@@ -33,7 +33,6 @@ import StrategyLibrary from './pages/StrategyLibrary'
 import StrategyManager from './pages/StrategyManager'
 import StrategyManager1 from './pages/StrategyManager1'
 import VisualStrategyBuilder from './pages/VisualStrategyBuilder'
-import Webhook2 from './pages/Webhook2'
 import DCABot from './pages/DCABot'
 import ErrorBoundary from './components/ErrorBoundary'
 
@@ -90,7 +89,6 @@ function App() {
         <Route path="/strategy-manager" element={<StrategyManager />} />
         <Route path="/strategy-manager-1" element={<StrategyManager1 />} />
         <Route path="/visual-strategy-builder" element={<VisualStrategyBuilder />} />
-        <Route path="/webhook2" element={<Webhook2 />} />
       
         {/* Protected routes */}
         <Route path="/app" element={isAuthenticated ? <AppShell /> : <Navigate to="/signin" />}>

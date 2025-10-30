@@ -47,7 +47,6 @@ const AppShell = () => {
         { path: '/app/connections', label: 'Connections', icon: Link },
         { path: '/app/bots', label: 'Bots', icon: Bot },
         { path: '/app/dca-bot', label: 'DCA Bot', icon: Bot },
-        { path: '/webhook2', label: 'Webhook2', icon: Zap },
         { path: '/clean-charts', label: 'Clean Charts', icon: BarChart3 },
       ]
     },
