@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smartbots"
+version = "0.1.0"
+description = "Smart trading bots for cryptocurrency arbitrage"
+authors = [{name = "Smart Bots Team"}]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.24.0",
+    "websockets>=11.0.0",
+]
+
+[project.scripts]
+scan-pairs = "scripts.scan_pairs:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["smartbots*", "scripts*"]

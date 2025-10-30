@@ -1,0 +1,13 @@
+ARBITRAGE SCANNER SUMMARY
+==================================================
+
+Runtime: 1.2 minutes
+Total ticks: 14
+Total opportunities found: 0
+Total profit: 0.00 USDT
+Pairs scanned: 0
+Loops analyzed: 1400
+Average opportunities per tick: 0.00
+
+SCANNED PAIRS:
+--------------------

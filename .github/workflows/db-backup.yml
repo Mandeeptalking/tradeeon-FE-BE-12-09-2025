@@ -1,0 +1,33 @@
+name: DB Nightly Backup
+
+on:
+  schedule:
+    - cron: "0 2 * * *"  # daily 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Postgres client & OpenSSL
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client openssl
+      - name: Dump database
+        env:
+          PG_CONN_URL: ${{ secrets.PG_CONN_URL }}
+        run: |
+          export PGPASSWORD=$(echo "$PG_CONN_URL" | sed -E 's/.*:(.*)@.*/\1/')
+          pg_dump "$PG_CONN_URL" --no-owner --no-privileges --format=plain > dump.sql
+      - name: Encrypt dump
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          openssl enc -aes-256-cbc -salt -pbkdf2 -k "$BACKUP_PASSPHRASE" -in dump.sql -out dump.sql.enc
+          rm dump.sql
+      - name: Upload encrypted artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-enc
+          path: dump.sql.enc
+
+
+

@@ -1,0 +1,13990 @@
+[
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ARDR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ARDRBTC",
+      "ARDRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "CHR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "CHRBTC",
+      "CHRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "CRV",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "CRVBTC",
+      "CRVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "USDC",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BTCUSDC",
+      "USDCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "KSM",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "KSMBTC",
+      "KSMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "STG",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "STGBTC",
+      "STGUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ME",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "MEBTC",
+      "MEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "MANTA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "MANTABTC",
+      "MANTAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "KDA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "KDABTC",
+      "KDAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ZAR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BTCZAR",
+      "USDTZAR"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "AGLD",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "AGLDBTC",
+      "AGLDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "AUCTION",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "AUCTIONBTC",
+      "AUCTIONUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "USUAL",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "USUALBTC",
+      "USUALUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "WLD",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "WLDBTC",
+      "WLDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "CTSI",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "CTSIBTC",
+      "CTSIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "XTZ",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "XTZBTC",
+      "XTZUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "NEXO",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "NEXOBTC",
+      "NEXOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "GLMR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "GLMRBTC",
+      "GLMRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ZRO",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ZROBTC",
+      "ZROUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "VET",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "VETBTC",
+      "VETUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "FLM",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "FLMBTC",
+      "FLMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "FLUX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "FLUXBTC",
+      "FLUXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ORDI",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ORDIBTC",
+      "ORDIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ZRX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ZRXBTC",
+      "ZRXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "FIS",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "FISBTC",
+      "FISUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "APT",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "APTBTC",
+      "APTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "HBAR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "HBARBTC",
+      "HBARUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "IOTX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "IOTXBTC",
+      "IOTXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ENA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ENABTC",
+      "ENAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "IOTA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "IOTABTC",
+      "IOTAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "XVS",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "XVSBTC",
+      "XVSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "LTC",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "LTCBTC",
+      "LTCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "RLC",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "RLCBTC",
+      "RLCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "THETA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "THETABTC",
+      "THETAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "AWE",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "AWEBTC",
+      "AWEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "AVA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "AVABTC",
+      "AVAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "CHZ",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "CHZBTC",
+      "CHZUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "FIL",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "FILBTC",
+      "FILUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ICP",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ICPBTC",
+      "ICPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "QNT",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "QNTBTC",
+      "QNTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "FORTH",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "FORTHBTC",
+      "FORTHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "PYTH",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "PYTHBTC",
+      "PYTHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ONT",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ONTBTC",
+      "ONTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "BCH",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BCHBTC",
+      "BCHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "BICO",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BICOBTC",
+      "BICOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ZK",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ZKBTC",
+      "ZKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "RONIN",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "RONINBTC",
+      "RONINUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SYS",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SYSBTC",
+      "SYSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ETH",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ETHBTC",
+      "ETHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ENJ",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ENJBTC",
+      "ENJUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "BAT",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BATBTC",
+      "BATUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "AEVO",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "AEVOBTC",
+      "AEVOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "RED",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "REDBTC",
+      "REDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "A",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ABTC",
+      "AUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "XRP",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "XRPBTC",
+      "XRPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ALGO",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ALGOBTC",
+      "ALGOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "HIVE",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "HIVEBTC",
+      "HIVEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "PLN",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BTCPLN",
+      "USDTPLN"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SHELL",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SHELLBTC",
+      "SHELLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "YFI",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "YFIBTC",
+      "YFIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "WBTC",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "WBTCBTC",
+      "WBTCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "AVAX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "AVAXBTC",
+      "AVAXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "UAH",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BTCUAH",
+      "USDTUAH"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "NFP",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "NFPBTC",
+      "NFPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "CELO",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "CELOBTC",
+      "CELOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "GRT",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "GRTBTC",
+      "GRTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "RIF",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "RIFBTC",
+      "RIFUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "TRX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "TRXBTC",
+      "TRXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "POL",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "POLBTC",
+      "POLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "1INCH",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "1INCHBTC",
+      "1INCHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "EIGEN",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "EIGENBTC",
+      "EIGENUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "EURI",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BTCEURI",
+      "EURIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "AR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ARBTC",
+      "ARUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ARB",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ARBBTC",
+      "ARBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SCRT",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SCRTBTC",
+      "SCRTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "HFT",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "HFTBTC",
+      "HFTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ADA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ADABTC",
+      "ADAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ARS",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BTCARS",
+      "USDTARS"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "DOGE",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "DOGEBTC",
+      "DOGEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ALT",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ALTBTC",
+      "ALTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "COTI",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "COTIBTC",
+      "COTIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "TUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BTCTUSD",
+      "TUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "PNUT",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "PNUTBTC",
+      "PNUTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "FLOW",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "FLOWBTC",
+      "FLOWUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "AI",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "AIBTC",
+      "AIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ARPA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ARPABTC",
+      "ARPAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "YGG",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "YGGBTC",
+      "YGGUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BTCFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "RARE",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "RAREBTC",
+      "RAREUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "GMT",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "GMTBTC",
+      "GMTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "BANANA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BANANABTC",
+      "BANANAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "MAV",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "MAVBTC",
+      "MAVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "HEI",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "HEIBTC",
+      "HEIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "KNC",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "KNCBTC",
+      "KNCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "KAITO",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "KAITOBTC",
+      "KAITOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ATA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ATABTC",
+      "ATAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "GLM",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "GLMBTC",
+      "GLMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "AUDIO",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "AUDIOBTC",
+      "AUDIOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "MINA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "MINABTC",
+      "MINAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "JST",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "JSTBTC",
+      "JSTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "LINK",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "LINKBTC",
+      "LINKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "DIA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "DIABTC",
+      "DIAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "GAS",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "GASBTC",
+      "GASUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "BEL",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BELBTC",
+      "BELUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "GALA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "GALABTC",
+      "GALAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SKL",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SKLBTC",
+      "SKLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ICX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ICXBTC",
+      "ICXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "STX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "STXBTC",
+      "STXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "PORTAL",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "PORTALBTC",
+      "PORTALUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "PYR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "PYRBTC",
+      "PYRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "AXS",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "AXSBTC",
+      "AXSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SEI",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SEIBTC",
+      "SEIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SFP",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SFPBTC",
+      "SFPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "PHB",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "PHBBTC",
+      "PHBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ILV",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ILVBTC",
+      "ILVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "LPT",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "LPTBTC",
+      "LPTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SCR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SCRBTC",
+      "SCRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "API3",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "API3BTC",
+      "API3USDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "FET",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "FETBTC",
+      "FETUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "JOE",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "JOEBTC",
+      "JOEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "QTUM",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "QTUMBTC",
+      "QTUMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "BAND",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BANDBTC",
+      "BANDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "DASH",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "DASHBTC",
+      "DASHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "LRC",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "LRCBTC",
+      "LRCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "WAN",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "WANBTC",
+      "WANUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "DYDX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "DYDXBTC",
+      "DYDXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "CFX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "CFXBTC",
+      "CFXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "OXT",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "OXTBTC",
+      "OXTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ZEN",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ZENBTC",
+      "ZENUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "CAKE",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "CAKEBTC",
+      "CAKEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BTCBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ONG",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ONGBTC",
+      "ONGUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "LDO",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "LDOBTC",
+      "LDOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BTCTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "INJ",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "INJBTC",
+      "INJUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "TFUEL",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "TFUELBTC",
+      "TFUELUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SUPER",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SUPERBTC",
+      "SUPERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ACH",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ACHBTC",
+      "ACHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "WAXP",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "WAXPBTC",
+      "WAXPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "W",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "WBTC",
+      "WUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "MXN",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BTCMXN",
+      "USDTMXN"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "NEO",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "NEOBTC",
+      "NEOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "TIA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "TIABTC",
+      "TIAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BTCEUR",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "CYBER",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "CYBERBTC",
+      "CYBERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SOL",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SOLBTC",
+      "SOLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SSV",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SSVBTC",
+      "SSVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "OM",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "OMBTC",
+      "OMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "IMX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "IMXBTC",
+      "IMXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "RENDER",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "RENDERBTC",
+      "RENDERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "XNO",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "XNOBTC",
+      "XNOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ANKR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ANKRBTC",
+      "ANKRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "LAYER",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "LAYERBTC",
+      "LAYERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "COMP",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "COMPBTC",
+      "COMPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "STORJ",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "STORJBTC",
+      "STORJUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "AAVE",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "AAVEBTC",
+      "AAVEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "OP",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "OPBTC",
+      "OPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "MOVR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "MOVRBTC",
+      "MOVRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "MOVE",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "MOVEBTC",
+      "MOVEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "BERA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BERABTC",
+      "BERAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "RUNE",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "RUNEBTC",
+      "RUNEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "PENDLE",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "PENDLEBTC",
+      "PENDLEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "PEOPLE",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "PEOPLEBTC",
+      "PEOPLEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SUSHI",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SUSHIBTC",
+      "SUSHIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "NEAR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "NEARBTC",
+      "NEARUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "APE",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "APEBTC",
+      "APEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ADX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ADXBTC",
+      "ADXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "REQ",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "REQBTC",
+      "REQUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "PHA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "PHABTC",
+      "PHAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SANTOS",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SANTOSBTC",
+      "SANTOSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "PAXG",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "PAXGBTC",
+      "PAXGUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ARKM",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ARKMBTC",
+      "ARKMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "TON",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "TONBTC",
+      "TONUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "TRB",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "TRBBTC",
+      "TRBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "OG",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "OGBTC",
+      "OGUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "FIDA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "FIDABTC",
+      "FIDAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SKY",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SKYBTC",
+      "SKYUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "MTL",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "MTLBTC",
+      "MTLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ZEC",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ZECBTC",
+      "ZECUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SAND",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SANDBTC",
+      "SANDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "OGN",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "OGNBTC",
+      "OGNUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "CTK",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "CTKBTC",
+      "CTKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "XLM",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "XLMBTC",
+      "XLMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SXP",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SXPBTC",
+      "SXPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "WIF",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "WIFBTC",
+      "WIFUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ASTR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ASTRBTC",
+      "ASTRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "S",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SBTC",
+      "SUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "DOT",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "DOTBTC",
+      "DOTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "DODO",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "DODOBTC",
+      "DODOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "RVN",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "RVNBTC",
+      "RVNUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "UMA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "UMABTC",
+      "UMAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ETC",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ETCBTC",
+      "ETCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "DATA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "DATABTC",
+      "DATAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "NMR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "NMRBTC",
+      "NMRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "EGLD",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "EGLDBTC",
+      "EGLDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ROSE",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ROSEBTC",
+      "ROSEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ENS",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ENSBTC",
+      "ENSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "KAVA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "KAVABTC",
+      "KAVAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ID",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "IDBTC",
+      "IDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "BNB",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BNBBTC",
+      "BNBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "TAO",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "TAOBTC",
+      "TAOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "BB",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BBBTC",
+      "BBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "ATOM",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "ATOMBTC",
+      "ATOMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "DUSK",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "DUSKBTC",
+      "DUSKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "LSK",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "LSKBTC",
+      "LSKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SNX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SNXBTC",
+      "SNXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "STEEM",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "STEEMBTC",
+      "STEEMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "IO",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "IOBTC",
+      "IOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "MANA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "MANABTC",
+      "MANAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "MAGIC",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "MAGICBTC",
+      "MAGICUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SAGA",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SAGABTC",
+      "SAGAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "PIVX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "PIVXBTC",
+      "PIVXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "AXL",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "AXLBTC",
+      "AXLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "SUI",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "SUIBTC",
+      "SUIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "POWR",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "POWRBTC",
+      "POWRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "DAI",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "BTCDAI",
+      "USDTDAI"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "OMNI",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "OMNIBTC",
+      "OMNIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "STRAX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "STRAXBTC",
+      "STRAXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "POLYX",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "POLYXBTC",
+      "POLYXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTC",
+      "UNI",
+      "USDT"
+    ],
+    "pairs": [
+      "BTCUSDT",
+      "UNIBTC",
+      "UNIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "NEAR",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "NEARETH",
+      "NEARUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "A",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "AETH",
+      "AUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "USDC",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ETHUSDC",
+      "USDCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "XRP",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "XRPETH",
+      "XRPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "ADX",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ADXETH",
+      "ADXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "AXS",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "AXSETH",
+      "AXSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "ZAR",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ETHZAR",
+      "USDTZAR"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "PLN",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ETHPLN",
+      "USDTPLN"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "SC",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "SCETH",
+      "SCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "WBTC",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "WBTCETH",
+      "WBTCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "AVAX",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "AVAXETH",
+      "AVAXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "QTUM",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "QTUMETH",
+      "QTUMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "DASH",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "DASHETH",
+      "DASHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "LRC",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "LRCETH",
+      "LRCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "ZEC",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ZECETH",
+      "ZECUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "GRT",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "GRTETH",
+      "GRTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "VET",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "VETETH",
+      "VETUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "XLM",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "XLMETH",
+      "XLMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "TRX",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "TRXETH",
+      "TRXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "POL",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "POLETH",
+      "POLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "EURI",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ETHEURI",
+      "EURIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "ARB",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ARBETH",
+      "ARBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "S",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "SETH",
+      "SUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "HOT",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "HOTETH",
+      "HOTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "ADA",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ADAETH",
+      "ADAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "DOT",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "DOTETH",
+      "DOTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "ARS",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ETHARS",
+      "USDTARS"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "TUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ETHTUSD",
+      "TUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ETHBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "ETC",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ETCETH",
+      "ETCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "APT",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "APTETH",
+      "APTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ETHTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "INJ",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "INJETH",
+      "INJUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "IOTX",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "IOTXETH",
+      "IOTXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "ZIL",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ZILETH",
+      "ZILUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "EGLD",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "EGLDETH",
+      "EGLDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ETHFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "BNB",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "BNBETH",
+      "BNBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "IOTA",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "IOTAETH",
+      "IOTAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "MXN",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ETHMXN",
+      "USDTMXN"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "ATOM",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ATOMETH",
+      "ATOMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "WBETH",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "WBETHETH",
+      "WBETHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "LTC",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "LTCETH",
+      "LTCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "RLC",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "RLCETH",
+      "RLCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "XVG",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "XVGETH",
+      "XVGUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ETHEUR",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "SOL",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "SOLETH",
+      "SOLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "SSV",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "SSVETH",
+      "SSVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "STEEM",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "STEEMETH",
+      "STEEMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "SLP",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "SLPETH",
+      "SLPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "CYBER",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "CYBERETH",
+      "CYBERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "MANA",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "MANAETH",
+      "MANAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "ICP",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ICPETH",
+      "ICPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "FIL",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "FILETH",
+      "FILUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "LINK",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "LINKETH",
+      "LINKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "DENT",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "DENTETH",
+      "DENTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "AAVE",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "AAVEETH",
+      "AAVEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "POWR",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "POWRETH",
+      "POWRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "DAI",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "ETHDAI",
+      "USDTDAI"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "OP",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "OPETH",
+      "OPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "GALA",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "GALAETH",
+      "GALAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "RUNE",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "RUNEETH",
+      "RUNEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETH",
+      "UNI",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHUSDT",
+      "UNIETH",
+      "UNIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "BIO",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "BIOBNB",
+      "BIOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "USDC",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "BNBUSDC",
+      "USDCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "HAEDAL",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "HAEDALBNB",
+      "HAEDALUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "LISTA",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "LISTABNB",
+      "LISTAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "VET",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "VETBNB",
+      "VETUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "INIT",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "INITBNB",
+      "INITUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "HYPER",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "HYPERBNB",
+      "HYPERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "ERA",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "ERABNB",
+      "ERAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "HBAR",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "HBARBNB",
+      "HBARUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "HOME",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "HOMEBNB",
+      "HOMEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "ENA",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "ENABNB",
+      "ENAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "MITO",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "MITOBNB",
+      "MITOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "PROVE",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "PROVEBNB",
+      "PROVEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "XVS",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "XVSBNB",
+      "XVSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "LTC",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "LTCBNB",
+      "LTCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "NEWT",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "NEWTBNB",
+      "NEWTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "CHZ",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "CHZBNB",
+      "CHZUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "GUN",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "GUNBNB",
+      "GUNUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "BCH",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "BCHBNB",
+      "BCHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "XRP",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "XRPBNB",
+      "XRPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "PLUME",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "PLUMEBNB",
+      "PLUMEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "SHELL",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "SHELLBNB",
+      "SHELLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "AVAX",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "AVAXBNB",
+      "AVAXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "SAHARA",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "SAHARABNB",
+      "SAHARAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "TOWNS",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "TOWNSBNB",
+      "TOWNSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "HOLO",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "HOLOBNB",
+      "HOLOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "POL",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "POLBNB",
+      "POLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "TRX",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "TRXBNB",
+      "TRXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "GPS",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "GPSBNB",
+      "GPSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "ADA",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "ADABNB",
+      "ADAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "ARS",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "BNBARS",
+      "USDTARS"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "ALT",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "ALTBNB",
+      "ALTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "TUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "BNBTUSD",
+      "TUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "ZKC",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "ZKCBNB",
+      "ZKCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "LA",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "LABNB",
+      "LAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "AI",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "AIBNB",
+      "AIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "SPK",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "SPKBNB",
+      "SPKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "BNBFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "TREE",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "TREEBNB",
+      "TREEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "BANANA",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "BANANABNB",
+      "BANANAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "KERNEL",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "KERNELBNB",
+      "KERNELUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "OPEN",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "OPENBNB",
+      "OPENUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "SOMI",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "SOMIBNB",
+      "SOMIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "NXPC",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "NXPCBNB",
+      "NXPCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "LINK",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "LINKBNB",
+      "LINKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "PORTAL",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "PORTALBNB",
+      "PORTALUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "AXS",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "AXSBNB",
+      "AXSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "SEI",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "SEIBNB",
+      "SEIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "NIL",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "NILBNB",
+      "NILUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "DOLO",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "DOLOBNB",
+      "DOLOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "LPT",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "LPTBNB",
+      "LPTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "FET",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "FETBNB",
+      "FETUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "CAKE",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "CAKEBNB",
+      "CAKEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "BNBBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "BNBTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "INJ",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "INJBNB",
+      "INJUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "LINEA",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "LINEABNB",
+      "LINEAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "BNBEUR",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "CYBER",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "CYBERBNB",
+      "CYBERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "SOL",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "SOLBNB",
+      "SOLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "WCT",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "WCTBNB",
+      "WCTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "PARTI",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "PARTIBNB",
+      "PARTIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "LAYER",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "LAYERBNB",
+      "LAYERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "SIGN",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "SIGNBNB",
+      "SIGNUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "BERA",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "BERABNB",
+      "BERAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "C",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "CBNB",
+      "CUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "MOVE",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "MOVEBNB",
+      "MOVEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "NEAR",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "NEARBNB",
+      "NEARUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "NTRN",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "NTRNBNB",
+      "NTRNUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "ARKM",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "ARKMBNB",
+      "ARKMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "RESOLV",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "RESOLVBNB",
+      "RESOLVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "CTK",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "CTKBNB",
+      "CTKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "S",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "SBNB",
+      "SUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "DOT",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "DOTBNB",
+      "DOTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "ETC",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "ETCBNB",
+      "ETCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "EGLD",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "EGLDBNB",
+      "EGLDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "BB",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "BBBNB",
+      "BBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "HUMA",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "HUMABNB",
+      "HUMAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "IO",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "IOBNB",
+      "IOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "SAGA",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "SAGABNB",
+      "SAGAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "SUI",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "SUIBNB",
+      "SUIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BNB",
+      "SOLV",
+      "USDT"
+    ],
+    "pairs": [
+      "BNBUSDT",
+      "SOLVBNB",
+      "SOLVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "NEO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "NEOUSDT",
+      "NEOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "NEO",
+      "USDC",
+      "USDT"
+    ],
+    "pairs": [
+      "NEOUSDT",
+      "NEOUSDC",
+      "USDCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LTC",
+      "USDC",
+      "USDT"
+    ],
+    "pairs": [
+      "LTCUSDT",
+      "LTCUSDC",
+      "USDCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LTC",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "LTCUSDT",
+      "LTCTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LTC",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "LTCUSDT",
+      "LTCFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LTC",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "LTCUSDT",
+      "LTCEUR",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LTC",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "LTCUSDT",
+      "LTCBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "QTUM",
+      "USDC",
+      "USDT"
+    ],
+    "pairs": [
+      "QTUMUSDT",
+      "QTUMUSDC",
+      "USDCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "QTUM",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "QTUMUSDT",
+      "QTUMTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ADA",
+      "USDC",
+      "USDT"
+    ],
+    "pairs": [
+      "ADAUSDT",
+      "ADAUSDC",
+      "USDCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ADA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ADAUSDT",
+      "ADATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ADA",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "ADAUSDT",
+      "ADAFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ADA",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "ADAUSDT",
+      "ADAEUR",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ADA",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "ADAUSDT",
+      "ADABRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XRP",
+      "USDC",
+      "USDT"
+    ],
+    "pairs": [
+      "XRPUSDT",
+      "XRPUSDC",
+      "USDCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XRP",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "XRPUSDT",
+      "XRPTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XRP",
+      "TRX",
+      "USDT"
+    ],
+    "pairs": [
+      "XRPUSDT",
+      "TRXXRP",
+      "TRXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XRP",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "XRPUSDT",
+      "XRPFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XRP",
+      "MXN",
+      "USDT"
+    ],
+    "pairs": [
+      "XRPUSDT",
+      "XRPMXN",
+      "USDTMXN"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XRP",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "XRPUSDT",
+      "XRPEUR",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XRP",
+      "TUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "XRPUSDT",
+      "XRPTUSD",
+      "TUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XRP",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "XRPUSDT",
+      "XRPBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TUSD",
+      "ARB",
+      "USDT"
+    ],
+    "pairs": [
+      "TUSDUSDT",
+      "ARBTUSD",
+      "ARBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TUSD",
+      "DOGE",
+      "USDT"
+    ],
+    "pairs": [
+      "TUSDUSDT",
+      "DOGETUSD",
+      "DOGEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TUSD",
+      "SOL",
+      "USDT"
+    ],
+    "pairs": [
+      "TUSDUSDT",
+      "SOLTUSD",
+      "SOLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "IOTA",
+      "USDC",
+      "USDT"
+    ],
+    "pairs": [
+      "IOTAUSDT",
+      "IOTAUSDC",
+      "USDCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "IOTA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "IOTAUSDT",
+      "IOTATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XLM",
+      "USDC",
+      "USDT"
+    ],
+    "pairs": [
+      "XLMUSDT",
+      "XLMUSDC",
+      "USDCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XLM",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "XLMUSDT",
+      "XLMTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XLM",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "XLMUSDT",
+      "XLMFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XLM",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "XLMUSDT",
+      "XLMEUR",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ONT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ONTUSDT",
+      "ONTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ONT",
+      "USDC",
+      "USDT"
+    ],
+    "pairs": [
+      "ONTUSDT",
+      "ONTUSDC",
+      "USDCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TRX",
+      "USDC",
+      "USDT"
+    ],
+    "pairs": [
+      "TRXUSDT",
+      "TRXUSDC",
+      "USDCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TRX",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "TRXUSDT",
+      "TRXTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TRX",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "TRXUSDT",
+      "TRXFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TRX",
+      "WIN",
+      "USDT"
+    ],
+    "pairs": [
+      "TRXUSDT",
+      "WINTRX",
+      "WINUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TRX",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "TRXUSDT",
+      "TRXEUR",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETC",
+      "USDC",
+      "USDT"
+    ],
+    "pairs": [
+      "ETCUSDT",
+      "ETCUSDC",
+      "USDCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETC",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ETCUSDT",
+      "ETCTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETC",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "ETCUSDT",
+      "ETCFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "VET",
+      "USDC",
+      "USDT"
+    ],
+    "pairs": [
+      "VETUSDT",
+      "VETUSDC",
+      "USDCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "VET",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "VETUSDT",
+      "VETTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "VET",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "VETUSDT",
+      "VETEUR",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PUNDIX",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "PUNDIXUSDC",
+      "PUNDIXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "CRV",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "CRVUSDC",
+      "CRVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BIO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BIOUSDC",
+      "BIOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "FLOKI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "FLOKIUSDC",
+      "FLOKIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ACX",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ACXUSDC",
+      "ACXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "HAEDAL",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "HAEDALUSDC",
+      "HAEDALUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "MANTA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "MANTAUSDC",
+      "MANTAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "LISTA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "LISTAUSDC",
+      "LISTAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "USDE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "USDEUSDC",
+      "USDEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "USUAL",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "USUALUSDC",
+      "USUALUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "AUCTION",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "AUCTIONUSDC",
+      "AUCTIONUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "WLD",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "WLDUSDC",
+      "WLDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "VANRY",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "VANRYUSDC",
+      "VANRYUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "XTZ",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "XTZUSDC",
+      "XTZUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ZRO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ZROUSDC",
+      "ZROUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "INIT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "INITUSDC",
+      "INITUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SYN",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SYNUSDC",
+      "SYNUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "DF",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "DFUSDC",
+      "DFUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "WLFI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "WLFIUSDC",
+      "WLFIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "JUP",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "JUPUSDC",
+      "JUPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "FLUX",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "FLUXUSDC",
+      "FLUXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ORDI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ORDIUSDC",
+      "ORDIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "HYPER",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "HYPERUSDC",
+      "HYPERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "COW",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "COWUSDC",
+      "COWUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ERA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ERAUSDC",
+      "ERAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "NEIRO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "NEIROUSDC",
+      "NEIROUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "APT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "APTUSDC",
+      "APTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "HBAR",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "HBARUSDC",
+      "HBARUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "HOME",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "HOMEUSDC",
+      "HOMEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PEPE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "PEPEUSDC",
+      "PEPEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ENA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ENAUSDC",
+      "ENAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "1000CHEEMS",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "1000CHEEMSUSDC",
+      "1000CHEEMSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PROVE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "PROVEUSDC",
+      "PROVEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "MITO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "MITOUSDC",
+      "MITOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "CHESS",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "CHESSUSDC",
+      "CHESSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "DOGS",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "DOGSUSDC",
+      "DOGSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "THETA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "THETAUSDC",
+      "THETAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "IDEX",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "IDEXUSDC",
+      "IDEXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "NEWT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "NEWTUSDC",
+      "NEWTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "XAI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "XAIUSDC",
+      "XAIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "CHZ",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "CHZUSDC",
+      "CHZUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "FIL",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "FILUSDC",
+      "FILUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ICP",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ICPUSDC",
+      "ICPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "JUV",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "JUVUSDC",
+      "JUVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "GUN",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "GUNUSDC",
+      "GUNUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "QNT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "QNTUSDC",
+      "QNTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PYTH",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "PYTHUSDC",
+      "PYTHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BCH",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BCHUSDC",
+      "BCHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ZK",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ZKUSDC",
+      "ZKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "1000SATS",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "1000SATSUSDC",
+      "1000SATSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BROCCOLI714",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BROCCOLI714USDC",
+      "BROCCOLI714USDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ENJ",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ENJUSDC",
+      "ENJUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "A",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "AUSDC",
+      "AUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "RED",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "REDUSDC",
+      "REDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PLUME",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "PLUMEUSDC",
+      "PLUMEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ALGO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ALGOUSDC",
+      "ALGOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "HIVE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "HIVEUSDC",
+      "HIVEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PLN",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "USDCPLN",
+      "USDTPLN"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SHELL",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SHELLUSDC",
+      "SHELLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BIGTIME",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BIGTIMEUSDC",
+      "BIGTIMEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "AVAX",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "AVAXUSDC",
+      "AVAXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SAHARA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SAHARAUSDC",
+      "SAHARAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "VANA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "VANAUSDC",
+      "VANAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "TOWNS",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "TOWNSUSDC",
+      "TOWNSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "HOLO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "HOLOUSDC",
+      "HOLOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "GRT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "GRTUSDC",
+      "GRTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "POL",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "POLUSDC",
+      "POLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "EIGEN",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "EIGENUSDC",
+      "EIGENUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "EURI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "EURIUSDC",
+      "EURIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ARB",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ARBUSDC",
+      "ARBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "AR",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ARUSDC",
+      "ARUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "GPS",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "GPSUSDC",
+      "GPSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BONK",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BONKUSDC",
+      "BONKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "DOGE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "DOGEUSDC",
+      "DOGEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ALT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ALTUSDC",
+      "ALTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PNUT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "PNUTUSDC",
+      "PNUTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ZKC",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ZKCUSDC",
+      "ZKCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "LA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "LAUSDC",
+      "LAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SPK",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SPKUSDC",
+      "SPKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "FDUSDUSDC",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "YGG",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "YGGUSDC",
+      "YGGUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "TREE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "TREEUSDC",
+      "TREEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "RARE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "RAREUSDC",
+      "RAREUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "HEI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "HEIUSDC",
+      "HEIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BANANA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BANANAUSDC",
+      "BANANAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "VIRTUAL",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "VIRTUALUSDC",
+      "VIRTUALUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "GMT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "GMTUSDC",
+      "GMTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "MAV",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "MAVUSDC",
+      "MAVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BFUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BFUSDUSDC",
+      "BFUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "CKB",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "CKBUSDC",
+      "CKBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "KERNEL",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "KERNELUSDC",
+      "KERNELUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "KAITO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "KAITOUSDC",
+      "KAITOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SOMI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SOMIUSDC",
+      "SOMIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "OPEN",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "OPENUSDC",
+      "OPENUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "NXPC",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "NXPCUSDC",
+      "NXPCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "MASK",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "MASKUSDC",
+      "MASKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "FORM",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "FORMUSDC",
+      "FORMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SOPH",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SOPHUSDC",
+      "SOPHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "LINK",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "LINKUSDC",
+      "LINKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "CGPT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "CGPTUSDC",
+      "CGPTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BLUR",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BLURUSDC",
+      "BLURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "1000CAT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "1000CATUSDC",
+      "1000CATUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "KMNO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "KMNOUSDC",
+      "KMNOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "GALA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "GALAUSDC",
+      "GALAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BEAMX",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BEAMXUSDC",
+      "BEAMXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SKL",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SKLUSDC",
+      "SKLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SXT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SXTUSDC",
+      "SXTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "STX",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "STXUSDC",
+      "STXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SHIB",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SHIBUSDC",
+      "SHIBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "JTO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "JTOUSDC",
+      "JTOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "KAIA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "KAIAUSDC",
+      "KAIAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "AXS",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "AXSUSDC",
+      "AXSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SEI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SEIUSDC",
+      "SEIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "TNSR",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "TNSRUSDC",
+      "TNSRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "NIL",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "NILUSDC",
+      "NILUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "DOLO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "DOLOUSDC",
+      "DOLOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ILV",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ILVUSDC",
+      "ILVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "LPT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "LPTUSDC",
+      "LPTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "TST",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "TSTUSDC",
+      "TSTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ONDO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ONDOUSDC",
+      "ONDOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "API3",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "API3USDC",
+      "API3USDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "FET",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "FETUSDC",
+      "FETUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SYRUP",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SYRUPUSDC",
+      "SYRUPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "CVX",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "CVXUSDC",
+      "CVXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ORCA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ORCAUSDC",
+      "ORCAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "DYDX",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "DYDXUSDC",
+      "DYDXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "REZ",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "REZUSDC",
+      "REZUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "RPL",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "RPLUSDC",
+      "RPLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BABY",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BABYUSDC",
+      "BABYUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "CFX",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "CFXUSDC",
+      "CFXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "VELODROME",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "VELODROMEUSDC",
+      "VELODROMEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "1MBABYDOGE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "1MBABYDOGEUSDC",
+      "1MBABYDOGEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ZEN",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ZENUSDC",
+      "ZENUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "CAKE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "CAKEUSDC",
+      "CAKEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "STO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "STOUSDC",
+      "STOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "USDCBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "LDO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "LDOUSDC",
+      "LDOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "RSR",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "RSRUSDC",
+      "RSRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "THE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "THEUSDC",
+      "THEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "INJ",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "INJUSDC",
+      "INJUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "USDCTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ACH",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ACHUSDC",
+      "ACHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "W",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "WUSDC",
+      "WUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "LINEA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "LINEAUSDC",
+      "LINEAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "TIA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "TIAUSDC",
+      "TIAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "EURUSDC",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "CYBER",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "CYBERUSDC",
+      "CYBERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SOL",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SOLUSDC",
+      "SOLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "WCT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "WCTUSDC",
+      "WCTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SSV",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SSVUSDC",
+      "SSVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "RENDER",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "RENDERUSDC",
+      "RENDERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "OM",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "OMUSDC",
+      "OMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PARTI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "PARTIUSDC",
+      "PARTIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "LAYER",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "LAYERUSDC",
+      "LAYERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "MUBARAK",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "MUBARAKUSDC",
+      "MUBARAKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BMT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BMTUSDC",
+      "BMTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "RAY",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "RAYUSDC",
+      "RAYUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "COMP",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "COMPUSDC",
+      "COMPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "AAVE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "AAVEUSDC",
+      "AAVEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "COOKIE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "COOKIEUSDC",
+      "COOKIEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "OP",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "OPUSDC",
+      "OPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SIGN",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SIGNUSDC",
+      "SIGNUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PENGU",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "PENGUUSDC",
+      "PENGUUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "HMSTR",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "HMSTRUSDC",
+      "HMSTRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "RUNE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "RUNEUSDC",
+      "RUNEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PENDLE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "PENDLEUSDC",
+      "PENDLEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "MEME",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "MEMEUSDC",
+      "MEMEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "MOVE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "MOVEUSDC",
+      "MOVEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BERA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BERAUSDC",
+      "BERAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PEOPLE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "PEOPLEUSDC",
+      "PEOPLEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "NEAR",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "NEARUSDC",
+      "NEARUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SUSHI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SUSHIUSDC",
+      "SUSHIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "C",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "CUSDC",
+      "CUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "APE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "APEUSDC",
+      "APEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "OSMO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "OSMOUSDC",
+      "OSMOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "T",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "TUSDC",
+      "TUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PHA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "PHAUSDC",
+      "PHAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PAXG",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "PAXGUSDC",
+      "PAXGUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PIXEL",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "PIXELUSDC",
+      "PIXELUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ARKM",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ARKMUSDC",
+      "ARKMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "TON",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "TONUSDC",
+      "TONUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "TRB",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "TRBUSDC",
+      "TRBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "RESOLV",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "RESOLVUSDC",
+      "RESOLVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SKY",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SKYUSDC",
+      "SKYUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SAND",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SANDUSDC",
+      "SANDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "TRUMP",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "TRUMPUSDC",
+      "TRUMPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "WIF",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "WIFUSDC",
+      "WIFUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BANANAS31",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BANANAS31USDC",
+      "BANANAS31USDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "S",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SUSDC",
+      "SUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "GMX",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "GMXUSDC",
+      "GMXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "FUN",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "FUNUSDC",
+      "FUNUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "PUMP",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "PUMPUSDC",
+      "PUMPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "DOT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "DOTUSDC",
+      "DOTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "CVC",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "CVCUSDC",
+      "CVCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BOME",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BOMEUSDC",
+      "BOMEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "TLM",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "TLMUSDC",
+      "TLMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "RVN",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "RVNUSDC",
+      "RVNUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "UMA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "UMAUSDC",
+      "UMAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "AIXBT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "AIXBTUSDC",
+      "AIXBTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "CATI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "CATIUSDC",
+      "CATIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "TURBO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "TURBOUSDC",
+      "TURBOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ETHFI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ETHFIUSDC",
+      "ETHFIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "NMR",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "NMRUSDC",
+      "NMRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "EGLD",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "EGLDUSDC",
+      "EGLDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ROSE",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ROSEUSDC",
+      "ROSEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ENS",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ENSUSDC",
+      "ENSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "TAO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "TAOUSDC",
+      "TAOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "BB",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "BBUSDC",
+      "BBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ATOM",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ATOMUSDC",
+      "ATOMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "EPIC",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "EPICUSDC",
+      "EPICUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "CETUS",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "CETUSUSDC",
+      "CETUSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "A2Z",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "A2ZUSDC",
+      "A2ZUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "HUMA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "HUMAUSDC",
+      "HUMAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "STEEM",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "STEEMUSDC",
+      "STEEMUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "IO",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "IOUSDC",
+      "IOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "TUT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "TUTUSDC",
+      "TUTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "STRK",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "STRKUSDC",
+      "STRKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "NOT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "NOTUSDC",
+      "NOTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SAGA",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SAGAUSDC",
+      "SAGAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ANIME",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ANIMEUSDC",
+      "ANIMEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "MAGIC",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "MAGICUSDC",
+      "MAGICUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "AVNT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "AVNTUSDC",
+      "AVNTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "SUI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "SUIUSDC",
+      "SUIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "ACT",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "ACTUSDC",
+      "ACTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "OMNI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "OMNIUSDC",
+      "OMNIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "UTK",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "UTKUSDC",
+      "UTKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USDC",
+      "UNI",
+      "USDT"
+    ],
+    "pairs": [
+      "USDCUSDT",
+      "UNIUSDC",
+      "UNIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LINK",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "LINKUSDT",
+      "LINKTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LINK",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "LINKUSDT",
+      "LINKFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LINK",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "LINKUSDT",
+      "LINKEUR",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LINK",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "LINKUSDT",
+      "LINKBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "HOT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "HOTUSDT",
+      "HOTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ZIL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ZILUSDT",
+      "ZILTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FET",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "FETUSDT",
+      "FETTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FET",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "FETUSDT",
+      "FETFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "THETA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "THETAUSDT",
+      "THETATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ENJ",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ENJUSDT",
+      "ENJTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ATOM",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ATOMUSDT",
+      "ATOMTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ATOM",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "ATOMUSDT",
+      "ATOMFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ATOM",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "ATOMUSDT",
+      "ATOMEUR",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ONE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ONEUSDT",
+      "ONETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ALGO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ALGOUSDT",
+      "ALGOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "DOGE",
+      "SHIB",
+      "USDT"
+    ],
+    "pairs": [
+      "DOGEUSDT",
+      "SHIBDOGE",
+      "SHIBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "DOGE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "DOGEUSDT",
+      "DOGETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "DOGE",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "DOGEUSDT",
+      "DOGEFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "DOGE",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "DOGEUSDT",
+      "DOGEEUR",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "DOGE",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "DOGEUSDT",
+      "DOGEBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ANKR",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ANKRUSDT",
+      "ANKRTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "WIN",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "WINUSDT",
+      "WINEUR",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "COS",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "COSUSDT",
+      "COSTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "DENT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "DENTUSDT",
+      "DENTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "CHZ",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "CHZUSDT",
+      "CHZTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "RVN",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "RVNUSDT",
+      "RVNTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "HBAR",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "HBARUSDT",
+      "HBARTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "HBAR",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "HBARUSDT",
+      "HBARFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "STX",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "STXUSDT",
+      "STXTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "STX",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "STXUSDT",
+      "STXFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ARPA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ARPAUSDT",
+      "ARPATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BCH",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BCHUSDT",
+      "BCHTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BCH",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "BCHUSDT",
+      "BCHFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BCH",
+      "EUR",
+      "USDT"
+    ],
+    "pairs": [
+      "BCHUSDT",
+      "BCHEUR",
+      "EURUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "NEAR",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "NEAREUR",
+      "NEARUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "SHIB",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "SHIBEUR",
+      "SHIBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "AVAX",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "AVAXEUR",
+      "AVAXUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "WLD",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "WLDEUR",
+      "WLDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "GRT",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "GRTEUR",
+      "GRTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "POL",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "POLEUR",
+      "POLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "WIF",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "WIFEUR",
+      "WIFUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "TRUMP",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "TRUMPEUR",
+      "TRUMPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "EURI",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "EUREURI",
+      "EURIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "ARB",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "ARBEUR",
+      "ARBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "S",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "SEUR",
+      "SUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "WLFI",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "WLFIEUR",
+      "WLFIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "DOT",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "DOTEUR",
+      "DOTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "BOME",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "BOMEEUR",
+      "BOMEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "PNUT",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "PNUTEUR",
+      "PNUTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "APT",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "APTEUR",
+      "APTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "PEPE",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "PEPEEUR",
+      "PEPEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "EGLD",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "EGLDEUR",
+      "EGLDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "GMT",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "GMTEUR",
+      "GMTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "SOL",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "SOLEUR",
+      "SOLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "RENDER",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "RENDEREUR",
+      "RENDERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "ICP",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "ICPEUR",
+      "ICPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "SUI",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "SUIEUR",
+      "SUIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "OP",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "OPEUR",
+      "OPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EUR",
+      "GALA",
+      "USDT"
+    ],
+    "pairs": [
+      "EURUSDT",
+      "GALAEUR",
+      "GALAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "OGN",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "OGNUSDT",
+      "OGNTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "COTI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "COTIUSDT",
+      "COTITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SOL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SOLUSDT",
+      "SOLTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SOL",
+      "BNSOL",
+      "USDT"
+    ],
+    "pairs": [
+      "SOLUSDT",
+      "BNSOLSOL",
+      "BNSOLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SOL",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "SOLUSDT",
+      "SOLFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SOL",
+      "MXN",
+      "USDT"
+    ],
+    "pairs": [
+      "SOLUSDT",
+      "SOLMXN",
+      "USDTMXN"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SOL",
+      "ARS",
+      "USDT"
+    ],
+    "pairs": [
+      "SOLUSDT",
+      "SOLARS",
+      "USDTARS"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SOL",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "SOLUSDT",
+      "SOLBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "HIVE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "HIVEUSDT",
+      "HIVETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LRC",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "LRCUSDT",
+      "LRCTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "COMP",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "COMPUSDT",
+      "COMPTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SNX",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SNXUSDT",
+      "SNXTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "VTHO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "VTHOUSDT",
+      "VTHOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SXP",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SXPUSDT",
+      "SXPTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "STORJ",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "STORJUSDT",
+      "STORJTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "MANA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "MANAUSDT",
+      "MANATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "CRV",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "CRVUSDT",
+      "CRVTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SAND",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SANDUSDT",
+      "SANDTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SAND",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "SANDUSDT",
+      "SANDFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "DOT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "DOTUSDT",
+      "DOTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "DOT",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "DOTUSDT",
+      "DOTFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "DOT",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "DOTUSDT",
+      "DOTBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LUNA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "LUNAUSDT",
+      "LUNATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "RSR",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "RSRUSDT",
+      "RSRTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PAXG",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PAXGUSDT",
+      "PAXGTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TRB",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "TRBUSDT",
+      "TRBTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SUSHI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SUSHIUSDT",
+      "SUSHITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "KSM",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "KSMUSDT",
+      "KSMTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EGLD",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "EGLDUSDT",
+      "EGLDTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EGLD",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "EGLDUSDT",
+      "EGLDFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "RUNE",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "RUNEUSDT",
+      "RUNEFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "UMA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "UMAUSDT",
+      "UMATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BEL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BELUSDT",
+      "BELTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "UNI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "UNIUSDT",
+      "UNITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "UNI",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "UNIUSDT",
+      "UNIFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SUN",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SUNUSDT",
+      "SUNTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AVAX",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "AVAXUSDT",
+      "AVAXTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AVAX",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "AVAXUSDT",
+      "AVAXFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AVAX",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "AVAXUSDT",
+      "AVAXBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AAVE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "AAVEUSDT",
+      "AAVETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AAVE",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "AAVEUSDT",
+      "AAVEFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "NEAR",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "NEARUSDT",
+      "NEARTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "NEAR",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "NEARUSDT",
+      "NEARFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "NEAR",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "NEARUSDT",
+      "NEARBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FIL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "FILUSDT",
+      "FILTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FIL",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "FILUSDT",
+      "FILFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "INJ",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "INJUSDT",
+      "INJTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "INJ",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "INJUSDT",
+      "INJFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AUDIO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "AUDIOUSDT",
+      "AUDIOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AXS",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "AXSUSDT",
+      "AXSTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "STRAX",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "STRAXUSDT",
+      "STRAXTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ROSE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ROSEUSDT",
+      "ROSETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SKL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SKLUSDT",
+      "SKLTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "GRT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "GRTUSDT",
+      "GRTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "GRT",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "GRTUSDT",
+      "GRTFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "JUV",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "JUVUSDT",
+      "JUVTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PSG",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PSGUSDT",
+      "PSGTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "OG",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "OGUSDT",
+      "OGTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ATM",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ATMUSDT",
+      "ATMTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ASR",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ASRUSDT",
+      "ASRTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "CELO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "CELOUSDT",
+      "CELOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TRU",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "TRUUSDT",
+      "TRUTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "CKB",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "CKBUSDT",
+      "CKBTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TWT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "TWTUSDT",
+      "TWTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "CAKE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "CAKEUSDT",
+      "CAKETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "OM",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "OMUSDT",
+      "OMTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ALICE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ALICEUSDT",
+      "ALICETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SUPER",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SUPERUSDT",
+      "SUPERTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "CFX",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "CFXUSDT",
+      "CFXTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TLM",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "TLMUSDT",
+      "TLMTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BAR",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BARUSDT",
+      "BARTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SLP",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SLPUSDT",
+      "SLPTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SHIB",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SHIBUSDT",
+      "SHIBTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SHIB",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "SHIBUSDT",
+      "SHIBFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SHIB",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "SHIBUSDT",
+      "SHIBBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ICP",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ICPUSDT",
+      "ICPTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ICP",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "ICPUSDT",
+      "ICPFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AR",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ARUSDT",
+      "ARTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AR",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "ARUSDT",
+      "ARFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "MASK",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "MASKUSDT",
+      "MASKTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LPT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "LPTUSDT",
+      "LPTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XVG",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "XVGUSDT",
+      "XVGTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PHA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PHAUSDT",
+      "PHATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "MINA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "MINAUSDT",
+      "MINATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "RAY",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "RAYUSDT",
+      "RAYTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "RAY",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "RAYUSDT",
+      "RAYFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "MBOX",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "MBOXUSDT",
+      "MBOXTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XEC",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "XECUSDT",
+      "XECTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "DYDX",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "DYDXUSDT",
+      "DYDXTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "DYDX",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "DYDXUSDT",
+      "DYDXFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "GALA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "GALAUSDT",
+      "GALATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "GALA",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "GALAUSDT",
+      "GALAFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "GALA",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "GALAUSDT",
+      "GALABRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FIDA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "FIDAUSDT",
+      "FIDATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "RAD",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "RADUSDT",
+      "RADTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "RARE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "RAREUSDT",
+      "RARETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LAZIO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "LAZIOUSDT",
+      "LAZIOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AUCTION",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "AUCTIONUSDT",
+      "AUCTIONTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AUCTION",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "AUCTIONUSDT",
+      "AUCTIONFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "MOVR",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "MOVRUSDT",
+      "MOVRTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "CITY",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "CITYUSDT",
+      "CITYTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ENS",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ENSUSDT",
+      "ENSTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ENS",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "ENSUSDT",
+      "ENSFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PORTO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PORTOUSDT",
+      "PORTOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "JASMY",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "JASMYUSDT",
+      "JASMYTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AMP",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "AMPUSDT",
+      "AMPTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SANTOS",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SANTOSUSDT",
+      "SANTOSTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "HIGH",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "HIGHUSDT",
+      "HIGHTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PEOPLE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PEOPLEUSDT",
+      "PEOPLETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PEOPLE",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "PEOPLEUSDT",
+      "PEOPLEFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SPELL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SPELLUSDT",
+      "SPELLTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ACH",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ACHUSDT",
+      "ACHTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "API3",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "API3USDT",
+      "API3TRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BTTC",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BTTCUSDT",
+      "BTTCTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ACA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ACAUSDT",
+      "ACATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ALPINE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ALPINEUSDT",
+      "ALPINETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "GMT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "GMTUSDT",
+      "GMTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "APE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "APEUSDT",
+      "APETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "APE",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "APEUSDT",
+      "APEFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LDO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "LDOUSDT",
+      "LDOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LDO",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "LDOUSDT",
+      "LDOFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "OP",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "OPUSDT",
+      "OPTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "OP",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "OPUSDT",
+      "OPFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LUNC",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "LUNCUSDT",
+      "LUNCTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "POLYX",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "POLYXUSDT",
+      "POLYXTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "APT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "APTUSDT",
+      "APTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "APT",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "APTUSDT",
+      "APTFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PHB",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PHBUSDT",
+      "PHBTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "MAGIC",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "MAGICUSDT",
+      "MAGICTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USTC",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "USTCUSDT",
+      "USTCTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "GAS",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "GASUSDT",
+      "GASTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ID",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "IDUSDT",
+      "IDTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ARB",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ARBUSDT",
+      "ARBTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ARB",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "ARBUSDT",
+      "ARBFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "RDNT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "RDNTUSDT",
+      "RDNTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EDU",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "EDUUSDT",
+      "EDUTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SUI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SUIUSDT",
+      "SUITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SUI",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "SUIUSDT",
+      "SUIFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SUI",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "SUIUSDT",
+      "SUIBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PEPE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PEPEUSDT",
+      "PEPETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PEPE",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "PEPEUSDT",
+      "PEPEFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PEPE",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "PEPEUSDT",
+      "PEPEBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FLOKI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "FLOKIUSDT",
+      "FLOKITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FLOKI",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "FLOKIUSDT",
+      "FLOKIFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "MAV",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "MAVUSDT",
+      "MAVTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PENDLE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PENDLEUSDT",
+      "PENDLETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PENDLE",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "PENDLEUSDT",
+      "PENDLEFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ARKM",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ARKMUSDT",
+      "ARKMTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ARKM",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "ARKMUSDT",
+      "ARKMFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "WLD",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "WLDUSDT",
+      "WLDTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "WLD",
+      "FDUSD",
+      "USDT"
+    ],
+    "pairs": [
+      "WLDUSDT",
+      "WLDFDUSD",
+      "FDUSDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "BIO",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "BIOFDUSD",
+      "BIOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "HAEDAL",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "HAEDALFDUSD",
+      "HAEDALUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "ME",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "MEFDUSD",
+      "MEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "MANTA",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "MANTAFDUSD",
+      "MANTAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "LISTA",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "LISTAFDUSD",
+      "LISTAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "USUAL",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "USUALFDUSD",
+      "USUALUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "ZRO",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "ZROFDUSD",
+      "ZROUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "INIT",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "INITFDUSD",
+      "INITUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "JUP",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "JUPFDUSD",
+      "JUPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "ORDI",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "ORDIFDUSD",
+      "ORDIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "ERA",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "ERAFDUSD",
+      "ERAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "NEIRO",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "NEIROFDUSD",
+      "NEIROUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "HOME",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "HOMEFDUSD",
+      "HOMEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "ENA",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "ENAFDUSD",
+      "ENAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "MITO",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "MITOFDUSD",
+      "MITOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "PROVE",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "PROVEFDUSD",
+      "PROVEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "DOGS",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "DOGSFDUSD",
+      "DOGSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "NEWT",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "NEWTFDUSD",
+      "NEWTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "GUN",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "GUNFDUSD",
+      "GUNUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "PYTH",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "PYTHFDUSD",
+      "PYTHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "ZK",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "ZKFDUSD",
+      "ZKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "RONIN",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "RONINFDUSD",
+      "RONINUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "1000SATS",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "1000SATSFDUSD",
+      "1000SATSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "A",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "AFDUSD",
+      "AUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "AEVO",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "AEVOFDUSD",
+      "AEVOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "RED",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "REDFDUSD",
+      "REDUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "PLUME",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "PLUMEFDUSD",
+      "PLUMEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "SHELL",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "SHELLFDUSD",
+      "SHELLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "SAHARA",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "SAHARAFDUSD",
+      "SAHARAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "NFP",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "NFPFDUSD",
+      "NFPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "VANA",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "VANAFDUSD",
+      "VANAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "TOWNS",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "TOWNSFDUSD",
+      "TOWNSUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "HOLO",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "HOLOFDUSD",
+      "HOLOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "POL",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "POLFDUSD",
+      "POLUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "EIGEN",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "EIGENFDUSD",
+      "EIGENUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "BONK",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "BONKFDUSD",
+      "BONKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "ALT",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "ALTFDUSD",
+      "ALTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "PNUT",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "PNUTFDUSD",
+      "PNUTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "ZKC",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "ZKCFDUSD",
+      "ZKCUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "LA",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "LAFDUSD",
+      "LAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "AI",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "AIFDUSD",
+      "AIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "SPK",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "SPKFDUSD",
+      "SPKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "TREE",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "TREEFDUSD",
+      "TREEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "BANANA",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "BANANAFDUSD",
+      "BANANAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "KERNEL",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "KERNELFDUSD",
+      "KERNELUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "KAITO",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "KAITOFDUSD",
+      "KAITOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "SOMI",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "SOMIFDUSD",
+      "SOMIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "OPEN",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "OPENFDUSD",
+      "OPENUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "SOPH",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "SOPHFDUSD",
+      "SOPHUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "1000CAT",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "1000CATFDUSD",
+      "1000CATUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "PORTAL",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "PORTALFDUSD",
+      "PORTALUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "JTO",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "JTOFDUSD",
+      "JTOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "SEI",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "SEIFDUSD",
+      "SEIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "DOLO",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "DOLOFDUSD",
+      "DOLOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "SCR",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "SCRFDUSD",
+      "SCRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "1MBABYDOGE",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "1MBABYDOGEFDUSD",
+      "1MBABYDOGEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "STO",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "STOFDUSD",
+      "STOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "FDUSDTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "W",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "WFDUSD",
+      "WUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "LINEA",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "LINEAFDUSD",
+      "LINEAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "TIA",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "TIAFDUSD",
+      "TIAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "CYBER",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "CYBERFDUSD",
+      "CYBERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "WCT",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "WCTFDUSD",
+      "WCTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "RENDER",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "RENDERFDUSD",
+      "RENDERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "PARTI",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "PARTIFDUSD",
+      "PARTIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "LAYER",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "LAYERFDUSD",
+      "LAYERUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "BMT",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "BMTFDUSD",
+      "BMTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "SIGN",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "SIGNFDUSD",
+      "SIGNUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "PENGU",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "PENGUFDUSD",
+      "PENGUUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "HMSTR",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "HMSTRFDUSD",
+      "HMSTRUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "MEME",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "MEMEFDUSD",
+      "MEMEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "BERA",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "BERAFDUSD",
+      "BERAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "C",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "CFDUSD",
+      "CUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "TON",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "TONFDUSD",
+      "TONUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "RESOLV",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "RESOLVFDUSD",
+      "RESOLVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "TRUMP",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "TRUMPFDUSD",
+      "TRUMPUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "WIF",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "WIFFDUSD",
+      "WIFUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "S",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "SFDUSD",
+      "SUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "BOME",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "BOMEFDUSD",
+      "BOMEUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "ETHFI",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "ETHFIFDUSD",
+      "ETHFIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "TAO",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "TAOFDUSD",
+      "TAOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "BB",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "BBFDUSD",
+      "BBUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "HUMA",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "HUMAFDUSD",
+      "HUMAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "IO",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "IOFDUSD",
+      "IOUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "STRK",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "STRKFDUSD",
+      "STRKUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "NOT",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "NOTFDUSD",
+      "NOTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "SAGA",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "SAGAFDUSD",
+      "SAGAUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "ACT",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "ACTFDUSD",
+      "ACTUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "OMNI",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "OMNIFDUSD",
+      "OMNIUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FDUSD",
+      "SOLV",
+      "USDT"
+    ],
+    "pairs": [
+      "FDUSDUSDT",
+      "SOLVFDUSD",
+      "SOLVUSDT"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SEI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SEIUSDT",
+      "SEITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "CYBER",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "CYBERUSDT",
+      "CYBERTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ARK",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ARKUSDT",
+      "ARKTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "NTRN",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "NTRNUSDT",
+      "NTRNTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TIA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "TIAUSDT",
+      "TIATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "MEME",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "MEMEUSDT",
+      "MEMETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ORDI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ORDIUSDT",
+      "ORDITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BEAMX",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BEAMXUSDT",
+      "BEAMXTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "VIC",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "VICUSDT",
+      "VICTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BLUR",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BLURUSDT",
+      "BLURTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "VANRY",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "VANRYUSDT",
+      "VANRYTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "JTO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "JTOUSDT",
+      "JTOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "1000SATS",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "1000SATSUSDT",
+      "1000SATSTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BONK",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BONKUSDT",
+      "BONKTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BONK",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "BONKUSDT",
+      "BONKBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ACE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ACEUSDT",
+      "ACETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "NFP",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "NFPUSDT",
+      "NFPTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "AIUSDT",
+      "AITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "XAI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "XAIUSDT",
+      "XAITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "MANTA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "MANTAUSDT",
+      "MANTATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ALT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ALTUSDT",
+      "ALTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "JUP",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "JUPUSDT",
+      "JUPTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PYTH",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PYTHUSDT",
+      "PYTHTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "RONIN",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "RONINUSDT",
+      "RONINTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "DYM",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "DYMUSDT",
+      "DYMTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PIXEL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PIXELUSDT",
+      "PIXELTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "STRK",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "STRKUSDT",
+      "STRKTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PORTAL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PORTALUSDT",
+      "PORTALTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AXL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "AXLUSDT",
+      "AXLTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "WIF",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "WIFUSDT",
+      "WIFTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "WIF",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "WIFUSDT",
+      "WIFBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "METIS",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "METISUSDT",
+      "METISTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AEVO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "AEVOUSDT",
+      "AEVOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BOME",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BOMEUSDT",
+      "BOMETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ETHFI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ETHFIUSDT",
+      "ETHFITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ENA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ENAUSDT",
+      "ENATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ENA",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "ENAUSDT",
+      "ENABRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "W",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "WUSDT",
+      "WTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TNSR",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "TNSRUSDT",
+      "TNSRTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SAGA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SAGAUSDT",
+      "SAGATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TAO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "TAOUSDT",
+      "TAOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "OMNI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "OMNIUSDT",
+      "OMNITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "REZ",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "REZUSDT",
+      "REZTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BB",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BBUSDT",
+      "BBTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "NOT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "NOTUSDT",
+      "NOTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "IO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "IOUSDT",
+      "IOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ZK",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ZKUSDT",
+      "ZKTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LISTA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "LISTAUSDT",
+      "LISTATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ZRO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ZROUSDT",
+      "ZROTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "G",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "GUSDT",
+      "GTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BANANA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BANANAUSDT",
+      "BANANATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "RENDER",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "RENDERUSDT",
+      "RENDERTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "RENDER",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "RENDERUSDT",
+      "RENDERBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TON",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "TONUSDT",
+      "TONTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "DOGS",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "DOGSUSDT",
+      "DOGSTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "POL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "POLUSDT",
+      "POLTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "POL",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "POLUSDT",
+      "POLBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "NEIRO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "NEIROUSDT",
+      "NEIROTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TURBO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "TURBOUSDT",
+      "TURBOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "1MBABYDOGE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "1MBABYDOGEUSDT",
+      "1MBABYDOGETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "CATI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "CATIUSDT",
+      "CATITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "HMSTR",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "HMSTRUSDT",
+      "HMSTRTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "EIGEN",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "EIGENUSDT",
+      "EIGENTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SCR",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SCRUSDT",
+      "SCRTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LUMIA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "LUMIAUSDT",
+      "LUMIATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "COW",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "COWUSDT",
+      "COWTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "CETUS",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "CETUSUSDT",
+      "CETUSTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PNUT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PNUTUSDT",
+      "PNUTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PNUT",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "PNUTUSDT",
+      "PNUTBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ACT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ACTUSDT",
+      "ACTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "USUAL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "USUALUSDT",
+      "USUALTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "THE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "THEUSDT",
+      "THETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ACX",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ACXUSDT",
+      "ACXTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ORCA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ORCAUSDT",
+      "ORCATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "MOVE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "MOVEUSDT",
+      "MOVETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ME",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "MEUSDT",
+      "METRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "VANA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "VANAUSDT",
+      "VANATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "1000CAT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "1000CATUSDT",
+      "1000CATTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PENGU",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PENGUUSDT",
+      "PENGUTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BIO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BIOUSDT",
+      "BIOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "D",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "DUSDT",
+      "DTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AIXBT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "AIXBTUSDT",
+      "AIXBTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "S",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SUSDT",
+      "STRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SOLV",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SOLVUSDT",
+      "SOLVTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TRUMP",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "TRUMPUSDT",
+      "TRUMPTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TRUMP",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "TRUMPUSDT",
+      "TRUMPBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ANIME",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ANIMEUSDT",
+      "ANIMETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BERA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BERAUSDT",
+      "BERATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TST",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "TSTUSDT",
+      "TSTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LAYER",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "LAYERUSDT",
+      "LAYERTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "KAITO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "KAITOUSDT",
+      "KAITOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SHELL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SHELLUSDT",
+      "SHELLTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "RED",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "REDUSDT",
+      "REDTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "GPS",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "GPSUSDT",
+      "GPSTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BMT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BMTUSDT",
+      "BMTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "FORM",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "FORMUSDT",
+      "FORMTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "NIL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "NILUSDT",
+      "NILTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PARTI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PARTIUSDT",
+      "PARTITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "MUBARAK",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "MUBARAKUSDT",
+      "MUBARAKTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "GUN",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "GUNUSDT",
+      "GUNTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "BABY",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "BABYUSDT",
+      "BABYTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ONDO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ONDOUSDT",
+      "ONDOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "VIRTUAL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "VIRTUALUSDT",
+      "VIRTUALTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "KERNEL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "KERNELUSDT",
+      "KERNELTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "WCT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "WCTUSDT",
+      "WCTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "HYPER",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "HYPERUSDT",
+      "HYPERTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "INIT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "INITUSDT",
+      "INITTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SIGN",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SIGNUSDT",
+      "SIGNTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "STO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "STOUSDT",
+      "STOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SYRUP",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SYRUPUSDT",
+      "SYRUPTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SXT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SXTUSDT",
+      "SXTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "NXPC",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "NXPCUSDT",
+      "NXPCTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "HAEDAL",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "HAEDALUSDT",
+      "HAEDALTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "HUMA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "HUMAUSDT",
+      "HUMATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "A",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "AUSDT",
+      "ATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SOPH",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SOPHUSDT",
+      "SOPHTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "RESOLV",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "RESOLVUSDT",
+      "RESOLVTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "HOME",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "HOMEUSDT",
+      "HOMETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SPK",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SPKUSDT",
+      "SPKTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "NEWT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "NEWTUSDT",
+      "NEWTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SAHARA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SAHARAUSDT",
+      "SAHARATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "LAUSDT",
+      "LATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ERA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ERAUSDT",
+      "ERATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "C",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "CUSDT",
+      "CTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TREE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "TREEUSDT",
+      "TREETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "TOWNS",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "TOWNSUSDT",
+      "TOWNSTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PROVE",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PROVEUSDT",
+      "PROVETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PLUME",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PLUMEUSDT",
+      "PLUMETRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "DOLO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "DOLOUSDT",
+      "DOLOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "MITO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "MITOUSDT",
+      "MITOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "WLFI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "WLFIUSDT",
+      "WLFITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "WLFI",
+      "BRL",
+      "USDT"
+    ],
+    "pairs": [
+      "WLFIUSDT",
+      "WLFIBRL",
+      "USDTBRL"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SOMI",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SOMIUSDT",
+      "SOMITRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "OPEN",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "OPENUSDT",
+      "OPENTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "LINEA",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "LINEAUSDT",
+      "LINEATRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "HOLO",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "HOLOUSDT",
+      "HOLOTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "PUMP",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "PUMPUSDT",
+      "PUMPTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "AVNT",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "AVNTUSDT",
+      "AVNTTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "ZKC",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "ZKCUSDT",
+      "ZKCTRY",
+      "USDTTRY"
+    ]
+  },
+  {
+    "path": [
+      "USDT",
+      "SKY",
+      "TRY",
+      "USDT"
+    ],
+    "pairs": [
+      "SKYUSDT",
+      "SKYTRY",
+      "USDTTRY"
+    ]
+  }
+]
