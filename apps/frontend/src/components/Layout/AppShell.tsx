@@ -47,13 +47,8 @@ const AppShell = () => {
         { path: '/app/connections', label: 'Connections', icon: Link },
         { path: '/app/bots', label: 'Bots', icon: Bot },
         { path: '/app/dca-bot', label: 'DCA Bot', icon: Bot },
-        { path: '/strategy-creation-v1', label: 'Strategy Creation v1', icon: Wrench },
-        { path: '/webhook-strategies', label: 'Webhook Strategies', icon: Zap },
         { path: '/webhook2', label: 'Webhook2', icon: Zap },
-        { path: '/app/live-charts', label: 'Live Charts', icon: BarChart3 },
-        { path: '/app/canvas-chart', label: 'Canvas Chart', icon: BarChart3 },
         { path: '/clean-charts', label: 'Clean Charts', icon: BarChart3 },
-        { path: '/chart-studio', label: 'Chart Studio', icon: BarChart3 },
       ]
     },
     {
@@ -68,7 +63,6 @@ const AppShell = () => {
   const quickActions = [
     { label: 'Connect Exchange', icon: Plus, action: () => navigate('/app/connections') },
     { label: 'Create Bot', icon: Bot, action: () => navigate('/app/bots') },
-    { label: 'Create Strategy', icon: Wrench, action: () => navigate('/strategy-creation-v1') },
   ];
 
   return (

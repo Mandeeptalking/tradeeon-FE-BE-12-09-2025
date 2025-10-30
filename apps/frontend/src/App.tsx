@@ -16,10 +16,7 @@ import Portfolio from './pages/app/Portfolio'
 import BotsPage from './pages/BotsPage'
 import Activity from './pages/Activity'
 import Settings from './pages/Settings'
-import LiveChartPage from './pages/LiveChartPage'
 import CleanCharts from './pages/CleanCharts'
-import ChartStudio from './pages/ChartStudio'
-import SimpleChartStudio from './pages/SimpleChartStudio'
 import TestPage from './pages/TestPage'
 import WorkingChart from './pages/WorkingChart'
 import SimpleTest from './pages/SimpleTest'
@@ -31,15 +28,11 @@ import SimpleIndicatorPane from './pages/SimpleIndicatorPane'
 import MinimalTest from './pages/MinimalTest'
 import WorkingSimpleChart from './pages/WorkingSimpleChart'
 import BasicChartTest from './pages/BasicChartTest'
-import CanvasChartWithIndicators from './pages/CanvasChartWithIndicators'
-import CanvasChart from './pages/CanvasChart'
 import StrategyBuilder from './pages/StrategyBuilder'
 import StrategyLibrary from './pages/StrategyLibrary'
 import StrategyManager from './pages/StrategyManager'
 import StrategyManager1 from './pages/StrategyManager1'
 import VisualStrategyBuilder from './pages/VisualStrategyBuilder'
-import StrategyCreationV1 from './pages/StrategyCreationV1'
-import WebhookStrategies from './pages/WebhookStrategies'
 import Webhook2 from './pages/Webhook2'
 import DCABot from './pages/DCABot'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -80,10 +73,7 @@ function App() {
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/live-charts" element={<LiveChartPage />} />
         <Route path="/clean-charts" element={<CleanCharts />} />
-        <Route path="/chart-studio" element={<ChartStudio />} />
-        <Route path="/simple-chart-studio" element={<SimpleChartStudio />} />
         <Route path="/test" element={<TestPage />} />
         <Route path="/working-chart" element={<WorkingChart />} />
         <Route path="/simple-test" element={<SimpleTest />} />
@@ -95,14 +85,11 @@ function App() {
         <Route path="/minimal-test" element={<MinimalTest />} />
         <Route path="/working-simple-chart" element={<WorkingSimpleChart />} />
         <Route path="/basic-chart-test" element={<BasicChartTest />} />
-        <Route path="/canvas-chart" element={<CanvasChartWithIndicators />} />
         <Route path="/strategy-builder" element={<StrategyBuilder />} />
         <Route path="/strategy-library" element={<StrategyLibrary />} />
         <Route path="/strategy-manager" element={<StrategyManager />} />
         <Route path="/strategy-manager-1" element={<StrategyManager1 />} />
         <Route path="/visual-strategy-builder" element={<VisualStrategyBuilder />} />
-        <Route path="/strategy-creation-v1" element={<StrategyCreationV1 />} />
-        <Route path="/webhook-strategies" element={<WebhookStrategies />} />
         <Route path="/webhook2" element={<Webhook2 />} />
       
         {/* Protected routes */}
@@ -115,7 +102,6 @@ function App() {
           <Route path="activity" element={<Activity />} />
           <Route path="settings" element={<Settings />} />
           <Route path="clean-charts" element={<CleanCharts />} />
-          <Route path="canvas-chart" element={<CanvasChart />} />
         </Route>
       
       {/* Redirect unknown routes to home */}

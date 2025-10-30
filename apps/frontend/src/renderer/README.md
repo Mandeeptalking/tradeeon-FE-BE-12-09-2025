@@ -30,7 +30,7 @@ src/
 │   ├── series/         # Series mapping and management
 │   └── ui/             # UI components (crosshair, autoscale, diagnostics)
 └── pages/              # Demo pages
-    └── ChartStudio.tsx # Main demo page
+    └── CleanCharts.tsx # Main demo page
 ```
 
 ## Key Components
