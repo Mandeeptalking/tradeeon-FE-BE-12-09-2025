@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import TradingConfiguration from '../components/TradingConfiguration';
-import VisualConditionBuilder from '../components/VisualConditionBuilder';
+import MainConditionBuilder from '../components/MainConditionBuilder';
 import CleanCharts from './CleanCharts';
 import { 
   BarChart3, 
@@ -105,7 +105,7 @@ export default function VisualStrategyBuilder() {
                 <Target className="w-5 h-5 text-blue-600" />
                 Condition Builder
               </h3>
-              <VisualConditionBuilder onConditionsChange={setTradingConditions} />
+              <MainConditionBuilder onConditionsChange={setTradingConditions} />
             </div>
             
             {/* Right Side - Live Chart */}
