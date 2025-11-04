@@ -1,0 +1,120 @@
+name: Deploy All Services
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Manual trigger
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: 531604848081
+  ECS_CLUSTER: tradeeon-cluster
+
+jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      alert-runner: ${{ steps.filter.outputs.alert-runner }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      bots: ${{ steps.filter.outputs.bots }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'apps/api/**'
+              - 'backend/**'
+              - 'shared/**'
+              - 'requirements.txt'
+              - 'Dockerfile'
+            alert-runner:
+              - 'apps/alerts/**'
+              - 'apps/bots/**'
+              - 'backend/**'
+              - 'shared/**'
+              - 'requirements.txt'
+              - 'Dockerfile.alert-runner'
+            frontend:
+              - 'apps/frontend/**'
+            bots:
+              - 'apps/bots/**'
+              - 'apps/bots/**/Dockerfile'
+
+  deploy-backend:
+    name: Deploy Backend
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and Push
+        run: |
+          docker build -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/tradeeon-backend:latest .
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/tradeeon-backend:latest
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service tradeeon-backend-service --force-new-deployment --region ${{ env.AWS_REGION }}
+
+  deploy-alert-runner:
+    name: Deploy Alert Runner
+    needs: detect-changes
+    if: needs.detect-changes.outputs.alert-runner == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and Push
+        run: |
+          docker build -f Dockerfile.alert-runner -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/tradeeon-alert-runner:latest .
+          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/tradeeon-alert-runner:latest
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service tradeeon-alert-runner-service --force-new-deployment --region ${{ env.AWS_REGION }}
+
+  deploy-frontend:
+    name: Deploy Frontend
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: apps/frontend/package-lock.json
+      - name: Build
+        working-directory: apps/frontend
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        run: |
+          npm ci
+          npm run build
+      - name: Deploy to S3
+        run: |
+          aws s3 sync apps/frontend/dist/ s3://tradeeon-frontend/ --delete
+      - name: Invalidate CloudFront
+        if: env.CLOUDFRONT_DISTRIBUTION_ID != ''
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+

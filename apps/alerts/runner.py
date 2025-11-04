@@ -75,24 +75,8 @@ async def run_once(manager: AlertManager):
                     )
                     
                     manager.log_and_dispatch(alert, payload)
-                    # Fire side-effects async
-                    action = alert.get("action") or {}
-                    if action.get("type") == "webhook" and action.get("url"):
-                        asyncio.create_task(dispatch.send_webhook(action["url"], {
-                            "alert_id": alert["alert_id"],
-                            "user_id": alert["user_id"],
-                            "symbol": alert["symbol"],
-                            "triggered_at": payload["snapshot"]["time"],
-                            "conditions": alert["conditions"],
-                            "snapshot": payload["snapshot"]
-                        }))
-                    else:
-                        asyncio.create_task(dispatch.notify_in_app(alert["user_id"], {
-                            "type":"ALERT_TRIGGERED",
-                            "alert_id": alert["alert_id"],
-                            "symbol": alert["symbol"],
-                            "time": payload["snapshot"]["time"]
-                        }))
+                    # Fire side-effects async using unified dispatcher
+                    asyncio.create_task(dispatch.dispatch_alert_action(alert, payload["snapshot"]))
             except Exception as e:
                 logger.error(
                     f"Error evaluating alert: {e}",

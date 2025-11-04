@@ -133,6 +133,54 @@ async def notify_in_app(user_id: str, event: Dict[str, Any]):
         return False
 
 
+async def dispatch_alert_action(alert: Dict[str, Any], snapshot: Dict[str, Any]):
+    """
+    Dispatch alert action based on type.
+    
+    Args:
+        alert: Alert data from database
+        snapshot: Market data snapshot when alert fired
+    """
+    action = alert.get("action", {})
+    action_type = action.get("type", "notify")
+    
+    if action_type == "bot_trigger":
+        # Execute bot action
+        try:
+            from apps.bots.bot_action_handler import execute_bot_action
+            await execute_bot_action(action, {
+                "alert_id": alert.get("alert_id"),
+                "user_id": alert.get("user_id"),
+                "symbol": alert.get("symbol"),
+                "snapshot": snapshot
+            })
+        except Exception as e:
+            print(f"Error executing bot action: {e}")
+    
+    elif action_type == "webhook":
+        url = action.get("url")
+        if url:
+            alert_id = alert.get("alert_id", "unknown")
+            bar_time = snapshot.get("time", "unknown")
+            await send_webhook(url, {
+                "alert_id": alert_id,
+                "user_id": alert.get("user_id"),
+                "symbol": alert.get("symbol"),
+                "triggered_at": bar_time,
+                "conditions": alert.get("conditions", []),
+                "snapshot": snapshot
+            }, alert_id, str(bar_time))
+    
+    else:
+        # Default: notify
+        await notify_in_app(alert.get("user_id"), {
+            "type": "ALERT_TRIGGERED",
+            "alert_id": alert.get("alert_id"),
+            "symbol": alert.get("symbol"),
+            "time": snapshot.get("time")
+        })
+
+
 def verify_webhook_signature(
     payload: str, 
     signature_header: str, 

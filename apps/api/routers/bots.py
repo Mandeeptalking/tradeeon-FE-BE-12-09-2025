@@ -145,6 +145,10 @@ async def create_dca_bot(
         if bots_path not in sys.path:
             sys.path.insert(0, bots_path)
         
+        # Import alert converter
+        from apps.bots.alert_converter import convert_bot_entry_to_alert_conditions, convert_playbook_conditions_to_alert
+        from apps.api.clients.supabase_client import supabase
+        
         bot_id = f"dca_bot_{int(time.time())}"
         
         # Get user_id from auth (TODO: integrate with actual auth)
@@ -214,6 +218,74 @@ async def create_dca_bot(
         # Store bot config for later use (in-memory fallback)
         from bot_manager import bot_manager
         bot_manager.store_bot_config(bot_id, bot_config)
+        
+        # Create alert for entry condition if present
+        condition_config = config_dict.get("conditionConfig")
+        if condition_config:
+            try:
+                # Check if using playbook mode
+                if condition_config.get("mode") == "playbook":
+                    playbook_conditions = condition_config.get("conditions", [])
+                    if playbook_conditions:
+                        # Convert playbook to alert format
+                        alert_condition_config = convert_playbook_conditions_to_alert(
+                            playbook_conditions,
+                            condition_config.get("baseTimeframe", "15m")
+                        )
+                        
+                        # Create alert
+                        alert = {
+                            "user_id": user_id,
+                            "symbol": primary_pair,
+                            "base_timeframe": condition_config.get("baseTimeframe", "15m"),
+                            "conditionConfig": alert_condition_config,
+                            "conditions": alert_condition_config.get("conditions", []),
+                            "logic": alert_condition_config.get("gateLogic", "ALL"),
+                            "action": {
+                                "type": "bot_trigger",
+                                "bot_id": bot_id,
+                                "action_type": "execute_entry"
+                            },
+                            "status": "active" if bot_config.get("status") == "active" else "paused"
+                        }
+                        
+                        # Save to alerts table
+                        supabase.table("alerts").insert(alert).execute()
+                        logger.info(f"Created alert for bot {bot_id} entry condition (playbook mode)")
+                
+                # Check if single entry condition
+                elif condition_config.get("entryCondition"):
+                    entry_condition = condition_config.get("entryCondition")
+                    condition_type = condition_config.get("entryConditionType")
+                    
+                    if entry_condition and condition_type:
+                        # Convert to alert format
+                        alert_conditions = convert_bot_entry_to_alert_conditions(
+                            entry_condition,
+                            condition_type
+                        )
+                        
+                        # Create alert
+                        alert = {
+                            "user_id": user_id,
+                            "symbol": primary_pair,
+                            "base_timeframe": entry_condition.get("timeframe", "15m"),
+                            "conditions": alert_conditions,
+                            "logic": "AND",
+                            "action": {
+                                "type": "bot_trigger",
+                                "bot_id": bot_id,
+                                "action_type": "execute_entry"
+                            },
+                            "status": "active" if bot_config.get("status") == "active" else "paused"
+                        }
+                        
+                        # Save to alerts table
+                        supabase.table("alerts").insert(alert).execute()
+                        logger.info(f"Created alert for bot {bot_id} entry condition")
+            
+            except Exception as alert_error:
+                logger.warning(f"Failed to create alert for bot {bot_id}: {alert_error}. Bot created without alert.")
         
         logger.info(f"Created DCA bot {bot_id} with {len(selected_pairs)} pairs")
         logger.info(f"Phase 1 features: {list(phase1.keys()) if phase1 else 'None'}")

@@ -1,0 +1,42 @@
+{
+  "family": "tradeeon-alert-runner",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::531604848081:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "alert-runner",
+      "image": "531604848081.dkr.ecr.us-east-1.amazonaws.com/tradeeon-alert-runner:latest",
+      "essential": true,
+      "environment": [
+        {
+          "name": "SUPABASE_URL",
+          "value": "https://mgjlnmlhwuqspctanaik.supabase.co"
+        },
+        {
+          "name": "SUPABASE_SERVICE_ROLE_KEY",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1namxubWxod3Vxc3BjdGFuYWlrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzQxNDMwNSwiZXhwIjoyMDcyOTkwMzA1fQ.AgWM1MZCPGQHgpZ4749KtgAOOGQZoI7wFvBqp_2p8Ng"
+        },
+        {
+          "name": "ALERT_RUNNER_POLL_MS",
+          "value": "1000"
+        },
+        {
+          "name": "ALERT_MAX_ALERTS_PER_SYMBOL",
+          "value": "200"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/tradeeon-alert-runner",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
+
