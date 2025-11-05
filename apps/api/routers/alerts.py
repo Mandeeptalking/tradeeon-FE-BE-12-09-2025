@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
-from deps.auth import AuthedUser, get_current_user
-from schemas.alerts import AlertCreate, AlertRow, AlertUpdate, AlertLogRow
-from services import alerts_service as svc
-from middleware.rate_limiting import get_alert_quota_info
+from apps.api.deps.auth import AuthedUser, get_current_user
+from apps.api.schemas.alerts import AlertCreate, AlertRow, AlertUpdate, AlertLogRow
+from apps.api.services import alerts_service as svc
+from apps.api.middleware.rate_limiting import get_alert_quota_info
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 

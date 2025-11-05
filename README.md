@@ -1,28 +1,165 @@
-# Smart Bots - Binance Arbitrage Scanner
+# Tradeeon - Advanced DCA Bot & Trading Automation Platform
 
-A Python 3.11 CLI tool for scanning Binance trading pairs and building triangular arbitrage loops.
+A comprehensive trading automation platform with advanced DCA (Dollar Cost Averaging) bots, condition-based trading, and real-time market analysis.
 
-## Features
+## 🚀 Quick Start
 
+**New to the project?** Start here: [QUICK_START.md](QUICK_START.md)
+
+**Need to set up the database?** See: [SUPABASE_SETUP_GUIDE.md](SUPABASE_SETUP_GUIDE.md)
+
+---
+
+## ✨ Features
+
+### DCA Bot System
+- 🤖 Intelligent DCA bot with multiple strategies
+- 📊 Real-time market analysis and condition evaluation
+- 💰 Advanced risk management and profit-taking
+- 🎯 Support/Resistance awareness
+- 🚨 Emergency brake system
+- 📈 Paper trading with live market data
+- 🔄 Test and Live mode support
+
+### Trading Conditions
+- ✅ RSI, MFI, CCI indicators
+- ✅ Moving Averages (EMA, SMA)
+- ✅ MACD analysis
+- ✅ Price Action patterns
+- ✅ Condition Playbook (AND/OR logic)
+- ✅ Priority-based evaluation
+- ✅ Validity duration tracking
+- 🆕 **RSI "Between" Operator** - Catch consolidation ranges!
+  - 📖 [User Guide](RSI_BETWEEN_CONDITION_USER_GUIDE.md)
+  - 📘 [Quick Explainer](RSI_BETWEEN_EXPLAINER.md)
+  - 📊 [Strategy Guide](RSI_OPTIMAL_ENTRY_STRATEGY.md)
+
+### Technical Indicators
+- 📈 RSI (Relative Strength Index)
+- 💰 MFI (Money Flow Index)
+- 📊 CCI (Commodity Channel Index)
+- 📉 Moving Averages (EMA, SMA)
+- 🔄 MACD (Moving Average Convergence Divergence)
+- 📊 Bollinger Bands
+- 🎲 Stochastic Oscillator
+- 📊 ATR (Average True Range)
+
+### Legacy Features (Arbitrage Scanner)
 - 🔍 Scans all Binance spot trading pairs
 - 🔗 Builds USDT-anchored triangular arbitrage loops
-- 📊 Provides detailed statistics and analysis
+- 📊 Detailed statistics and analysis
 - 💾 Export loops to JSON for further analysis
 - ⚡ Fast and lightweight (minimal dependencies)
 
-## Installation
+## 📦 Installation
 
-### Option 1: Using uv (recommended)
-```bash
-uv pip install -r requirements.txt
-```
+**For complete setup instructions, see [QUICK_START.md](QUICK_START.md)**
 
-### Option 2: Using pip
+### Prerequisites
+- Python 3.11+
+- Node.js 18+
+- Supabase account
+
+### Install Dependencies
+
+**Backend:**
 ```bash
 pip install -r requirements.txt
 ```
 
-## Usage
+**Frontend:**
+```bash
+cd apps/frontend
+npm install
+cd ../..
+```
+
+### Configure Environment
+
+```bash
+# Copy environment template
+Copy-Item "infra\configs\env.template" ".env"  # Windows
+# or
+cp infra/configs/env.template .env  # Linux/Mac
+
+# Edit .env and fill in your Supabase credentials
+```
+
+### Setup Database
+
+See detailed instructions in [SUPABASE_SETUP_GUIDE.md](SUPABASE_SETUP_GUIDE.md)
+
+---
+
+## 🚀 Running the Application
+
+### Start Backend API
+```bash
+cd apps/api
+python main.py
+```
+
+### Start Frontend
+```bash
+cd apps/frontend
+npm run dev
+```
+
+### Start Bot Runner (Optional)
+```bash
+python -m apps.bots.bot_runner
+```
+
+Access the application at http://localhost:5173
+
+---
+
+## 🌐 Deployment
+
+### Quick Start
+- **[AWS Deployment Complete](AWS_DEPLOYMENT_COMPLETE.md)** - Full AWS solution ⭐
+- **[AWS Quick Start](AWS_QUICK_START.md)** - Step-by-step deployment
+- **[AWS Deployment Summary](AWS_DEPLOYMENT_SUMMARY.md)** - Overview & architecture
+
+### Frontend Deployment
+- [S3 + CloudFront Guide](AWS_S3_CLOUDFRONT_DEPLOYMENT.md) - Deploy frontend to AWS
+- [Netlify Guide](NETLIFY_DEPLOYMENT.md) - Deploy to Netlify
+- [Deployment Comparison](DEPLOYMENT_COMPARISON.md) - Compare options
+
+### Backend Deployment
+- [AWS ECS Fargate Guide](AWS_ECS_DEPLOYMENT_GUIDE.md) - Complete backend setup
+- [AWS Complete Guide](AWS_COMPLETE_DEPLOYMENT_GUIDE.md) - Full AWS architecture
+- [AWS Decision Guide](AWS_DEPLOYMENT_DECISION.md) - Frontend + Backend explained
+
+**Recommended**: Frontend on S3+CloudFront, Backend on ECS Fargate (complete AWS architecture!)
+
+---
+## 📖 Documentation
+
+- [Quick Start Guide](QUICK_START.md) - Get started in minutes
+- [Supabase Setup Guide](SUPABASE_SETUP_GUIDE.md) - Database configuration
+- [DCA Bot Innovation Roadmap](DCA_BOT_INNOVATION_ROADMAP.md) - Feature roadmap
+- [DCA Bot Complete Answer](DCA_BOT_COMPLETE_ANSWER.md) - Everything about costs, architecture & business model ⭐
+- [DCA Bot Compute Analysis](DCA_BOT_COMPUTE_ANALYSIS.md) - Deep dive into condition computing costs
+- [WebSocket Entry Reality](WEBSOCKET_ENTRY_CONDITION_REALITY.md) - Why indicators need incremental calculation
+- [Alert vs Live Compute](ALERT_VS_LIVE_COMPUTE_COMPARISON.md) - Using alert system for bots (80-95% savings) ⭐
+- [Bot to Alert Playbook Mapping](BOT_TO_ALERT_PLAYBOOK_MAPPING.md) - Perfect fit! Already supports all features ⭐
+- [Optimal DCA Bot Roadmap](OPTIMAL_DCA_BOT_ROADMAP.md) - Best route: minimal cost, all features ⭐
+- [Go Live Strategy](GO_LIVE_STRATEGY.md) - Launch now, optimize later ⭐
+- [Deploy to AWS](DEPLOY_TO_AWS.md) - Step-by-step deployment guide ⭐
+- **[Deployment Ready](DEPLOYMENT_READY.md)** - Quick summary & next steps 🚀⭐
+- **[YOUR NEXT STEPS](YOUR_NEXT_STEPS.md)** - Domain to live in 3 days! ⭐⭐
+- [Domain Setup Guide](DOMAIN_SETUP_GUIDE.md) - Configure tradeeon.com
+- [DCA Bot Cost Analysis](DCA_BOT_COST_ANALYSIS.md) - Free/Pro/Enterprise tiers & architecture
+- [DCA Bot Business Model](DCA_BOT_BUSINESS_MODEL.md) - Revenue, pricing & growth strategy
+- [Condition Verification](DCA_BOT_CONDITIONS_VERIFICATION.md) - Trading conditions
+- [System Readiness Report](READINESS_REPORT.md) - Production readiness
+- [E2E Test Scenario](TEST_SCENARIO.md) - Testing guide
+- [RSI Between Documentation](README_RSI_BETWEEN_CONDITION.md) - RSI "Between" operator
+
+---
+
+## 🧪 Legacy Usage (Arbitrage Scanner)
 
 ### Basic scan
 ```bash

@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { useAuthStore } from './store/auth'
@@ -37,8 +37,9 @@ import DCABot from './pages/DCABot'
 import ErrorBoundary from './components/ErrorBoundary'
 
 function App() {
-  const { isAuthenticated } = useAuthStore()
-  useAuth() // Initialize auth session management
+  const { isAuthenticated, user } = useAuthStore()
+  const authInitialized = useAuth() // Initialize auth session management
+  const location = useLocation()
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -91,7 +92,17 @@ function App() {
         <Route path="/visual-strategy-builder" element={<VisualStrategyBuilder />} />
       
         {/* Protected routes */}
-        <Route path="/app" element={isAuthenticated ? <AppShell /> : <Navigate to="/signin" />}>
+        <Route path="/app" element={
+          !authInitialized ? (
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+          ) : isAuthenticated ? (
+            <AppShell />
+          ) : (
+            <Navigate to="/signin" replace state={{ from: location.pathname }} />
+          )
+        }>
           <Route index element={<Dashboard />} />
           <Route path="connections" element={<Connections />} />
           <Route path="portfolio" element={<Portfolio />} />
@@ -102,8 +113,8 @@ function App() {
           <Route path="clean-charts" element={<CleanCharts />} />
         </Route>
       
-      {/* Redirect unknown routes to home */}
-      <Route path="*" element={<Navigate to="/" />} />
+      {/* Redirect unknown routes to home (only if not /app/*) */}
+      <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </QueryClientProvider>
   )

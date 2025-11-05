@@ -3,17 +3,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import List, Optional
 import asyncio
+import os
 from datetime import datetime
 
-from binance_client import BinanceClient
-from models import (
+from apps.api.binance_client import BinanceClient
+from apps.api.models import (
     SymbolListResponse, TickerResponse, KlineResponse, 
     OrderBookResponse, TradesResponse, MarketDataResponse
 )
-from routers import connections, portfolio, analytics, market, bots, orders, indicators
-import routers.alerts as alerts
-from middleware.rate_limiting import rate_limit_middleware, cleanup_rate_limits
-from metrics import get_metrics_response, record_api_request
+from apps.api.routers import connections, portfolio, analytics, market, bots, orders, indicators, alerts
+from apps.api.middleware.rate_limiting import rate_limit_middleware, cleanup_rate_limits
+from apps.api.metrics import get_metrics_response, record_api_request
 
 app = FastAPI(
     title="Tradeeon API",
@@ -21,10 +21,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure CORS
+# Configure CORS - get allowed origins from environment variable
+cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173")
+allowed_origins = [origin.strip() for origin in cors_origins_str.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Frontend URL
+    allow_origins=allowed_origins,  # Can be multiple origins: "http://localhost:5173,https://your-app.netlify.app"
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

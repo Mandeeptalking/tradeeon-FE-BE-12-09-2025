@@ -2,14 +2,10 @@ from typing import List, Dict, Any
 import pandas as pd
 import numpy as np
 import datetime as dt
-from datasource import CandleSource
-import state
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'api'))
-from clients.supabase_client import supabase
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'backend'))
-from evaluator import evaluate_condition, evaluate_playbook
+from apps.alerts.datasource import CandleSource
+from apps.alerts import state
+from apps.api.clients.supabase_client import supabase
+from backend.evaluator import evaluate_condition, evaluate_playbook
 
 TABLE = "alerts"
 LOG_TABLE = "alerts_log"

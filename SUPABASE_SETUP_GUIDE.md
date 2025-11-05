@@ -179,21 +179,90 @@ else:
 
 ## 📝 Environment Variables Required
 
-Make sure these are set in your backend:
+### Step 1: Create `.env` File
 
-```bash
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+**IMPORTANT**: The `.env` file is not included in the repository for security reasons. You need to create it first.
+
+#### On Windows (PowerShell):
+```powershell
+# Copy the template to create your .env file
+Copy-Item "infra\configs\env.template" ".env"
 ```
 
-**Where to find them:**
-1. Supabase Dashboard → Project Settings → API
-2. Copy `Project URL` → `SUPABASE_URL`
-3. Copy `service_role` key (secret) → `SUPABASE_SERVICE_ROLE_KEY`
+#### On Linux/Mac:
+```bash
+# Copy the template to create your .env file
+cp infra/configs/env.template .env
+```
+
+#### Or manually:
+1. Create a new file named `.env` in the project root directory
+2. Copy the content from `infra/configs/env.template`
+3. Fill in your actual values
+
+### Step 2: Fill in Your Supabase Credentials
+
+Edit the `.env` file and update these critical values:
+
+```bash
+# Database - REQUIRED
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_anon_key_here
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+
+# Encryption - REQUIRED (generate a 32-character key)
+ENCRYPTION_KEY=your_32_character_encryption_key_here
+```
+
+**Where to find Supabase credentials:**
+1. Go to Supabase Dashboard → https://supabase.com/dashboard
+2. Select your project
+3. Go to **Settings** → **API**
+4. Copy values:
+   - `Project URL` → `SUPABASE_URL`
+   - `anon` `public` key → `SUPABASE_ANON_KEY`
+   - `service_role` `secret` key → `SUPABASE_SERVICE_ROLE_KEY`
+
+**How to generate an encryption key:**
+```bash
+# Generate a 32-character random string
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# Or online: https://generate-secret.vercel.app/32
+```
+
+### Step 3: Verify `.env` File Location
+
+Your `.env` file should be at the root of the project:
+
+```
+tradeeon-FE-BE-12-09-2025/
+├── .env                    ← HERE
+├── apps/
+├── backend/
+├── infra/
+│   └── configs/
+│       └── env.template    ← Source template
+├── README.md
+└── ...
+```
+
+### ⚠️ Security Warning
+
+- ❌ **NEVER** commit `.env` to git (already in `.gitignore`)
+- ❌ **NEVER** share your `.env` file publicly
+- ✅ Keep `SUPABASE_SERVICE_ROLE_KEY` secret
+- ✅ Generate unique encryption keys for production
 
 ---
 
 ## 🐛 Common Issues
+
+### Issue: ".env file not found" or "Missing required environment variables"
+**Solution**: 
+1. Create `.env` file from template: `Copy-Item "infra\configs\env.template" ".env"` (Windows) or `cp infra/configs/env.template .env` (Linux/Mac)
+2. Fill in Supabase credentials (see Step 2 above)
+3. Verify file is at project root: `tradeeon-FE-BE-12-09-2025/.env`
 
 ### Issue: "relation 'public.bots' does not exist"
 **Solution**: Run the migration SQL file in Supabase SQL Editor
@@ -206,6 +275,9 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 ### Issue: "foreign key constraint violation"
 **Solution**: Ensure tables are created in order: `bots` → `bot_runs` → `order_logs`
+
+### Issue: "Supabase not configured. Check environment variables"
+**Solution**: Verify `.env` file exists and contains `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
 
 ---
 

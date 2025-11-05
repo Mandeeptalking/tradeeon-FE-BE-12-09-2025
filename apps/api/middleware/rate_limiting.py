@@ -11,7 +11,7 @@ from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 import os
 import time
-from metrics import record_api_request
+from apps.api.metrics import record_api_request
 
 # Configuration
 MAX_REQUESTS_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))

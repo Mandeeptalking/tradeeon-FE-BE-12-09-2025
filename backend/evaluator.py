@@ -63,8 +63,18 @@ def _evaluate_indicator_condition(row: pd.Series, condition: Dict[str, Any], ope
     # Get comparison value
     if compare_with == "value":
         compare_value = condition.get("compareValue")
-        if compare_value is None:
+        
+        # Handle 'between' operator specially - convert lowerBound/upperBound to dict
+        if operator == "between":
+            lower_bound = condition.get("lowerBound")
+            upper_bound = condition.get("upperBound")
+            if lower_bound is not None and upper_bound is not None:
+                compare_value = {"lower": lower_bound, "upper": upper_bound}
+            elif compare_value is None:
+                return False
+        elif compare_value is None:
             return False
+            
         return _apply_operator(indicator_value, compare_value, operator)
     
     elif compare_with == "indicator_component":
@@ -99,8 +109,18 @@ def _evaluate_price_condition(row: pd.Series, condition: Dict[str, Any], operato
     
     if compare_with == "value":
         compare_value = condition.get("compareValue")
-        if compare_value is None:
+        
+        # Handle 'between' operator specially - convert lowerBound/upperBound to dict
+        if operator == "between":
+            lower_bound = condition.get("lowerBound")
+            upper_bound = condition.get("upperBound")
+            if lower_bound is not None and upper_bound is not None:
+                compare_value = {"lower": lower_bound, "upper": upper_bound}
+            elif compare_value is None:
+                return False
+        elif compare_value is None:
             return False
+            
         return _apply_operator(price_value, compare_value, operator)
     
     elif compare_with == "indicator_component":
@@ -141,8 +161,18 @@ def _evaluate_volume_condition(row: pd.Series, condition: Dict[str, Any], operat
     
     if compare_with == "value":
         compare_value = condition.get("compareValue")
-        if compare_value is None:
+        
+        # Handle 'between' operator specially - convert lowerBound/upperBound to dict
+        if operator == "between":
+            lower_bound = condition.get("lowerBound")
+            upper_bound = condition.get("upperBound")
+            if lower_bound is not None and upper_bound is not None:
+                compare_value = {"lower": lower_bound, "upper": upper_bound}
+            elif compare_value is None:
+                return False
+        elif compare_value is None:
             return False
+            
         return _apply_operator(volume_value, compare_value, operator)
     
     elif compare_with == "indicator_component":
@@ -213,10 +243,18 @@ def _get_price_value(row: pd.Series, field: str) -> Optional[float]:
             pass
     return None
 
-def _apply_operator(left: float, right: float, operator: str) -> bool:
+def _apply_operator(left: float, right: Union[float, Dict[str, float]], operator: str) -> bool:
     """Apply comparison operator"""
     try:
-        if operator == ">":
+        if operator == "between":
+            # Handle 'between' operator with lower and upper bounds
+            if isinstance(right, dict):
+                lower = right.get('lower')
+                upper = right.get('upper')
+                if lower is not None and upper is not None:
+                    return lower <= left <= upper
+            return False
+        elif operator == ">":
             return left > right
         elif operator == "<":
             return left < right

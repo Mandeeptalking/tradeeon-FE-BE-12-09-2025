@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any
-from clients.supabase_client import supabase
-from schemas.alerts import AlertCreate, AlertRow, AlertUpdate, AlertLogRow
-from middleware.rate_limiting import check_alert_quota, increment_alert_count, decrement_alert_count
+from apps.api.clients.supabase_client import supabase
+from apps.api.schemas.alerts import AlertCreate, AlertRow, AlertUpdate, AlertLogRow
+from apps.api.middleware.rate_limiting import check_alert_quota, increment_alert_count, decrement_alert_count
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'alerts'))
