@@ -1,9 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-)
+import { supabase } from '../supabase'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -80,18 +75,21 @@ export interface AlertLogRow {
 
 // Helper function to get auth token
 async function getAuthToken(): Promise<string> {
+  if (!supabase) {
+    // Supabase not configured, use mock token for testing
+    return 'mock-jwt-token-for-testing'
+  }
+  
   try {
     const { data: { session } } = await supabase.auth.getSession()
     if (session?.access_token) {
-      console.log('Using real Supabase token')
       return session.access_token
     }
   } catch (error) {
     console.warn('Supabase auth error:', error)
   }
   
-  // For testing purposes, return a mock token
-  console.warn('No authentication token available, using mock token for testing')
+  // Fallback to mock token if no session
   return 'mock-jwt-token-for-testing'
 }
 

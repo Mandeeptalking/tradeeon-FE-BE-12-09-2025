@@ -1,20 +1,33 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Create supabase client only if env vars are available
+// Create supabase client only if env vars are available and valid
 // This allows the app to load even if Supabase isn't configured yet
 let supabase: ReturnType<typeof createClient> | null = null;
 
-if (supabaseUrl && supabaseAnonKey && supabaseUrl !== 'your_supabase_url_here' && supabaseAnonKey !== 'your_supabase_anon_key_here') {
+// Check if we have valid Supabase credentials
+const hasValidSupabaseConfig = 
+  supabaseUrl && 
+  supabaseAnonKey && 
+  supabaseUrl.startsWith('http') && 
+  supabaseAnonKey.length > 20 &&
+  !supabaseUrl.includes('your_supabase') &&
+  !supabaseAnonKey.includes('your_supabase');
+
+if (hasValidSupabaseConfig) {
   try {
     supabase = createClient(supabaseUrl, supabaseAnonKey);
   } catch (error) {
     console.error('Failed to initialize Supabase client:', error);
+    supabase = null;
   }
 } else {
-  console.warn('Supabase environment variables not set. Some features may not work.');
+  // Silently continue without Supabase - app will work but auth features won't
+  if (import.meta.env.DEV) {
+    console.warn('Supabase environment variables not set. Some features may not work.');
+  }
 }
 
 export { supabase };
