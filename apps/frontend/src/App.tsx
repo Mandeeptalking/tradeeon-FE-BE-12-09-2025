@@ -12,6 +12,7 @@ import Signup from './pages/Signup'
 import ForgotPassword from './pages/ForgotPassword'
 import Dashboard from './pages/Dashboard'
 import ConnectionsClean from './pages/app/ConnectionsClean'
+import ConnectionsTest from './pages/app/ConnectionsTest'
 import Portfolio from './pages/app/Portfolio'
 import BotsPage from './pages/BotsPage'
 import Activity from './pages/Activity'
@@ -104,7 +105,7 @@ function App() {
           )
         }>
           <Route index element={<Dashboard />} />
-                <Route path="connections" element={<ConnectionsClean />} />
+                <Route path="connections" element={<ConnectionsTest />} />
           <Route path="portfolio" element={<Portfolio />} />
           <Route path="bots" element={<BotsPage />} />
           <Route path="dca-bot" element={<ErrorBoundary><DCABot /></ErrorBoundary>} />
