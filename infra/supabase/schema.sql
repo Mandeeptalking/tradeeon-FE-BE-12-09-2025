@@ -141,7 +141,7 @@ CREATE TABLE public.funds (
 -- Trading signals (for analysis and backtesting)
 CREATE TABLE public.signals (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    bot_id UUID REFERENCES public.bots(bot_id) ON DELETE CASCADE NOT NULL,
+    bot_id TEXT REFERENCES public.bots(bot_id) ON DELETE CASCADE NOT NULL,  -- TEXT to match bots.bot_id
     run_id UUID REFERENCES public.bot_runs(run_id) ON DELETE CASCADE,
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
     symbol TEXT NOT NULL,
