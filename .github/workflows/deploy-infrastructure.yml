@@ -34,6 +34,19 @@ jobs:
         terraform_version: ${{ env.TF_VERSION }}
         terraform_wrapper: false
     
+    - name: Create terraform.tfvars
+      working-directory: ./infra/terraform
+      run: |
+        cat > terraform.tfvars <<EOF
+        aws_region = "us-east-1"
+        ecr_repository_url = "531604848081.dkr.ecr.us-east-1.amazonaws.com/tradeeon-backend"
+        acm_certificate_arn = "arn:aws:acm:us-east-1:531604848081:certificate/9efc3bad-10d1-4ed3-9930-cb68360d23ab"
+        route53_zone_id = "${{ secrets.ROUTE53_ZONE_ID }}"
+        supabase_url = "${{ secrets.SUPABASE_URL }}"
+        supabase_service_role_key = "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+        cors_origins = "https://www.tradeeon.com,https://tradeeon.com"
+        EOF
+    
     - name: Terraform Init
       working-directory: ./infra/terraform
       run: terraform init
@@ -50,6 +63,7 @@ jobs:
     - name: Terraform Apply
       working-directory: ./infra/terraform
       run: terraform apply -auto-approve tfplan
+      if: github.ref == 'refs/heads/main'
     
     - name: Terraform Outputs
       working-directory: ./infra/terraform
