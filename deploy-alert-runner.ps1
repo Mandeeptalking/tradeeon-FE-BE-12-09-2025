@@ -101,3 +101,4 @@ Write-Host ""
 Write-Host "View logs:" -ForegroundColor Yellow
 Write-Host "  aws logs tail /ecs/tradeeon-alert-runner --follow --region $region" -ForegroundColor White
 
+

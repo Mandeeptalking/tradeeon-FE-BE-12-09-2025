@@ -110,3 +110,4 @@ If service fails to start:
 - Check CloudWatch logs: `/ecs/tradeeon-backend`
 - Verify task can pull image: Check ECR repository permissions
 
+

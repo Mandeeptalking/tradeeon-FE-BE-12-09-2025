@@ -144,3 +144,4 @@ Write-Host "  2. Whitelist task IPs on Binance" -ForegroundColor White
 Write-Host "  3. Monitor logs: AWS Console → CloudWatch → Log groups" -ForegroundColor White
 Write-Host "`n"
 
+

@@ -662,3 +662,4 @@ Create IAM user with minimal permissions:
 
 **Bottom Line**: S3 + CloudFront is excellent for production, offering better performance and control than Netlify, though setup is more complex. For rapid iteration, use Netlify; for production scale, use S3 + CloudFront.
 
+

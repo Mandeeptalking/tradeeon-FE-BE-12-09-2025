@@ -14,3 +14,4 @@ $jsonContent | aws cloudfront create-distribution --distribution-config - --outp
 
 Write-Host "`nDone! Check the output above for Distribution ID." -ForegroundColor Green
 
+

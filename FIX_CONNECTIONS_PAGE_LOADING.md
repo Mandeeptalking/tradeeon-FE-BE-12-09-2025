@@ -164,3 +164,4 @@ The frontend already has mock data fallback, but if the API is completely unreac
 - CloudWatch: https://console.aws.amazon.com/cloudwatch/home?region=us-east-1
 - EC2 (ALB): https://console.aws.amazon.com/ec2/home?region=us-east-1
 
+

@@ -225,3 +225,4 @@ Alert Runner → Condition Evaluation → Alert Fired → Bot Handler → Exchan
 
 **This visual map shows the complete user journey from signup to active trading!** 🚀
 
+

@@ -141,3 +141,4 @@ Write-Host "Monitor deployments:" -ForegroundColor Yellow
 Write-Host "  aws ecs describe-services --cluster tradeeon-cluster --services tradeeon-backend-service tradeeon-alert-runner-service --region $region" -ForegroundColor White
 Write-Host ""
 
+

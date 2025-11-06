@@ -131,3 +131,4 @@ Then create HTTPS listener on ALB.
 - Docker image build: 5-10 minutes
 - ECS service creation: 2-5 minutes
 
+

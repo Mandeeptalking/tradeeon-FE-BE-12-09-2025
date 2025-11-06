@@ -177,3 +177,4 @@ async def _disable_alert(alert_id: str):
     except Exception as e:
         logger.error(f"Error disabling alert {alert_id}: {e}")
 
+

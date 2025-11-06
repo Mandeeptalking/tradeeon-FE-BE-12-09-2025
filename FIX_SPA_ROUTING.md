@@ -196,3 +196,4 @@ aws cloudfront get-distribution --id $cfId --region us-east-1 --query "Distribut
 
 **After this fix, your SPA routing will work perfectly! 🎉**
 
+

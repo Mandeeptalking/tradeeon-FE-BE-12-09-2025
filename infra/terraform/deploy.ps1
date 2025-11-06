@@ -105,3 +105,4 @@ Write-Host "   aws logs tail /ecs/tradeeon-backend --follow" -ForegroundColor Gr
 
 Write-Host "`n✅ Deployment complete!" -ForegroundColor Green
 
+

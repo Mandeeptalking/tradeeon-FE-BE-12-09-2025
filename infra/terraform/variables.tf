@@ -96,3 +96,4 @@ variable "cors_origins" {
   default     = "https://www.tradeeon.com,https://tradeeon.com"
 }
 
+

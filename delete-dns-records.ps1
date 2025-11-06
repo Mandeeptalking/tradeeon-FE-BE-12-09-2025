@@ -107,3 +107,4 @@ Write-Host "1. Wait 10-30 seconds for changes to propagate" -ForegroundColor Whi
 Write-Host "2. Go to Route 53 console and verify only NS and SOA records remain" -ForegroundColor White
 Write-Host "3. Then delete the hosted zone" -ForegroundColor White
 Write-Host ""
+

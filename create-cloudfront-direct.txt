@@ -25,3 +25,4 @@ aws cloudfront create-distribution --distribution-config '{
   "DefaultRootObject": "index.html"
 }' --output json
 
+

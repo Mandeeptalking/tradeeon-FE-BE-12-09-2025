@@ -22,3 +22,4 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "❌ Failed to create service. Check error above." -ForegroundColor Red
 }
 
+

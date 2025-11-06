@@ -645,3 +645,4 @@ Dashboard → Activity Page → View Trading History
 
 **This workflow ensures a smooth, secure, and intuitive user experience from signup to active trading!** 🚀
 
+

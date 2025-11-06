@@ -110,3 +110,4 @@ echo "Check service status:"
 echo "  aws ecs describe-services --cluster $CLUSTER --services $SERVICE --region $REGION --query 'services[0].{Status:status,Desired:desiredCount,Running:runningCount}' --output table"
 echo ""
 
+

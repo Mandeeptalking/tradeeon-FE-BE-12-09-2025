@@ -19,3 +19,4 @@ docker push 531604848081.dkr.ecr.us-east-1.amazonaws.com/tradeeon-backend:latest
 echo "✅ Image pushed successfully!"
 echo "Image URI: 531604848081.dkr.ecr.us-east-1.amazonaws.com/tradeeon-backend:latest"
 
+

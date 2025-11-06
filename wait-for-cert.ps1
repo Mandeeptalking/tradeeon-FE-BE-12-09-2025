@@ -51,3 +51,4 @@ while ($true) {
 Write-Host "`nTo check status manually, run:" -ForegroundColor Cyan
 Write-Host "aws acm describe-certificate --certificate-arn $certArn --region us-east-1 --query 'Certificate.Status' --output text" -ForegroundColor Gray
 
+

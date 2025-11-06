@@ -194,3 +194,4 @@ def _map_operator(bot_operator: str) -> str:
     }
     return mapping.get(bot_operator, ">")
 
+

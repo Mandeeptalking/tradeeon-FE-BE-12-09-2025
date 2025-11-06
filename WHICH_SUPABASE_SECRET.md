@@ -88,3 +88,4 @@ The backend needs the **Service Role Secret** because:
 
 **Use the SERVICE ROLE SECRET!** 🔑
 
+

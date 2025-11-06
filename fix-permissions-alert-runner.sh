@@ -44,3 +44,4 @@ echo "Now try building:"
 echo "  docker build -f Dockerfile.alert-runner -t tradeeon-alert-runner:latest ."
 echo ""
 
+

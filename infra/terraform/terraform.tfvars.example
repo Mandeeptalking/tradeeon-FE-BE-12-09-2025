@@ -34,3 +34,4 @@ supabase_service_role_key = "your-service-role-key-here"
 # CORS Origins (comma-separated)
 cors_origins = "https://www.tradeeon.com,https://tradeeon.com"
 
+

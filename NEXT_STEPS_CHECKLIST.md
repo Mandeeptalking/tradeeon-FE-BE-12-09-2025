@@ -74,3 +74,4 @@ aws ecs update-service --cluster tradeeon-cluster --service tradeeon-backend-ser
 aws ecs update-service --cluster tradeeon-cluster --service tradeeon-backend-service --desired-count 1 --region us-east-1
 ```
 
+

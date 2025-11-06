@@ -67,3 +67,4 @@ Write-Host "   cd tradeeon-cloudshell-upload-*" -ForegroundColor Gray
 Write-Host ""
 Write-Host "Then run the deployment commands from MANUAL_DEPLOY_BACKEND.md" -ForegroundColor Yellow
 
+

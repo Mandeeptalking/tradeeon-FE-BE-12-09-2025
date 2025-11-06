@@ -14,3 +14,4 @@ if ($status -eq "ISSUED") {
     Write-Host "DNS validation can take 5-10 minutes after DNS record propagation." -ForegroundColor Yellow
 }
 
+

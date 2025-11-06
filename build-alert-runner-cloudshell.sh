@@ -85,3 +85,4 @@ echo "Image URI: $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG"
 echo ""
 echo "Next: Run deploy-alert-runner.ps1 locally to create the ECS service"
 
+

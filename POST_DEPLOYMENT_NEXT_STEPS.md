@@ -161,3 +161,4 @@ aws logs tail /ecs/tradeeon-backend --since 1h --region us-east-1
 
 **Congratulations! Your Tradeeon platform is live on AWS! 🎉**
 
+

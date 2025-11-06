@@ -78,3 +78,4 @@ Frontend: apps/frontend/dist
 
 **🎊 CONGRATULATIONS! Your frontend is LIVE on AWS! 🎊**
 
+

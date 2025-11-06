@@ -62,3 +62,4 @@ echo "2. Set up CloudFront for CDN"
 echo "3. Configure Route 53 to point to CloudFront"
 echo ""
 
+

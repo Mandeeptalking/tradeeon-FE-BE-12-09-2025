@@ -44,3 +44,4 @@ Write-Host "aws cloudfront create-distribution --distribution-config file://clou
 Write-Host "Then check the result with:`n" -ForegroundColor Cyan
 Write-Host "Get-Content cloudfront-result.json | ConvertFrom-Json | Select-Object -ExpandProperty Distribution | Select-Object Id, DomainName, Status`n" -ForegroundColor Gray
 
+

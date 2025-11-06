@@ -123,3 +123,4 @@ docker system prune -a --volumes -f
 - Verify environment variables in task definition
 - Check security group allows outbound traffic
 
+

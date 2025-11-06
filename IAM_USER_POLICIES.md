@@ -178,3 +178,4 @@ If you want minimal permissions instead of full access, here are the specific pe
 
 That's it! These 4 policies are all you need! ✅
 
+

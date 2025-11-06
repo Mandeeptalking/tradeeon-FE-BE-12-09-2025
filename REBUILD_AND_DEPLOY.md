@@ -78,3 +78,4 @@ from apps.api.binance_client import BinanceClient  # ✅ Works with PYTHONPATH=/
 
 The Dockerfile now sets `ENV PYTHONPATH=/app` so Python can find the `apps` package.
 
+

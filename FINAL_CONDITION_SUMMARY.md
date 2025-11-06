@@ -346,3 +346,4 @@ That's it! Your bot will now catch both scenarios automatically.
 
 **Ready to trade? Configure your bot and start paper trading!** 🚀
 
+

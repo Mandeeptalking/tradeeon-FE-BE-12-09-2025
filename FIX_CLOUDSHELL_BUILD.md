@@ -67,3 +67,4 @@ chmod 644 requirements.txt Dockerfile
 docker build -t tradeeon-backend:latest .
 ```
 
+

@@ -231,3 +231,4 @@ aws logs tail /ecs/tradeeon-alert-runner --follow
 ✅ **Supports all conditions** - RSI, MA, MACD, Price Action, etc.  
 ✅ **Playbook mode** - Priority, validity duration, gate logic  
 
+

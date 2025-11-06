@@ -133,3 +133,4 @@ echo ""
 echo "Check service:"
 echo "  aws ecs describe-services --cluster $CLUSTER --services $SERVICE --region $REGION"
 
+

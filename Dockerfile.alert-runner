@@ -31,3 +31,4 @@ ENV PYTHONPATH=/app
 # Run Alert Runner
 CMD ["python", "-m", "apps.alerts.runner"]
 
+

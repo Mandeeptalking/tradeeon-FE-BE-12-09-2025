@@ -77,3 +77,4 @@ jobs:
         echo "Service: ${{ env.ECS_SERVICE }}"
         echo "Cluster: ${{ env.ECS_CLUSTER }}"
 
+

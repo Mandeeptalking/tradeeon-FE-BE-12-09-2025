@@ -13,6 +13,7 @@ import logging
 from apps.api.deps.auth import get_current_user, AuthedUser
 from apps.api.clients.supabase_client import supabase
 from apps.api.utils.encryption import encrypt_value, decrypt_value
+from apps.api.binance_authenticated_client import BinanceAuthenticatedClient
 
 logger = logging.getLogger(__name__)
 
@@ -172,8 +173,6 @@ async def upsert_connection(body: UpsertBody, user: AuthedUser = Depends(get_cur
 async def test_connection(body: TestBody, user: AuthedUser = Depends(get_current_user)):
     """Test a connection with real exchange API"""
     try:
-        # For now, do a basic validation
-        # TODO: Implement real Binance API test
         if not body.api_key or not body.api_secret:
             return {
                 "ok": False,
@@ -181,22 +180,18 @@ async def test_connection(body: TestBody, user: AuthedUser = Depends(get_current
                 "message": "API key and secret are required"
             }
         
-        # Basic validation - check if keys are not empty
-        if len(body.api_key) < 10 or len(body.api_secret) < 10:
+        # Test with real Binance API
+        if body.exchange.upper() == 'BINANCE':
+            async with BinanceAuthenticatedClient(body.api_key, body.api_secret) as client:
+                result = await client.test_connection()
+                return result
+        else:
+            # For other exchanges, return not implemented
             return {
                 "ok": False,
-                "code": "invalid_credentials",
-                "message": "API credentials appear to be invalid"
+                "code": "not_implemented",
+                "message": f"Connection testing for {body.exchange} is not yet implemented"
             }
-        
-        # TODO: Add real Binance API test here
-        # For now, return success if keys look valid
-        return {
-            "ok": True,
-            "code": "ok",
-            "latency_ms": 120,
-            "message": "Connection test successful (validation only - real API test pending)"
-        }
     except Exception as e:
         logger.error(f"Error testing connection: {e}")
         return {
