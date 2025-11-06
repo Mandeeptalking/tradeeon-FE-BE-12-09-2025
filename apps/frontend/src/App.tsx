@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
@@ -35,6 +36,7 @@ import StrategyManager from './pages/StrategyManager'
 import StrategyManager1 from './pages/StrategyManager1'
 import VisualStrategyBuilder from './pages/VisualStrategyBuilder'
 import DCABot from './pages/DCABot'
+import TestHome from './pages/TestHome'
 import ErrorBoundary from './components/ErrorBoundary'
 
 function App() {
@@ -43,7 +45,7 @@ function App() {
   const location = useLocation()
 
   // Debug logging
-  React.useEffect(() => {
+  useEffect(() => {
     console.log('App rendered', { isAuthenticated, authInitialized, path: location.pathname });
   }, [isAuthenticated, authInitialized, location.pathname]);
 
@@ -75,6 +77,7 @@ function App() {
       />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/test-home" element={<TestHome />} />
         <Route path="/get-started" element={<GetStarted />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<Signup />} />
