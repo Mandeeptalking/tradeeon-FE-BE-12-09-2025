@@ -11,7 +11,12 @@ export default defineConfig({
     target: 'es2015',
     minify: true,
     sourcemap: false,
+    // Ensure proper base path for production
+    outDir: 'dist',
+    assetsDir: 'assets',
   },
+  // Base path for production (empty for root domain)
+  base: '/',
   server: {
     port: 5173,
     host: true,
