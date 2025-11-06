@@ -153,16 +153,9 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow outbound to ECS tasks
-  egress {
-    description     = "Outbound to ECS tasks"
-    from_port       = var.container_port
-    to_port         = var.container_port
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ecs_task.id]
-  }
-
-  # Allow all outbound (for health checks, etc.)
+  # Allow all outbound (for health checks, routing to ECS tasks, etc.)
+  # Note: We don't need to reference ECS task security group here - the ingress
+  # rule on ECS tasks allows from ALB, which is sufficient.
   egress {
     description = "All outbound"
     from_port   = 0
