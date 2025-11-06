@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Users table (extends Supabase auth.users)
-CREATE TABLE public.users (
+CREATE TABLE IF NOT EXISTS public.users (
     id UUID REFERENCES auth.users(id) PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     full_name TEXT,
@@ -17,7 +17,7 @@ CREATE TABLE public.users (
 );
 
 -- Exchange connections and API keys
-CREATE TABLE public.exchange_keys (
+CREATE TABLE IF NOT EXISTS public.exchange_keys (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
     exchange TEXT NOT NULL CHECK (exchange IN ('binance', 'zerodha', 'coinbase', 'kraken')),
@@ -32,7 +32,7 @@ CREATE TABLE public.exchange_keys (
 );
 
 -- Zerodha session management
-CREATE TABLE public.zerodha_sessions (
+CREATE TABLE IF NOT EXISTS public.zerodha_sessions (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
     request_token TEXT,
@@ -45,7 +45,7 @@ CREATE TABLE public.zerodha_sessions (
 );
 
 -- Bot configurations
-CREATE TABLE public.bots (
+CREATE TABLE IF NOT EXISTS public.bots (
     bot_id TEXT PRIMARY KEY,  -- TEXT to match application-generated IDs (e.g., "dca_bot_1234567890")
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
     name TEXT NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE public.bots (
 );
 
 -- Bot run instances
-CREATE TABLE public.bot_runs (
+CREATE TABLE IF NOT EXISTS public.bot_runs (
     run_id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     bot_id TEXT REFERENCES public.bots(bot_id) ON DELETE CASCADE NOT NULL,  -- TEXT to match bots.bot_id
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE public.bot_runs (
 );
 
 -- Order logs
-CREATE TABLE public.order_logs (
+CREATE TABLE IF NOT EXISTS public.order_logs (
     order_id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     bot_id TEXT REFERENCES public.bots(bot_id) ON DELETE CASCADE NOT NULL,  -- TEXT to match bots.bot_id
     run_id UUID REFERENCES public.bot_runs(run_id) ON DELETE CASCADE,
@@ -98,7 +98,7 @@ CREATE TABLE public.order_logs (
 );
 
 -- Current positions
-CREATE TABLE public.positions (
+CREATE TABLE IF NOT EXISTS public.positions (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
     symbol TEXT NOT NULL,
@@ -112,7 +112,7 @@ CREATE TABLE public.positions (
 );
 
 -- Asset holdings
-CREATE TABLE public.holdings (
+CREATE TABLE IF NOT EXISTS public.holdings (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
     currency TEXT NOT NULL,
@@ -126,7 +126,7 @@ CREATE TABLE public.holdings (
 );
 
 -- Available funds per exchange
-CREATE TABLE public.funds (
+CREATE TABLE IF NOT EXISTS public.funds (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
     exchange TEXT NOT NULL,
@@ -139,7 +139,7 @@ CREATE TABLE public.funds (
 );
 
 -- Trading signals (for analysis and backtesting)
-CREATE TABLE public.signals (
+CREATE TABLE IF NOT EXISTS public.signals (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     bot_id TEXT REFERENCES public.bots(bot_id) ON DELETE CASCADE NOT NULL,  -- TEXT to match bots.bot_id
     run_id UUID REFERENCES public.bot_runs(run_id) ON DELETE CASCADE,
@@ -157,7 +157,7 @@ CREATE TABLE public.signals (
 );
 
 -- Market data cache (for performance)
-CREATE TABLE public.market_data_cache (
+CREATE TABLE IF NOT EXISTS public.market_data_cache (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     symbol TEXT NOT NULL,
     interval TEXT NOT NULL,
@@ -173,20 +173,20 @@ CREATE TABLE public.market_data_cache (
 );
 
 -- Indexes for performance
-CREATE INDEX idx_bots_user_id ON public.bots(user_id);
-CREATE INDEX idx_bots_status ON public.bots(status);
-CREATE INDEX idx_bot_runs_bot_id ON public.bot_runs(bot_id);
-CREATE INDEX idx_bot_runs_status ON public.bot_runs(status);
-CREATE INDEX idx_order_logs_bot_id ON public.order_logs(bot_id);
-CREATE INDEX idx_order_logs_status ON public.order_logs(status);
-CREATE INDEX idx_order_logs_created_at ON public.order_logs(created_at);
-CREATE INDEX idx_positions_user_id ON public.positions(user_id);
-CREATE INDEX idx_holdings_user_id ON public.holdings(user_id);
-CREATE INDEX idx_funds_user_id ON public.funds(user_id);
-CREATE INDEX idx_signals_bot_id ON public.signals(bot_id);
-CREATE INDEX idx_signals_created_at ON public.signals(created_at);
-CREATE INDEX idx_market_data_symbol_interval ON public.market_data_cache(symbol, interval);
-CREATE INDEX idx_market_data_timestamp ON public.market_data_cache(timestamp);
+CREATE INDEX IF NOT EXISTS idx_bots_user_id ON public.bots(user_id);
+CREATE INDEX IF NOT EXISTS idx_bots_status ON public.bots(status);
+CREATE INDEX IF NOT EXISTS idx_bot_runs_bot_id ON public.bot_runs(bot_id);
+CREATE INDEX IF NOT EXISTS idx_bot_runs_status ON public.bot_runs(status);
+CREATE INDEX IF NOT EXISTS idx_order_logs_bot_id ON public.order_logs(bot_id);
+CREATE INDEX IF NOT EXISTS idx_order_logs_status ON public.order_logs(status);
+CREATE INDEX IF NOT EXISTS idx_order_logs_created_at ON public.order_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_positions_user_id ON public.positions(user_id);
+CREATE INDEX IF NOT EXISTS idx_holdings_user_id ON public.holdings(user_id);
+CREATE INDEX IF NOT EXISTS idx_funds_user_id ON public.funds(user_id);
+CREATE INDEX IF NOT EXISTS idx_signals_bot_id ON public.signals(bot_id);
+CREATE INDEX IF NOT EXISTS idx_signals_created_at ON public.signals(created_at);
+CREATE INDEX IF NOT EXISTS idx_market_data_symbol_interval ON public.market_data_cache(symbol, interval);
+CREATE INDEX IF NOT EXISTS idx_market_data_timestamp ON public.market_data_cache(timestamp);
 
 -- Row Level Security (RLS) policies
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -201,36 +201,47 @@ ALTER TABLE public.funds ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.signals ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies - Users can only access their own data
+DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
 CREATE POLICY "Users can view own profile" ON public.users
     FOR SELECT USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
 CREATE POLICY "Users can update own profile" ON public.users
     FOR UPDATE USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can manage own exchange keys" ON public.exchange_keys;
 CREATE POLICY "Users can manage own exchange keys" ON public.exchange_keys
     FOR ALL USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can manage own Zerodha sessions" ON public.zerodha_sessions;
 CREATE POLICY "Users can manage own Zerodha sessions" ON public.zerodha_sessions
     FOR ALL USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can manage own bots" ON public.bots;
 CREATE POLICY "Users can manage own bots" ON public.bots
     FOR ALL USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own bot runs" ON public.bot_runs;
 CREATE POLICY "Users can view own bot runs" ON public.bot_runs
     FOR ALL USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own orders" ON public.order_logs;
 CREATE POLICY "Users can view own orders" ON public.order_logs
     FOR ALL USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can manage own positions" ON public.positions;
 CREATE POLICY "Users can manage own positions" ON public.positions
     FOR ALL USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can manage own holdings" ON public.holdings;
 CREATE POLICY "Users can manage own holdings" ON public.holdings
     FOR ALL USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can manage own funds" ON public.funds;
 CREATE POLICY "Users can manage own funds" ON public.funds
     FOR ALL USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own signals" ON public.signals;
 CREATE POLICY "Users can view own signals" ON public.signals
     FOR ALL USING (auth.uid() = user_id);
 
@@ -244,27 +255,35 @@ END;
 $$ language 'plpgsql';
 
 -- Triggers for automatic timestamp updates
+DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_exchange_keys_updated_at ON public.exchange_keys;
 CREATE TRIGGER update_exchange_keys_updated_at BEFORE UPDATE ON public.exchange_keys
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_zerodha_sessions_updated_at ON public.zerodha_sessions;
 CREATE TRIGGER update_zerodha_sessions_updated_at BEFORE UPDATE ON public.zerodha_sessions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_bots_updated_at ON public.bots;
 CREATE TRIGGER update_bots_updated_at BEFORE UPDATE ON public.bots
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_order_logs_updated_at ON public.order_logs;
 CREATE TRIGGER update_order_logs_updated_at BEFORE UPDATE ON public.order_logs
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_positions_updated_at ON public.positions;
 CREATE TRIGGER update_positions_updated_at BEFORE UPDATE ON public.positions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_holdings_updated_at ON public.holdings;
 CREATE TRIGGER update_holdings_updated_at BEFORE UPDATE ON public.holdings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_funds_updated_at ON public.funds;
 CREATE TRIGGER update_funds_updated_at BEFORE UPDATE ON public.funds
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
