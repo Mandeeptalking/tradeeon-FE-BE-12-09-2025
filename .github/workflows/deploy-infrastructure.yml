@@ -58,12 +58,12 @@ jobs:
     - name: Terraform Plan
       working-directory: ./infra/terraform
       run: terraform plan -out=tfplan
-      continue-on-error: true
+      continue-on-error: false
     
     - name: Terraform Apply
       working-directory: ./infra/terraform
       run: terraform apply -auto-approve tfplan
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     
     - name: Terraform Outputs
       working-directory: ./infra/terraform
