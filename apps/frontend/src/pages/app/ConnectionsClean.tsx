@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, CheckCircle, X } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || 'https://api.tradeeon.com';
+// Get API URL - always have a fallback
+const getApiUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE;
+  return envUrl || 'https://api.tradeeon.com';
+};
+
+const API_BASE_URL = getApiUrl();
 
 interface Connection {
   id: string;
@@ -12,7 +18,7 @@ interface Connection {
 }
 
 const ConnectionsClean = () => {
-  // Simple state - always show data immediately (no loading states)
+  // CRITICAL: Always initialize with empty array - never null/undefined
   const [connections, setConnections] = useState<Connection[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -24,7 +30,11 @@ const ConnectionsClean = () => {
 
   // Load connections on mount (non-blocking, doesn't affect UI)
   useEffect(() => {
-    loadConnections();
+    // Delay API call slightly to ensure UI renders first
+    const timer = setTimeout(() => {
+      loadConnections();
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   const loadConnections = async () => {
@@ -35,13 +45,13 @@ const ConnectionsClean = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           setConnections(data);
         }
       }
     } catch (err) {
       // Silently fail - page still works
-      console.log('API not available');
+      console.log('API not available:', err);
     }
   };
 
@@ -108,16 +118,18 @@ const ConnectionsClean = () => {
       setConnections([...connections, newConnection]);
       setFormData({ exchange: '', apiKey: '', apiSecret: '' });
       setShowForm(false);
-      alert('✅ Connection saved (using local storage)');
+      alert('✅ Connection saved (local only)');
     }
   };
 
   const handleEdit = (connection: Connection) => {
     setEditingId(connection.id);
+    // For editing, we need to show the actual keys (not masked)
+    // Since we only store masked keys, we'll need user to re-enter
     setFormData({
       exchange: connection.exchange,
-      apiKey: connection.apiKey,
-      apiSecret: connection.apiSecret,
+      apiKey: '', // User needs to re-enter
+      apiSecret: '', // User needs to re-enter
     });
     setShowForm(true);
   };
@@ -181,7 +193,7 @@ const ConnectionsClean = () => {
       setFormData({ exchange: '', apiKey: '', apiSecret: '' });
       setShowForm(false);
       setEditingId(null);
-      alert('✅ Connection updated (using local storage)');
+      alert('✅ Connection updated (local only)');
     }
   };
 
@@ -203,7 +215,7 @@ const ConnectionsClean = () => {
     } catch (err) {
       // Remove from local state
       setConnections(connections.filter(c => c.id !== connectionId));
-      alert('✅ Connection disconnected (local)');
+      alert('✅ Connection disconnected');
     }
   };
 
@@ -213,10 +225,12 @@ const ConnectionsClean = () => {
     setFormData({ exchange: '', apiKey: '', apiSecret: '' });
   };
 
+  // CRITICAL: Always return JSX - never return null/undefined
+  // This ensures the page ALWAYS renders something
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" style={{ minHeight: '100vh' }}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+        {/* Header - ALWAYS VISIBLE */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -237,10 +251,13 @@ const ConnectionsClean = () => {
           </div>
         </div>
 
-        {/* API URL Info */}
+        {/* API URL Info - ALWAYS VISIBLE */}
         <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
             <strong>API URL:</strong> {API_BASE_URL}
+          </p>
+          <p className="text-xs text-blue-600 mt-1">
+            Connections: {connections.length} | Form: {showForm ? 'Open' : 'Closed'}
           </p>
         </div>
 
@@ -309,7 +326,7 @@ const ConnectionsClean = () => {
           </div>
         )}
 
-        {/* Connections List */}
+        {/* Connections List - ALWAYS SHOWS SOMETHING */}
         <div className="space-y-4">
           {connections.length === 0 ? (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
@@ -390,4 +407,3 @@ const ConnectionsClean = () => {
 };
 
 export default ConnectionsClean;
-
