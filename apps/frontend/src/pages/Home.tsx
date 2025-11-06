@@ -1,7 +1,12 @@
+import { useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import Hero from '../components/Hero'
 
 const Home = () => {
+  useEffect(() => {
+    console.log('Home component mounted');
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />

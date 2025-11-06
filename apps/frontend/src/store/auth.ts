@@ -41,7 +41,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       // Import supabase here to avoid circular dependency
       const { supabase } = await import('../lib/supabase')
-      await supabase.auth.signOut()
+      if (supabase) {
+        await supabase.auth.signOut()
+      }
     } catch (error) {
       console.error('Error signing out:', error)
     } finally {

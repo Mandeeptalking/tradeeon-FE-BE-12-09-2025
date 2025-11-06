@@ -42,6 +42,11 @@ function App() {
   const authInitialized = useAuth() // Initialize auth session management
   const location = useLocation()
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('App rendered', { isAuthenticated, authInitialized, path: location.pathname });
+  }, [isAuthenticated, authInitialized, location.pathname]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Toaster 
