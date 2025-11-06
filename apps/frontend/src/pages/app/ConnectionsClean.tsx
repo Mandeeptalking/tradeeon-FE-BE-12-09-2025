@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, CheckCircle, X } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || 'https://api.tradeeon.com';
@@ -12,7 +12,7 @@ interface Connection {
 }
 
 const ConnectionsClean = () => {
-  // Simple state - always show data immediately
+  // Simple state - always show data immediately (no loading states)
   const [connections, setConnections] = useState<Connection[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -22,10 +22,10 @@ const ConnectionsClean = () => {
     apiSecret: '',
   });
 
-  // Load connections on mount (non-blocking)
-  useState(() => {
+  // Load connections on mount (non-blocking, doesn't affect UI)
+  useEffect(() => {
     loadConnections();
-  });
+  }, []);
 
   const loadConnections = async () => {
     try {
