@@ -1,0 +1,27 @@
+Run this EXACT command in YOUR PowerShell (copy the entire block):
+
+aws cloudfront create-distribution --distribution-config '{
+  "CallerReference": "tradeeon-' + (Get-Date -Format 'yyyyMMddHHmmss') + '",
+  "Comment": "Tradeeon frontend",
+  "Enabled": true,
+  "Origins": {
+    "Quantity": 1,
+    "Items": [
+      {
+        "Id": "S3-tradeeon",
+        "DomainName": "www-tradeeon-prod.s3-website-us-east-1.amazonaws.com",
+        "CustomOriginConfig": {
+          "HTTPPort": 80,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "http-only"
+        }
+      }
+    ]
+  },
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "S3-tradeeon",
+    "ViewerProtocolPolicy": "redirect-to-https"
+  },
+  "DefaultRootObject": "index.html"
+}' --output json
+

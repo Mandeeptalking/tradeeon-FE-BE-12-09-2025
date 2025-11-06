@@ -121,6 +121,29 @@ const Signup = () => {
 
       if (authError) throw authError;
 
+      // Create user profile in public.users table
+      if (authData.user) {
+        try {
+          const { error: profileError } = await supabase
+            .from('users')
+            .insert({
+              id: authData.user.id,
+              email: formData.email,
+              full_name: `${formData.firstName} ${formData.lastName}`,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+
+          if (profileError) {
+            console.warn('Failed to create user profile (may already exist):', profileError);
+            // Don't fail signup if profile creation fails - it might already exist
+          }
+        } catch (profileErr) {
+          console.warn('Error creating user profile:', profileErr);
+          // Continue with signup even if profile creation fails
+        }
+      }
+
       setSuccess(true);
       console.log('User created successfully:', authData);
 

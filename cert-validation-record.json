@@ -1,0 +1,18 @@
+{
+  "Changes": [
+    {
+      "Action": "CREATE",
+      "ResourceRecordSet": {
+        "Name": "_6525569d68de7bdaa2577fe6419ca47a.tradeeon.com",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "_d7ad880188b8467e86fbe43160ca55d2.jkddzztszm.acm-validations.aws."
+          }
+        ]
+      }
+    }
+  ]
+}
+

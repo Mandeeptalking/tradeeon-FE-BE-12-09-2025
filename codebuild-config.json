@@ -1,0 +1,33 @@
+﻿{
+    "name":  "tradeeon-backend-build",
+    "source":  {
+                   "type":  "S3",
+                   "location":  "tradeeon-build-source/"
+               },
+    "environment":  {
+                        "privilegedMode":  true,
+                        "computeType":  "BUILD_GENERAL1_SMALL",
+                        "environmentVariables":  [
+                                                     {
+                                                         "value":  "us-east-1",
+                                                         "name":  "AWS_DEFAULT_REGION"
+                                                     },
+                                                     {
+                                                         "value":  "531604848081",
+                                                         "name":  "AWS_ACCOUNT_ID"
+                                                     },
+                                                     {
+                                                         "value":  "tradeeon-backend",
+                                                         "name":  "IMAGE_REPO_NAME"
+                                                     }
+                                                 ],
+                        "type":  "LINUX_CONTAINER",
+                        "image":  "aws/codebuild/standard:7.0"
+                    },
+    "description":  "Build and push Tradeeon backend Docker image",
+    "timeoutInMinutes":  20,
+    "artifacts":  {
+                      "type":  "NO_ARTIFACTS"
+                  },
+    "serviceRole":  "arn:aws:iam::531604848081:role/codebuild-tradeeon-backend-role"
+}
