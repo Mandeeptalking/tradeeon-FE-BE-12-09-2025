@@ -12,13 +12,24 @@ export const useAuth = () => {
     // Get initial session synchronously
     const getInitialSession = async () => {
       try {
+        // Check if supabase is available
+        if (!supabase) {
+          console.warn('Supabase client not initialized')
+          if (mounted) {
+            setInitialized(true)
+          }
+          return
+        }
+
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (!mounted) return
         
         if (error) {
           console.error('Error getting session:', error)
-          setInitialized(true)
+          if (mounted) {
+            setInitialized(true)
+          }
           return
         }
 
@@ -29,7 +40,9 @@ export const useAuth = () => {
             name: session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || ''
           })
         }
-        setInitialized(true)
+        if (mounted) {
+          setInitialized(true)
+        }
       } catch (error) {
         console.error('Error in getInitialSession:', error)
         if (mounted) {
@@ -40,24 +53,34 @@ export const useAuth = () => {
 
     getInitialSession()
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || ''
-          })
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null)
-        }
+    // Listen for auth changes (only if supabase is available)
+    let subscription: { unsubscribe: () => void } | null = null
+    if (supabase) {
+      try {
+        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (event === 'SIGNED_IN' && session?.user) {
+              setUser({
+                id: session.user.id,
+                email: session.user.email || '',
+                name: session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || ''
+              })
+            } else if (event === 'SIGNED_OUT') {
+              setUser(null)
+            }
+          }
+        )
+        subscription = sub
+      } catch (error) {
+        console.error('Error setting up auth listener:', error)
       }
-    )
+    }
 
     return () => {
       mounted = false
-      subscription.unsubscribe()
+      if (subscription) {
+        subscription.unsubscribe()
+      }
     }
   }, [setUser])
 
