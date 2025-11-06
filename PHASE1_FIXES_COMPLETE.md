@@ -92,3 +92,4 @@ See `infra/supabase/schema.sql` for full schema.
 - All connections are now user-specific
 - API keys are never sent to frontend (only encrypted versions stored)
 
+
