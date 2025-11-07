@@ -117,7 +117,7 @@ jobs:
         run: |
           aws s3 sync apps/frontend/dist/ s3://tradeeon-frontend/ --delete
       - name: Invalidate CloudFront
-        if: env.CLOUDFRONT_DISTRIBUTION_ID != ''
+        if: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID != '' }}
         run: |
           aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
 
