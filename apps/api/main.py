@@ -122,6 +122,24 @@ async def startup_event():
         if os.getenv("ENVIRONMENT") == "production":
             raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
     
+    # Validate database connection
+    from apps.api.clients.supabase_client import supabase
+    if supabase is None:
+        logger.error("❌ Database connection failed - Supabase client is None")
+        if os.getenv("ENVIRONMENT") == "production":
+            raise RuntimeError("Cannot start in production without database connection")
+        else:
+            logger.warning("⚠️  Running without database - some features will be unavailable")
+    else:
+        # Test database connection
+        try:
+            result = supabase.table("users").select("id").limit(1).execute()
+            logger.info("✅ Database connection verified successfully")
+        except Exception as e:
+            logger.error(f"❌ Database connection test failed: {e}")
+            if os.getenv("ENVIRONMENT") == "production":
+                raise RuntimeError(f"Database connection test failed: {e}")
+    
     # Start background tasks
     asyncio.create_task(cleanup_rate_limits())
     
@@ -132,8 +150,25 @@ async def startup_event():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    return {"status": "ok", "timestamp": int(datetime.now().timestamp())}
+    """Health check endpoint with database status"""
+    from apps.api.clients.supabase_client import supabase
+    
+    health_status = {
+        "status": "ok",
+        "timestamp": int(datetime.now().timestamp()),
+        "database": "connected" if supabase is not None else "disconnected"
+    }
+    
+    # Test database connection if available
+    if supabase is not None:
+        try:
+            supabase.table("users").select("id").limit(1).execute()
+            health_status["database"] = "connected"
+        except Exception as e:
+            health_status["database"] = "error"
+            health_status["database_error"] = str(e)
+    
+    return health_status
 
 @app.get("/metrics")
 async def metrics():
