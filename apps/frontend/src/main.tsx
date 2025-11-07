@@ -5,6 +5,15 @@ import App from './App.tsx'
 import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
 
+// Debug: Check if environment variables are loaded
+console.log('🔍 Vite Environment Check:', {
+  VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+  VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'MISSING',
+  MODE: import.meta.env.MODE,
+  DEV: import.meta.env.DEV,
+  PROD: import.meta.env.PROD
+});
+
 // Add error handler for unhandled errors
 window.addEventListener('error', (event) => {
   console.error('Global error:', event.error);
