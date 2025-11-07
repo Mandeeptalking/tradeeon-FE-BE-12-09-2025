@@ -3,7 +3,7 @@ name: Deploy All Services
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
@@ -18,7 +18,6 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       alert-runner: ${{ steps.filter.outputs.alert-runner }}
       frontend: ${{ steps.filter.outputs.frontend }}
-      bots: ${{ steps.filter.outputs.bots }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v2
@@ -41,9 +40,6 @@ jobs:
               - 'Dockerfile.alert-runner'
             frontend:
               - 'apps/frontend/**'
-            bots:
-              - 'apps/bots/**'
-              - 'apps/bots/**/Dockerfile'
 
   deploy-backend:
     name: Deploy Backend
@@ -108,21 +104,15 @@ jobs:
       - name: Build
         working-directory: apps/frontend
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL || 'http://localhost:8000' }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || '' }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || '' }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npm run build
       - name: Deploy to S3
-        continue-on-error: true
         run: |
-          aws s3 sync apps/frontend/dist/ s3://tradeeon-frontend/ --delete || echo "S3 sync failed, but continuing..."
+          aws s3 sync apps/frontend/dist/ s3://tradeeon-frontend/ --delete
       - name: Invalidate CloudFront
-        continue-on-error: true
+        if: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID != '' }}
         run: |
-          if [ -n "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" ]; then
-            aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
-          else
-            echo "CloudFront distribution ID not set, skipping invalidation"
-          fi
-
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
 
