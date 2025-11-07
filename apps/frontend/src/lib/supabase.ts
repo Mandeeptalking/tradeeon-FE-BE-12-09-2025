@@ -38,6 +38,9 @@ if (supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http')) {
   }
 } else {
   console.error('❌ Invalid Supabase configuration');
+  console.error('   supabaseUrl:', supabaseUrl || 'MISSING');
+  console.error('   supabaseAnonKey:', supabaseAnonKey ? 'SET' : 'MISSING');
+  console.error('   supabaseUrl starts with http:', supabaseUrl?.startsWith('http'));
   supabase = null;
 }
 
