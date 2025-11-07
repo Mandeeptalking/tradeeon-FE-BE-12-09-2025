@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { Download, Search, Eye, MoreHorizontal } from 'lucide-react';
 import { Holding } from '../../lib/api/portfolio';
 
@@ -45,22 +44,31 @@ const HoldingsTable = ({ data, isLoading, onExport }: HoldingsTableProps) => {
   );
 
   const Sparkline = ({ data }: { data: number[] }) => {
-    const chartData = data.map((value, index) => ({ value, index }));
+    if (!data || data.length === 0) return <div className="h-8 w-20" />;
+    
     const color = getSparklineColor(data);
+    const max = Math.max(...data);
+    const min = Math.min(...data);
+    const range = max - min || 1;
+    const width = 80;
+    const height = 32;
+    
+    const points = data.map((value, index) => {
+      const x = (index / (data.length - 1 || 1)) * width;
+      const y = height - ((value - min) / range) * height;
+      return `${x},${y}`;
+    }).join(' ');
     
     return (
       <div className="h-8 w-20">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke={color}
-              strokeWidth={1.5}
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+          <polyline
+            fill="none"
+            stroke={color}
+            strokeWidth="1.5"
+            points={points}
+          />
+        </svg>
       </div>
     );
   };

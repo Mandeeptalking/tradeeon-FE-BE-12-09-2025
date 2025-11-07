@@ -1,4 +1,3 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { PieChart as PieChartIcon } from 'lucide-react';
 import { useState } from 'react';
 
@@ -84,34 +83,59 @@ const AllocationDonut = ({ data, isLoading }: AllocationDonutProps) => {
         </div>
       </div>
       
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={100}
-              paddingAngle={2}
-              dataKey="value"
-            >
-              {data.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-            <Legend 
-              verticalAlign="bottom" 
-              height={36}
-              formatter={(value, entry) => (
-                <span className="text-sm text-gray-600">
-                  {value} ({formatPercent(entry.payload?.value || 0)})
-                </span>
-              )}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+      <div className="h-64 flex flex-col items-center justify-center">
+        <svg width="200" height="200" viewBox="0 0 200 200" className="mb-4">
+          {(() => {
+            const total = data.reduce((sum, d) => sum + d.value, 0);
+            let currentAngle = -90;
+            return data.map((item, index) => {
+              const percentage = item.value / total;
+              const angle = percentage * 360;
+              const startAngle = currentAngle;
+              const endAngle = currentAngle + angle;
+              currentAngle = endAngle;
+              
+              const startAngleRad = (startAngle * Math.PI) / 180;
+              const endAngleRad = (endAngle * Math.PI) / 180;
+              const innerRadius = 60;
+              const outerRadius = 100;
+              const cx = 100;
+              const cy = 100;
+              
+              const x1 = cx + innerRadius * Math.cos(startAngleRad);
+              const y1 = cy + innerRadius * Math.sin(startAngleRad);
+              const x2 = cx + outerRadius * Math.cos(startAngleRad);
+              const y2 = cy + outerRadius * Math.sin(startAngleRad);
+              const x3 = cx + outerRadius * Math.cos(endAngleRad);
+              const y3 = cy + outerRadius * Math.sin(endAngleRad);
+              const x4 = cx + innerRadius * Math.cos(endAngleRad);
+              const y4 = cy + innerRadius * Math.sin(endAngleRad);
+              
+              const largeArc = angle > 180 ? 1 : 0;
+              
+              return (
+                <path
+                  key={index}
+                  d={`M ${x1} ${y1} L ${x2} ${y2} A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x3} ${y3} L ${x4} ${y4} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x1} ${y1} Z`}
+                  fill={COLORS[index % COLORS.length]}
+                />
+              );
+            });
+          })()}
+        </svg>
+        <div className="flex flex-wrap justify-center gap-2 text-sm">
+          {data.map((item, index) => (
+            <div key={index} className="flex items-center space-x-2">
+              <div 
+                className="w-3 h-3 rounded" 
+                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+              />
+              <span className="text-gray-600">
+                {item.label} ({formatPercent(item.value)})
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
