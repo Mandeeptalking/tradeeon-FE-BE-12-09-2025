@@ -7,6 +7,10 @@ export function useAlertMarkers(symbol: string, timeframe: string) {
     let sub: any;
 
     async function loadExisting() {
+      if (!supabase) {
+        console.warn('Supabase not available, skipping alert markers');
+        return;
+      }
       try {
         const { data, error } = await supabase
           .from("alerts_log")
@@ -33,7 +37,7 @@ export function useAlertMarkers(symbol: string, timeframe: string) {
     }
 
     // Live channel if enabled
-    if (supabase.channel) {
+    if (supabase && supabase.channel) {
       try {
         sub = supabase
           .channel("alert_triggers")
