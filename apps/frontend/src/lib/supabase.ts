@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Get and trim environment variables
 const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
@@ -16,17 +16,14 @@ console.log('🔍 Supabase Config:', {
   rawEnvKey: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'MISSING'
 });
 
-// Validate and create client
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Missing Supabase environment variables');
-  console.error('   VITE_SUPABASE_URL:', supabaseUrl || 'MISSING');
-  console.error('   VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'SET' : 'MISSING');
-  console.error('   Make sure .env file exists in apps/frontend/');
-  console.error('   Restart dev server after changing .env');
-}
+// Create a dummy client that will fail gracefully if env vars are missing
+// This ensures supabase is NEVER null
+const createDummyClient = (): SupabaseClient => {
+  return createClient('https://dummy.supabase.co', 'dummy-key');
+};
 
-// Create client if we have valid credentials
-let supabase: ReturnType<typeof createClient> | null = null;
+// Create client - ALWAYS create one, even if invalid
+let supabase: SupabaseClient;
 
 if (supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http')) {
   try {
@@ -34,14 +31,17 @@ if (supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http')) {
     console.log('✅ Supabase client initialized successfully');
   } catch (error) {
     console.error('❌ Failed to create Supabase client:', error);
-    supabase = null;
+    console.error('   Falling back to dummy client');
+    supabase = createDummyClient();
   }
 } else {
   console.error('❌ Invalid Supabase configuration');
   console.error('   supabaseUrl:', supabaseUrl || 'MISSING');
   console.error('   supabaseAnonKey:', supabaseAnonKey ? 'SET' : 'MISSING');
   console.error('   supabaseUrl starts with http:', supabaseUrl?.startsWith('http'));
-  supabase = null;
+  console.error('   ⚠️ Using dummy client - authentication will not work!');
+  supabase = createDummyClient();
 }
 
+// Export - supabase is now ALWAYS defined (never null)
 export { supabase };

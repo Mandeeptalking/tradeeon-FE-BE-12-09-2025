@@ -10,9 +10,11 @@ import { supabase } from '../supabase';
  * Returns null if user is not authenticated or Supabase is not configured
  */
 export async function getAuthToken(): Promise<string | null> {
-  if (!supabase) {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+  if (!supabaseUrl || !supabaseKey || !supabaseUrl.startsWith('http')) {
     if (import.meta.env.DEV) {
-      console.warn('Supabase client not initialized. Cannot get auth token.');
+      console.warn('Supabase not properly configured. Cannot get auth token.');
     }
     return null;
   }

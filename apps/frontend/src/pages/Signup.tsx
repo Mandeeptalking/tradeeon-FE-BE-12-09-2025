@@ -30,8 +30,11 @@ const Signup = () => {
 
     setLoading(true);
 
-    if (!supabase) {
-      setError('Authentication service is not configured');
+    // Check if supabase is properly configured (not dummy client)
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+    if (!supabaseUrl || !supabaseKey || !supabaseUrl.startsWith('http')) {
+      setError('Authentication service is not configured. Please check your environment variables.');
       setLoading(false);
       return;
     }

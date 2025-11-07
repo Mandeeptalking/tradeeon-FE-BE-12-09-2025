@@ -12,9 +12,11 @@ export const useAuth = () => {
     // Get initial session synchronously
     const getInitialSession = async () => {
       try {
-        // Check if supabase is available
-        if (!supabase) {
-          console.warn('⚠️ Supabase client not initialized')
+        // Check if supabase is properly configured (not dummy client)
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+        if (!supabaseUrl || !supabaseKey || !supabaseUrl.startsWith('http')) {
+          console.warn('⚠️ Supabase not properly configured')
           if (mounted) {
             setInitialized(true)
           }
@@ -57,9 +59,11 @@ export const useAuth = () => {
 
     getInitialSession()
 
-    // Listen for auth changes (only if supabase is available)
+    // Listen for auth changes (only if supabase is properly configured)
     let subscription: { unsubscribe: () => void } | null = null
-    if (supabase) {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+    if (supabaseUrl && supabaseKey && supabaseUrl.startsWith('http')) {
       try {
         console.log('👂 Setting up auth state change listener...');
         const { data: { subscription: sub } } = supabase.auth.onAuthStateChange(

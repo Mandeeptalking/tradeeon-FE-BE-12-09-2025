@@ -1,61 +1,62 @@
-# How to Check Workflow Error
+# Check Workflow Error - Quick Guide
 
-## Quick Steps
+## ✅ Good News
+The build works locally! The TypeScript fix is correct.
 
-1. **Go to the failed run:**
-   - Click on the red X icon next to "Deploy Infrastructure with Terraform #5"
+## 🔍 What to Check
 
-2. **Click on the "deploy" job:**
-   - This will show all the steps
+Since the build works, the failure is likely in one of these steps:
 
-3. **Find the failed step:**
-   - Look for the step with a red X
-   - Common failed steps:
-     - "Terraform Init"
-     - "Terraform Validate"
-     - "Terraform Plan"
-     - "Configure AWS credentials"
+### 1. **Check GitHub Actions Logs**
+Go to: `https://github.com/[your-username]/tradeeon-FE-BE-12-09-2025/actions`
 
-4. **Click on the failed step:**
-   - This will show the error output
+Find the latest failed workflow and check:
+- **Which step failed?** (Build, Deploy to S3, Invalidate CloudFront)
+- **What's the exact error message?**
 
-5. **Copy the error message:**
-   - Look for lines starting with "Error:"
-   - Copy the full error message
+### 2. **Common Issues**
 
----
+#### Issue A: Missing Secrets
+**Error:** "Secret not found" or "Access denied"
 
-## Common Errors
+**Fix:** Go to GitHub → Settings → Secrets and variables → Actions
+- Verify these secrets exist:
+  - `AWS_ACCESS_KEY_ID`
+  - `AWS_SECRET_ACCESS_KEY`
+  - `VITE_API_URL`
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_ANON_KEY`
+  - `CLOUDFRONT_DISTRIBUTION_ID` (optional)
 
-### 1. Missing Secrets
-**Error:** `Error: Missing credentials` or `Access Denied`
-**Fix:** Check all 5 secrets are added:
-- AWS_ACCESS_KEY_ID
-- AWS_SECRET_ACCESS_KEY
-- ROUTE53_ZONE_ID
-- SUPABASE_URL
-- SUPABASE_SERVICE_ROLE_KEY
+#### Issue B: S3 Bucket Error
+**Error:** "NoSuchBucket" or "AccessDenied"
 
-### 2. Terraform Validation Error
-**Error:** `Error: Cycle:` or `Error: Invalid configuration`
-**Fix:** Check Terraform configuration syntax
+**Fix:** 
+- Verify S3 bucket `tradeeon-frontend` exists
+- Check AWS credentials have S3 write permissions
+- Verify bucket is in `us-east-1` region
 
-### 3. AWS Permissions
-**Error:** `AccessDenied` or `UnauthorizedOperation`
-**Fix:** Check IAM user has required permissions
+#### Issue C: CloudFront Error
+**Error:** "Invalid distribution ID" or "AccessDenied"
 
-### 4. Resource Already Exists
-**Error:** `Error: resource already exists`
-**Fix:** May need to import existing resources or use different names
+**Fix:**
+- Verify `CLOUDFRONT_DISTRIBUTION_ID` secret is set correctly
+- Check AWS credentials have CloudFront invalidation permissions
 
----
+### 3. **Quick Test**
 
-## Share the Error
+Run this locally to test AWS credentials:
+```bash
+aws s3 ls s3://tradeeon-frontend/
+```
 
-Once you have the error message, share it and I'll help fix it!
+If this fails, your AWS credentials are the issue.
 
----
+## 📋 What I Need From You
 
-**Quick Link:** https://github.com/Mandeeptalking/tradeeon-FE-BE-12-09-2025/actions
+**Please share:**
+1. Screenshot of the failed workflow step
+2. OR copy the exact error message from GitHub Actions
+3. Which workflow failed? (`deploy-all.yml` or `deploy-frontend.yml`)
 
-
+This will help me provide the exact fix!

@@ -75,7 +75,9 @@ export interface AlertLogRow {
 
 // Helper function to get auth token
 async function getAuthToken(): Promise<string> {
-  if (!supabase) {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+  if (!supabaseUrl || !supabaseKey || !supabaseUrl.startsWith('http')) {
     // Supabase not configured, use mock token for testing
     return 'mock-jwt-token-for-testing'
   }

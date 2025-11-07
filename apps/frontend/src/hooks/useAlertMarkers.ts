@@ -7,8 +7,10 @@ export function useAlertMarkers(symbol: string, timeframe: string) {
     let sub: any;
 
     async function loadExisting() {
-      if (!supabase) {
-        console.warn('Supabase not available, skipping alert markers');
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+      if (!supabaseUrl || !supabaseKey || !supabaseUrl.startsWith('http')) {
+        console.warn('Supabase not properly configured, skipping alert markers');
         return;
       }
       try {
@@ -37,7 +39,9 @@ export function useAlertMarkers(symbol: string, timeframe: string) {
     }
 
     // Live channel if enabled
-    if (supabase && supabase.channel) {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+    if (supabaseUrl && supabaseKey && supabaseUrl.startsWith('http') && supabase.channel) {
       try {
         sub = supabase
           .channel("alert_triggers")

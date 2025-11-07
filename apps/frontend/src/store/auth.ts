@@ -42,7 +42,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       // Import supabase here to avoid circular dependency
       const { supabase } = await import('../lib/supabase')
-      if (supabase) {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+      if (supabaseUrl && supabaseKey && supabaseUrl.startsWith('http')) {
         await supabase.auth.signOut()
       }
     } catch (error) {

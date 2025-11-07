@@ -1,97 +1,100 @@
-# Workflow Failure Diagnosis - Step by Step
+# GitHub Actions Workflow Failure Diagnosis
 
-## 🔴 Last 2 Workflows Failed
+## 🔍 Which Workflow Failed?
 
-To fix this, I need to see the **actual error messages**. Here's how:
+Since we just pushed changes to `apps/frontend/src/pages/SignIn.tsx`, these workflows likely ran:
 
-## 📋 Step-by-Step to Get Error Messages
+1. **`deploy-all.yml`** - Runs on any push to main
+2. **`deploy-frontend.yml`** - Runs when `apps/frontend/**` changes
 
-### Step 1: Go to GitHub Actions
-https://github.com/Mandeeptalking/tradeeon-FE-BE-12-09-2025/actions
+## 🐛 Common Failure Points
 
-### Step 2: Click on Failed Workflow
-Click on the most recent failed workflow (red X icon)
+### 1. **Build Step Failure** (Most Likely)
+**Location:** `deploy-frontend.yml` line 48 or `deploy-all.yml` line 114
 
-### Step 3: Click on Failed Job
-Click on the failed job (e.g., "Deploy Frontend" or "Deploy All Services")
+**Error might be:**
+- TypeScript compilation errors
+- Missing dependencies
+- Build script errors
 
-### Step 4: Find the Failed Step
-Scroll down and look for steps with red X icons
+**Check:**
+```bash
+cd apps/frontend
+npm run build
+```
 
-### Step 5: Expand Failed Step
-Click on the failed step to see the error
+**Fix:**
+- Ensure all TypeScript errors are resolved
+- Run `npm ci` to ensure dependencies are correct
+- Check `package.json` for build script
 
-### Step 6: Copy Error Message
-Copy the entire error message and share it
+### 2. **S3 Deployment Failure**
+**Location:** `deploy-frontend.yml` line 50-52 or `deploy-all.yml` line 115-118
 
-## 🚨 Most Likely Causes (Based on Recent Changes)
+**Error might be:**
+- AWS credentials invalid
+- S3 bucket doesn't exist
+- Permission issues
 
-### 1. Missing GitHub Secrets (90% likely)
-**Check:** https://github.com/Mandeeptalking/tradeeon-FE-BE-12-09-2025/settings/secrets/actions
+**Note:** This step has `continue-on-error: true` in `deploy-all.yml`, so it won't fail the workflow, but will show a warning.
 
+### 3. **CloudFront Invalidation Failure**
+**Location:** `deploy-frontend.yml` line 54-63 or `deploy-all.yml` line 119-128
+
+**Error might be:**
+- `CLOUDFRONT_DISTRIBUTION_ID` secret not set
+- Invalid distribution ID
+- Permission issues
+
+**Note:** This step has `continue-on-error: true`, so it won't fail the workflow.
+
+### 4. **Missing Secrets**
 **Required secrets:**
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `VITE_API_URL`
-- `VITE_SUPABASE_URL` ⚠️ **MOST LIKELY MISSING**
-- `VITE_SUPABASE_ANON_KEY` ⚠️ **MOST LIKELY MISSING**
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `CLOUDFRONT_DISTRIBUTION_ID` (optional)
 
-**Error you'd see:**
-- "Missing required input"
-- "Environment variable not set"
-- Build fails with "undefined" errors
+## 🔧 How to Check What Failed
 
-### 2. Build Failure (5% likely)
-**Error you'd see:**
-- "npm ERR!"
-- "Build failed"
-- "Cannot find module"
+### Step 1: Go to GitHub Actions
+1. Go to your repository on GitHub
+2. Click "Actions" tab
+3. Find the latest failed workflow run
+4. Click on it to see details
 
-**Fix:** Test locally:
-```bash
-cd apps/frontend
-npm ci
-npm run build
-```
+### Step 2: Check the Logs
+Look for red X marks or error messages in:
+- **Build step** - Check for TypeScript/build errors
+- **Deploy to S3** - Check for AWS errors
+- **Invalidate CloudFront** - Check for CloudFront errors
 
-### 3. AWS Issues (5% likely)
-**Error you'd see:**
-- "AccessDenied"
-- "NoSuchBucket"
-- "ResourceNotFoundException"
+### Step 3: Share the Error
+Copy the exact error message from the failed step.
 
-## 🔧 Quick Fixes
+## 🚨 Most Likely Issue
 
-### If Missing Secrets:
-1. Go to GitHub → Settings → Secrets and variables → Actions
-2. Click "New repository secret"
-3. Add each missing secret
+Since we just fixed a TypeScript error, the build should pass. But if it's still failing, it might be:
 
-### If Build Fails:
-1. Test build locally first
-2. Fix any errors
-3. Commit and push
+1. **TypeScript error not fully resolved** - Check if there are other TypeScript errors
+2. **Missing environment variables** - Check if all secrets are set in GitHub
+3. **Build script issue** - Check if `npm run build` works locally
 
-### If AWS Fails:
-1. Check AWS credentials are correct
-2. Verify resources exist (S3 bucket, ECR repos, etc.)
+## 📋 Quick Fix Checklist
 
-## 📝 What I Need From You
+- [ ] Run `npm run build` locally in `apps/frontend` to check for build errors
+- [ ] Check GitHub Actions logs for the exact error message
+- [ ] Verify all required secrets are set in GitHub repository settings
+- [ ] Check if S3 bucket exists and has correct permissions
+- [ ] Verify CloudFront distribution ID is correct (if using)
+
+## 🎯 Next Steps
 
 **Please share:**
-1. Which workflow failed? (Deploy All Services? Deploy Frontend?)
-2. Which step failed? (Build? Deploy? Install?)
-3. The exact error message from the logs
+1. The exact error message from the failed workflow
+2. Which step failed (Build, Deploy to S3, or Invalidate CloudFront)
+3. Screenshot of the GitHub Actions failure (if possible)
 
-**Without the actual error, I can only guess!**
-
-## 🎯 Most Likely Fix
-
-**90% chance it's missing secrets:**
-- Add `VITE_SUPABASE_URL` to GitHub secrets
-- Add `VITE_SUPABASE_ANON_KEY` to GitHub secrets
-
-**Values from your .env:**
-- `VITE_SUPABASE_URL` = `https://mgjlnmlhwuqspctanaik.supabase.co`
-- `VITE_SUPABASE_ANON_KEY` = (your anon key - 208 chars)
-
+This will help me provide a specific fix!
