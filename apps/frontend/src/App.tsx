@@ -21,9 +21,17 @@ import DCABot from './pages/DCABot'
 import ErrorBoundary from './components/ErrorBoundary'
 
 function App() {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
   const authInitialized = useAuth() // Initialize auth session management
   const location = useLocation()
+
+  // Debug logging
+  console.log('📱 App render:', { 
+    isAuthenticated, 
+    userId: user?.id, 
+    authInitialized,
+    path: location.pathname 
+  });
 
 
   return (

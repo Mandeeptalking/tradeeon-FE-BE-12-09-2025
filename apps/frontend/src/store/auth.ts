@@ -34,6 +34,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   
   setUser: (user: User | null) => {
+    console.log('👤 Auth store: setUser called', { userId: user?.id, email: user?.email, isAuthenticated: !!user });
     set({ user, isAuthenticated: !!user })
   },
   
