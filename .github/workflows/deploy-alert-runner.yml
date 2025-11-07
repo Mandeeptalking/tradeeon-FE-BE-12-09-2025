@@ -4,7 +4,8 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'apps/alerts/**'
+      - 'apps/api/modules/alerts/**'
+      - 'apps/api/modules/bots/**'
       - 'apps/bots/**'
       - 'backend/**'
       - 'shared/**'
