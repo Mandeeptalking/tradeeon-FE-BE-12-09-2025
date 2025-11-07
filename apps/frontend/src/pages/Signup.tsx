@@ -252,7 +252,7 @@ const Signup = () => {
                 </span>
                 <br />
                 <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 bg-clip-text text-transparent">
-                  Tradeeon?
+                  TradingBot Pro?
                 </span>
               </h1>
               <p className="text-xl text-gray-400 max-w-2xl">
