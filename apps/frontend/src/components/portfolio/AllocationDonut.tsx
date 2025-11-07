@@ -18,21 +18,6 @@ const AllocationDonut = ({ data, isLoading }: AllocationDonutProps) => {
     return `${(value * 100).toFixed(1)}%`;
   };
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-          <p className="text-sm font-medium text-gray-900">{data.label}</p>
-          <p className="text-lg font-semibold text-gray-900">
-            {formatPercent(data.value)}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
   if (isLoading) {
     return (
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
