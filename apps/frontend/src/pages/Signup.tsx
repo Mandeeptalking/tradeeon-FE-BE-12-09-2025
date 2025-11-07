@@ -108,12 +108,18 @@ const Signup = () => {
     try {
       // Check if Supabase is initialized
       if (!supabase) {
-        throw new Error('Authentication service is not available. Please check your configuration. Make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your environment variables.');
+        const errorMsg = 'Authentication service is not available.\n\n' +
+          'Please check:\n' +
+          '1. VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in apps/frontend/.env\n' +
+          '2. Dev server was restarted after adding .env variables\n' +
+          '3. Browser was hard refreshed (Ctrl+Shift+R)\n\n' +
+          'Check browser console (F12) for detailed error messages.';
+        throw new Error(errorMsg);
       }
 
       // Check if supabase.auth exists (defensive check)
       if (!supabase.auth) {
-        throw new Error('Supabase authentication is not properly initialized. Please refresh the page and try again.');
+        throw new Error('Supabase authentication is not properly initialized. Please check browser console (F12) for details and refresh the page.');
       }
 
       // Sign up the user with Supabase Auth

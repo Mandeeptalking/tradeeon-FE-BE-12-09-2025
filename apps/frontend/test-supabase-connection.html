@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Supabase Connection</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .error {
+            color: #f44336;
+            background: #3a1a1a;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #4CAF50;
+            background: #1a3a1a;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        pre {
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Supabase Connection Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Configuration</h2>
+        <p>Enter your Supabase credentials:</p>
+        <input type="text" id="supabaseUrl" placeholder="Supabase URL" style="width: 100%; padding: 10px; margin: 5px 0; background: #1a1a1a; color: #fff; border: 1px solid #444; border-radius: 4px;" 
+               value="https://mgjlnmlhwuqspctanaik.supabase.co">
+        <input type="text" id="supabaseKey" placeholder="Supabase Anon Key" style="width: 100%; padding: 10px; margin: 5px 0; background: #1a1a1a; color: #fff; border: 1px solid #444; border-radius: 4px;"
+               value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1namxubWxod3Vxc3BjdGFuYWlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0MTQzMDUsImV4cCI6MjA3Mjk5MDMwNX0.LF1iumCNB4EPJxAJSeTx04V0Tp7SlL7HBfsJVb3RmLU">
+        <button onclick="testConnection()">Test Connection</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Test Sign Up</h2>
+        <input type="email" id="testEmail" placeholder="Test Email" style="width: 100%; padding: 10px; margin: 5px 0; background: #1a1a1a; color: #fff; border: 1px solid #444; border-radius: 4px;">
+        <input type="password" id="testPassword" placeholder="Test Password (min 6 chars)" style="width: 100%; padding: 10px; margin: 5px 0; background: #1a1a1a; color: #fff; border: 1px solid #444; border-radius: 4px;">
+        <button onclick="testSignUp()">Test Sign Up</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Test Sign In</h2>
+        <button onclick="testSignIn()">Test Sign In</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <script>
+        let supabaseClient = null;
+        
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'test-section';
+            div.innerHTML = `<pre>${message}</pre>`;
+            results.appendChild(div);
+        }
+        
+        function testConnection() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
+            
+            if (!url || !key) {
+                log('❌ Please enter both URL and Key', 'error');
+                return;
+            }
+            
+            try {
+                supabaseClient = window.supabase.createClient(url, key);
+                log('✅ Supabase client created successfully!\n\nTesting connection...', 'success');
+                
+                // Test a simple query
+                supabaseClient.from('users').select('id').limit(1).then(({ data, error }) => {
+                    if (error) {
+                        log(`❌ Connection test failed:\n${JSON.stringify(error, null, 2)}`, 'error');
+                    } else {
+                        log(`✅ Connection successful! Database is accessible.\n\nResponse: ${JSON.stringify(data, null, 2)}`, 'success');
+                    }
+                });
+            } catch (error) {
+                log(`❌ Failed to create Supabase client:\n${error.message}`, 'error');
+            }
+        }
+        
+        function testSignUp() {
+            if (!supabaseClient) {
+                log('❌ Please test connection first', 'error');
+                return;
+            }
+            
+            const email = document.getElementById('testEmail').value.trim();
+            const password = document.getElementById('testPassword').value.trim();
+            
+            if (!email || !password) {
+                log('❌ Please enter email and password', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                log('❌ Password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            log('🔄 Attempting sign up...', 'info');
+            
+            supabaseClient.auth.signUp({
+                email: email,
+                password: password
+            }).then(({ data, error }) => {
+                if (error) {
+                    log(`❌ Sign up failed:\n${JSON.stringify(error, null, 2)}`, 'error');
+                } else {
+                    log(`✅ Sign up successful!\n\nUser ID: ${data.user?.id}\nEmail: ${data.user?.email}\n\nNote: Check your email for confirmation if email confirmation is enabled.`, 'success');
+                }
+            });
+        }
+        
+        function testSignIn() {
+            if (!supabaseClient) {
+                log('❌ Please test connection first', 'error');
+                return;
+            }
+            
+            const email = document.getElementById('testEmail').value.trim();
+            const password = document.getElementById('testPassword').value.trim();
+            
+            if (!email || !password) {
+                log('❌ Please enter email and password', 'error');
+                return;
+            }
+            
+            log('🔄 Attempting sign in...', 'info');
+            
+            supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            }).then(({ data, error }) => {
+                if (error) {
+                    log(`❌ Sign in failed:\n${JSON.stringify(error, null, 2)}`, 'error');
+                } else {
+                    log(`✅ Sign in successful!\n\nUser ID: ${data.user?.id}\nEmail: ${data.user?.email}\nSession: ${data.session ? 'Active' : 'No session'}`, 'success');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+

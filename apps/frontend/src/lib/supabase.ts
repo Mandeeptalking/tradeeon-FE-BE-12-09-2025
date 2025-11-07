@@ -37,31 +37,40 @@ const hasValidSupabaseConfig =
 if (hasValidSupabaseConfig) {
   try {
     supabase = createClient(supabaseUrl, supabaseAnonKey);
+    console.log('✅ Supabase client initialized successfully');
   } catch (error) {
-    // Failed to initialize Supabase - log only in development
-    if (import.meta.env.DEV) {
-      console.error('Failed to initialize Supabase client:', error);
-    }
+    // Failed to initialize Supabase
+    console.error('❌ Failed to initialize Supabase client:', error);
     supabase = null;
+    // Show alert in browser
+    if (typeof window !== 'undefined') {
+      console.error('🔴 CRITICAL: Supabase initialization failed. Authentication will not work.');
+    }
   }
 } else {
-  // Log detailed error in development
-  if (import.meta.env.DEV) {
-    console.error('❌ Supabase client not initialized. Configuration check failed:', {
-      supabaseUrl: supabaseUrl || 'MISSING',
-      supabaseAnonKey: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING',
-      urlValid: supabaseUrl && supabaseUrl.startsWith('http'),
-      keyValid: supabaseAnonKey && supabaseAnonKey.length > 20,
-      reason: !supabaseUrl ? 'Missing VITE_SUPABASE_URL' :
-              !supabaseAnonKey ? 'Missing VITE_SUPABASE_ANON_KEY' :
-              !supabaseUrl.startsWith('http') ? 'Invalid URL format' :
-              supabaseAnonKey.length <= 20 ? 'Key too short' :
-              supabaseUrl.includes('your_supabase') ? 'Placeholder URL detected' :
-              supabaseAnonKey.includes('your_supabase') ? 'Placeholder key detected' :
-              'Unknown error'
-    });
-    console.warn('💡 Make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in apps/frontend/.env');
-    console.warn('💡 Restart your dev server after adding/changing .env variables');
+  // Log detailed error - ALWAYS log, not just in dev
+  const reason = !supabaseUrl ? 'Missing VITE_SUPABASE_URL' :
+                 !supabaseAnonKey ? 'Missing VITE_SUPABASE_ANON_KEY' :
+                 !supabaseUrl.startsWith('http') ? 'Invalid URL format' :
+                 supabaseAnonKey.length <= 20 ? 'Key too short' :
+                 supabaseUrl.includes('your_supabase') ? 'Placeholder URL detected' :
+                 supabaseAnonKey.includes('your_supabase') ? 'Placeholder key detected' :
+                 'Unknown error';
+  
+  console.error('❌ Supabase client not initialized. Configuration check failed:', {
+    supabaseUrl: supabaseUrl || 'MISSING',
+    supabaseAnonKey: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING',
+    urlValid: supabaseUrl && supabaseUrl.startsWith('http'),
+    keyValid: supabaseAnonKey && supabaseAnonKey.length > 20,
+    reason: reason
+  });
+  console.warn('💡 FIX: Make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in apps/frontend/.env');
+  console.warn('💡 FIX: Restart your dev server after adding/changing .env variables');
+  console.warn('💡 FIX: Hard refresh browser (Ctrl+Shift+R) after restarting server');
+  
+  // Show alert in browser
+  if (typeof window !== 'undefined') {
+    console.error('🔴 CRITICAL: Supabase is not configured. Sign up/Sign in will not work.');
   }
 }
 
