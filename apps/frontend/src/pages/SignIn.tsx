@@ -23,27 +23,90 @@ const SignIn = () => {
     }
 
     try {
+      console.log('🔐 Attempting sign-in...');
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (signInError) {
+        console.error('❌ Sign-in error:', signInError);
         setError(signInError.message);
+        setLoading(false);
         return;
       }
 
-      if (data.user) {
+      console.log('✅ Sign-in successful:', { user: data.user?.id, session: !!data.session });
+
+      // Check if user exists
+      if (!data.user) {
+        console.error('❌ Sign-in succeeded but no user data returned');
+        setError('Sign-in failed: No user data received. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      // Wait for session to be fully established
+      if (data.session) {
+        console.log('✅ Session available, setting user and navigating...');
         setUser({
           id: data.user.id,
           email: data.user.email || email,
           name: data.user.user_metadata?.first_name || email.split('@')[0],
         });
-        navigate('/app');
+        // Small delay to ensure state is updated
+        setTimeout(() => {
+          console.log('🚀 Navigating to /app');
+          setLoading(false);
+          navigate('/app');
+        }, 100);
+        // Don't set loading to false in finally - we're handling it in setTimeout
+        return;
+      } else {
+        // Session might not be immediately available, wait a bit
+        console.log('⏳ Waiting for session...');
+        // Capture supabase and user data for use in setTimeout callback
+        const supabaseClient = supabase;
+        const userData = data.user;
+        if (!supabaseClient) {
+          setError('Authentication service is not configured');
+          setLoading(false);
+          return;
+        }
+        setTimeout(async () => {
+          try {
+            const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+            if (sessionError) {
+              console.error('❌ Error getting session:', sessionError);
+              setError('Failed to retrieve session. Please try again.');
+              setLoading(false);
+              return;
+            }
+            if (session) {
+              console.log('✅ Session retrieved, setting user and navigating...');
+              setUser({
+                id: userData.id,
+                email: userData.email || email,
+                name: userData.user_metadata?.first_name || email.split('@')[0],
+              });
+              setLoading(false);
+              navigate('/app');
+            } else {
+              console.error('❌ Session not available after waiting');
+              setError('Session not available. Please try again.');
+              setLoading(false);
+            }
+          } catch (err: any) {
+            console.error('❌ Error in session retrieval:', err);
+            setError('Failed to retrieve session. Please try again.');
+            setLoading(false);
+          }
+        }, 500);
+        // Don't set loading to false in finally - we're handling it in setTimeout
+        return;
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred');
-    } finally {
       setLoading(false);
     }
   };
