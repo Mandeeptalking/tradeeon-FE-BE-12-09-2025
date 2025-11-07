@@ -118,9 +118,11 @@ jobs:
           aws s3 sync apps/frontend/dist/ s3://tradeeon-frontend/ --delete || echo "S3 sync failed, but continuing..."
       - name: Invalidate CloudFront
         continue-on-error: true
+        env:
+          CLOUDFRONT_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
-          if [ -n "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" ]; then
-            aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+          if [ -n "$CLOUDFRONT_ID" ]; then
+            aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_ID" --paths "/*"
           else
             echo "CloudFront distribution ID not set, skipping invalidation"
           fi
