@@ -100,7 +100,12 @@ const SignIn = () => {
     try {
       // Check if Supabase is initialized
       if (!supabase) {
-        throw new Error('Authentication service is not available. Please check your configuration.');
+        throw new Error('Authentication service is not available. Please check your configuration. Make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your environment variables.');
+      }
+
+      // Check if supabase.auth exists (defensive check)
+      if (!supabase.auth) {
+        throw new Error('Supabase authentication is not properly initialized. Please refresh the page and try again.');
       }
 
       // Sign in with Supabase
@@ -120,7 +125,7 @@ const SignIn = () => {
         });
       }
       
-      console.log('User signed in successfully:', data);
+      // User signed in successfully
       navigate('/app');
     } catch (err: any) {
       setError(err.message || 'An error occurred during signin');
