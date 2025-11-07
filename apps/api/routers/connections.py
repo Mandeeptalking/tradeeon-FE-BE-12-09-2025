@@ -96,7 +96,7 @@ def _connection_to_dict(conn: Dict, include_keys: bool = False) -> Dict:
         "notes": None
     }
 
-@router.get("/connections")
+@router.get("/")
 async def list_connections(user: AuthedUser = Depends(get_current_user)):
     """Get all connections for the authenticated user"""
     try:
@@ -118,7 +118,7 @@ async def list_connections(user: AuthedUser = Depends(get_current_user)):
         logger.error(f"Error listing connections: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to list connections: {str(e)}")
 
-@router.post("/connections")
+@router.post("/")
 async def upsert_connection(body: UpsertBody, user: AuthedUser = Depends(get_current_user)):
     """Create or update a connection"""
     try:
@@ -169,7 +169,7 @@ async def upsert_connection(body: UpsertBody, user: AuthedUser = Depends(get_cur
         logger.error(f"Error upserting connection: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to save connection: {str(e)}")
 
-@router.post("/connections/test")
+@router.post("/test")
 async def test_connection(body: TestBody, user: AuthedUser = Depends(get_current_user)):
     """Test a connection with real exchange API"""
     try:
@@ -200,7 +200,7 @@ async def test_connection(body: TestBody, user: AuthedUser = Depends(get_current
             "message": f"Test failed: {str(e)}"
         }
 
-@router.post("/connections/{connection_id}/rotate")
+@router.post("/{connection_id}/rotate")
 async def rotate_keys(connection_id: str, body: RotateBody, user: AuthedUser = Depends(get_current_user)):
     """Rotate API keys for a connection"""
     try:
@@ -238,7 +238,7 @@ async def rotate_keys(connection_id: str, body: RotateBody, user: AuthedUser = D
         logger.error(f"Error rotating keys: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to rotate keys: {str(e)}")
 
-@router.delete("/connections/{connection_id}")
+@router.delete("/{connection_id}")
 async def revoke_connection(connection_id: str, user: AuthedUser = Depends(get_current_user)):
     """Revoke a connection"""
     try:
@@ -265,7 +265,7 @@ async def revoke_connection(connection_id: str, user: AuthedUser = Depends(get_c
         logger.error(f"Error revoking connection: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to revoke connection: {str(e)}")
 
-@router.get("/connections/audit")
+@router.get("/audit")
 async def get_audit_events(user: AuthedUser = Depends(get_current_user)):
     """Get audit events for user's connections"""
     try:

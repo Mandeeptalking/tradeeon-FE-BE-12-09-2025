@@ -1,4 +1,5 @@
 import { Connection, UpsertConnectionBody, TestConnectionBody, TestConnectionResponse, AuditEvent } from '../../types/connections';
+import { authenticatedFetch } from './auth';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
@@ -66,11 +67,8 @@ export const connectionsApi = {
       const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 second timeout
       
       const response = await Promise.race([
-        fetch(`${API_BASE_URL}/connections`, {
+        authenticatedFetch(`${API_BASE_URL}/connections`, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           signal: controller.signal,
         }),
         new Promise<Response>((_, reject) => 
@@ -100,11 +98,8 @@ export const connectionsApi = {
 
   async testConnection(body: TestConnectionBody): Promise<TestConnectionResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/connections/test`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/connections/test`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(body),
       });
       
@@ -127,11 +122,8 @@ export const connectionsApi = {
 
   async upsertConnection(body: UpsertConnectionBody): Promise<Connection> {
     try {
-      const response = await fetch(`${API_BASE_URL}/connections`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/connections`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(body),
       });
       
@@ -157,11 +149,8 @@ export const connectionsApi = {
 
   async rotateKeys(id: string, body: UpsertConnectionBody): Promise<Connection> {
     try {
-      const response = await fetch(`${API_BASE_URL}/connections/${id}/rotate`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/connections/${id}/rotate`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(body),
       });
       
@@ -185,7 +174,7 @@ export const connectionsApi = {
 
   async revokeConnection(id: string): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/connections/${id}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/connections/${id}`, {
         method: 'DELETE',
       });
       
@@ -204,7 +193,7 @@ export const connectionsApi = {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1000);
       
-      const response = await fetch(`${API_BASE_URL}/connections/audit`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/connections/audit`, {
         signal: controller.signal,
       });
       
