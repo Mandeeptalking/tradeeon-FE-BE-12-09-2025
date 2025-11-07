@@ -106,6 +106,11 @@ const Signup = () => {
     setError(null);
 
     try {
+      // Check if Supabase is initialized
+      if (!supabase) {
+        throw new Error('Authentication service is not available. Please check your configuration.');
+      }
+
       // Sign up the user with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
