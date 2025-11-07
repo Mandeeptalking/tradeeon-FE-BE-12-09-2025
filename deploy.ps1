@@ -91,3 +91,4 @@ aws ecs describe-services `
 Write-Host "`n✅ Tradeeon is now live!`n" -ForegroundColor Green
 
 
+

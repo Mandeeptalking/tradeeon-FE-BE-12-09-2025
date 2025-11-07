@@ -1,0 +1,40 @@
+# Copy and paste these commands into AWS CloudShell (one at a time)
+
+# ============================================
+# COMMAND 1: Get current task definition
+# ============================================
+aws ecs describe-task-definition --task-definition tradeeon-backend --query taskDefinition > task-def.json
+
+# ============================================
+# COMMAND 2: Install jq if not already installed
+# ============================================
+sudo yum install jq -y
+
+# ============================================
+# COMMAND 3: Add JWT secret to environment variables
+# ============================================
+jq --arg secret "b5xpWCI1kSA9+zuP39rNJ3RIJiwHa86gGsL6mBcUpl6u6VxFaTowQcHoNpJhrYTacxAdsHBosS+k88xHlNdXyQ==" '
+    .containerDefinitions[0].environment = (
+        (.containerDefinitions[0].environment // []) | 
+        map(select(.name != "SUPABASE_JWT_SECRET")) + 
+        [{"name": "SUPABASE_JWT_SECRET", "value": $secret}]
+    ) |
+    del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)
+' task-def.json > task-def-new.json
+
+# ============================================
+# COMMAND 4: Register new task definition revision
+# ============================================
+aws ecs register-task-definition --cli-input-json file://task-def-new.json
+
+# ============================================
+# COMMAND 5: Note the revision number from above output, then update service
+# Replace REVISION_NUMBER with the actual number (e.g., 5, 6, 7)
+# ============================================
+aws ecs update-service --cluster tradeeon-cluster --service tradeeon-backend-service --task-definition tradeeon-backend:REVISION_NUMBER --force-new-deployment
+
+# ============================================
+# COMMAND 6: Clean up temp files
+# ============================================
+rm task-def.json task-def-new.json
+

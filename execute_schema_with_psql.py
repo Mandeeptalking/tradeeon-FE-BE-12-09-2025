@@ -86,3 +86,4 @@ if __name__ == "__main__":
     success = execute_schema_with_psql()
     sys.exit(0 if success else 1)
 
+

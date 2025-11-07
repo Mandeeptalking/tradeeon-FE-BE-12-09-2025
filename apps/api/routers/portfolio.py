@@ -11,6 +11,7 @@ from apps.api.deps.auth import get_current_user, AuthedUser
 from apps.api.clients.supabase_client import supabase
 from apps.api.utils.encryption import decrypt_value
 from apps.api.binance_authenticated_client import BinanceAuthenticatedClient
+from apps.api.utils.errors import NotFoundError, ValidationError, ExternalServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ async def get_holdings(
     try:
         connection = _get_user_binance_connection(user.user_id)
         if not connection:
-            raise HTTPException(status_code=404, detail="No active Binance connection found. Please connect your exchange first.")
+            raise NotFoundError("Binance connection", "Please connect your exchange first")
         
         # Decrypt API keys
         api_key = decrypt_value(connection["api_key_encrypted"])
@@ -76,7 +77,10 @@ async def get_holdings(
         raise
     except Exception as e:
         logger.error(f"Error fetching holdings: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch holdings: {str(e)}")
+        from apps.api.utils.errors import TradeeonError
+        if isinstance(e, TradeeonError):
+            raise
+        raise ExternalServiceError("Binance", f"Failed to fetch holdings: {str(e)}")
 
 
 @router.get("/funds")
@@ -87,7 +91,7 @@ async def get_funds(
     """Get user's available funds from Binance"""
     try:
         if exchange and exchange.lower() != "binance":
-            raise HTTPException(status_code=400, detail="Only Binance is currently supported")
+            raise ValidationError("Only Binance is currently supported")
         
         connection = _get_user_binance_connection(user.user_id)
         if not connection:

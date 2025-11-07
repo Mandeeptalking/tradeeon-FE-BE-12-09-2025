@@ -98,6 +98,11 @@ const SignIn = () => {
     setError(null);
 
     try {
+      // Check if Supabase is initialized
+      if (!supabase) {
+        throw new Error('Authentication service is not available. Please check your configuration.');
+      }
+
       // Sign in with Supabase
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: formData.email,

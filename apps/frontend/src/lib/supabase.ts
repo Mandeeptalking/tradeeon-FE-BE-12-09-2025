@@ -20,11 +20,15 @@ if (hasValidSupabaseConfig) {
   try {
     supabase = createClient(supabaseUrl, supabaseAnonKey);
   } catch (error) {
-    console.error('Failed to initialize Supabase client:', error);
+    // Failed to initialize Supabase - log only in development
+    if (import.meta.env.DEV) {
+      console.error('Failed to initialize Supabase client:', error);
+    }
     supabase = null;
   }
 } else {
   // Silently continue without Supabase - app will work but auth features won't
+  // Only warn in development mode
   if (import.meta.env.DEV) {
     console.warn('Supabase environment variables not set. Some features may not work.');
   }

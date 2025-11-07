@@ -486,3 +486,4 @@ Your backend needs:
 **Bottom Line**: S3 is for frontend ONLY. Backend needs a real server (Lambda/ECS/Railway). I recommend starting with S3+CloudFront (frontend) + Railway (backend), then migrating to full AWS when ready.
 
 
+

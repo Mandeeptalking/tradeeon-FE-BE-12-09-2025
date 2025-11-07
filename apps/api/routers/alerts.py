@@ -4,6 +4,7 @@ from apps.api.deps.auth import AuthedUser, get_current_user
 from apps.api.schemas.alerts import AlertCreate, AlertRow, AlertUpdate, AlertLogRow
 from apps.api.services import alerts_service as svc
 from apps.api.middleware.rate_limiting import get_alert_quota_info
+from apps.api.utils.errors import NotFoundError, ValidationError
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 
@@ -12,7 +13,7 @@ def create_alert(body: AlertCreate, user: AuthedUser = Depends(get_current_user)
     try:
         return svc.create_alert(user.user_id, body)
     except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        raise ValidationError(str(e))
 
 @router.get("", response_model=List[AlertRow])
 def list_alerts(user: AuthedUser = Depends(get_current_user)):
@@ -22,7 +23,7 @@ def list_alerts(user: AuthedUser = Depends(get_current_user)):
 def get_alert(alert_id: str, user: AuthedUser = Depends(get_current_user)):
     row = svc.get_alert(user.user_id, alert_id)
     if not row:
-        raise HTTPException(404, "Alert not found")
+        raise NotFoundError("Alert", alert_id)
     return row
 
 @router.patch("/{alert_id}", response_model=AlertRow)
@@ -36,7 +37,7 @@ def update_alert(alert_id: str, body: AlertUpdate, user: AuthedUser = Depends(ge
 def delete_alert(alert_id: str, user: AuthedUser = Depends(get_current_user)):
     ok = svc.delete_alert(user.user_id, alert_id)
     if not ok:
-        raise HTTPException(404, "Alert not found")
+        raise NotFoundError("Alert", alert_id)
     return {"ok": True}
 
 @router.get("/{alert_id}/logs", response_model=List[AlertLogRow])

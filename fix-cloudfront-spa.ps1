@@ -44,3 +44,4 @@ Write-Host "See: https://docs.aws.amazon.com/cloudfront/latest/DeveloperGuide/cu
 Write-Host "`n✅ After configuring, invalidate cache:" -ForegroundColor Green
 Write-Host "aws cloudfront create-invalidation --distribution-id $DistributionId --paths '/*'" -ForegroundColor White
 
+

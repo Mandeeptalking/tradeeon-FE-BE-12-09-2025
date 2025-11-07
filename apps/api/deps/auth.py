@@ -13,9 +13,12 @@ def get_current_user(authorization: str = Header(None)) -> AuthedUser:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing token")
     token = authorization.split(" ", 1)[1]
     
-    # Handle mock token for testing
-    if token == "mock-jwt-token-for-testing":
-        return AuthedUser(user_id="test-user-123")
+    # Validate JWT secret is configured
+    if not SUPABASE_JWT_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Authentication service not configured"
+        )
     
     try:
         payload = jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"], options={"verify_aud": False})

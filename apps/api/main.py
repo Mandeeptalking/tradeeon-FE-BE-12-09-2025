@@ -14,6 +14,12 @@ from apps.api.models import (
 from apps.api.routers import connections, portfolio, analytics, market, bots, orders, indicators, alerts
 from apps.api.middleware.rate_limiting import rate_limit_middleware, cleanup_rate_limits
 from apps.api.metrics import get_metrics_response, record_api_request
+from apps.api.utils.errors import (
+    TradeeonError, create_error_response, create_success_response
+)
+from fastapi.responses import JSONResponse
+from datetime import datetime
+import logging
 
 app = FastAPI(
     title="Tradeeon API",
@@ -29,8 +35,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,  # Can be multiple origins: "http://localhost:5173,https://your-app.netlify.app"
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+    expose_headers=["X-Request-ID"],
 )
 
 # Add rate limiting middleware
@@ -46,10 +53,82 @@ app.include_router(orders.router, tags=["orders"])
 app.include_router(indicators.router, tags=["indicators"])
 app.include_router(alerts.router)
 
+logger = logging.getLogger(__name__)
+
+# Global exception handler for TradeeonError
+@app.exception_handler(TradeeonError)
+async def tradeeon_error_handler(request, exc: TradeeonError):
+    """Handle TradeeonError exceptions with standardized response"""
+    logger.error(f"TradeeonError: {exc.code} - {exc.message}", exc_info=True)
+    response = create_error_response(exc)
+    response["timestamp"] = int(datetime.now().timestamp())
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=response
+    )
+
+# Global exception handler for all other exceptions
+@app.exception_handler(Exception)
+async def general_exception_handler(request, exc: Exception):
+    """Handle unexpected exceptions"""
+    logger.error(f"Unexpected error: {str(exc)}", exc_info=True)
+    response = {
+        "success": False,
+        "error": {
+            "code": "INTERNAL_SERVER_ERROR",
+            "message": "An unexpected error occurred"
+        },
+        "timestamp": int(datetime.now().timestamp())
+    }
+    # Only show details in development
+    if os.getenv("ENVIRONMENT") != "production":
+        response["error"]["details"] = {"exception": str(exc)}
+    return JSONResponse(
+        status_code=500,
+        content=response
+    )
+
+async def run_alert_runner():
+    """Background task to run alert evaluation loop."""
+    try:
+        from apps.api.modules.alerts.runner import run_once
+        from apps.api.modules.alerts.datasource import CandleSource
+        from apps.api.modules.alerts.alert_manager import AlertManager
+        
+        src = CandleSource()
+        manager = AlertManager(src)
+        
+        # Run alert evaluation loop
+        while True:
+            try:
+                await run_once(manager)
+                await asyncio.sleep(1.0)  # Poll every second
+            except Exception as e:
+                logger.error(f"Error in alert runner loop: {e}", exc_info=True)
+                await asyncio.sleep(5.0)  # Wait longer on error
+    except Exception as e:
+        logger.error(f"Failed to start alert runner: {e}", exc_info=True)
+
 @app.on_event("startup")
 async def startup_event():
-    """Start background tasks on startup."""
+    """Start background tasks on startup and validate environment."""
+    # Validate critical environment variables
+    required_vars = ["SUPABASE_JWT_SECRET"]
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+    
+    if missing_vars:
+        logger.error(f"Missing required environment variables: {', '.join(missing_vars)}")
+        # Don't fail startup in development, but log warning
+        if os.getenv("ENVIRONMENT") == "production":
+            raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
+    
+    # Start background tasks
     asyncio.create_task(cleanup_rate_limits())
+    
+    # Start alert runner if enabled
+    if os.getenv("ALERT_RUNNER_ENABLED", "true").lower() == "true":
+        asyncio.create_task(run_alert_runner())
+        logger.info("Alert runner started")
 
 @app.get("/health")
 async def health_check():

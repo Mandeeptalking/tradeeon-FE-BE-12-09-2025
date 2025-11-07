@@ -95,3 +95,4 @@ aws ecs describe-services \
 echo -e "\n${GREEN}✅ Tradeeon is now live!${NC}"
 
 
+

@@ -110,3 +110,4 @@ After adding secrets:
 - Check RLS (Row Level Security) policies
 - Verify service role key has correct permissions
 
+

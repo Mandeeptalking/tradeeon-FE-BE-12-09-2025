@@ -24,6 +24,13 @@ class BotDatabaseService:
         self.enabled = supabase is not None
         
         if not self.enabled:
+            import os
+            env = os.getenv("ENVIRONMENT", "development")
+            if env == "production":
+                raise RuntimeError(
+                    "Database service is required in production. "
+                    "Please configure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables."
+                )
             logger.warning("Supabase not configured, database operations disabled. Bot data will only be stored in memory.")
     
     def create_bot(

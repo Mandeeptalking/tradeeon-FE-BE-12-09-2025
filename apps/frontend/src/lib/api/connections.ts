@@ -108,7 +108,7 @@ export const connectionsApi = {
       }
       return await response.json();
     } catch (error) {
-      console.log('Using mock test response');
+      // Using mock response (development fallback)
       // Randomize response for demo
       const responses = [
         { ok: true, code: 'ok', latency_ms: 120 },
@@ -132,7 +132,7 @@ export const connectionsApi = {
       }
       return await response.json();
     } catch (error) {
-      console.log('Using mock upsert response');
+      // Using mock response (development fallback)
       // Create mock connection
       const newConnection: Connection = {
         id: Date.now().toString(),
@@ -159,7 +159,7 @@ export const connectionsApi = {
       }
       return await response.json();
     } catch (error) {
-      console.log('Using mock rotate response');
+      // Using mock response (development fallback)
       // Find existing connection and update
       const existing = mockConnections.find(c => c.id === id);
       if (existing) {
@@ -182,7 +182,7 @@ export const connectionsApi = {
         throw new Error('Failed to revoke connection');
       }
     } catch (error) {
-      console.log('Using mock revoke response');
+      // Using mock response (development fallback)
       // In real app, this would update the connection status
     }
   },

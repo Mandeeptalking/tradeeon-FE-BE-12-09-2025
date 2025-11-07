@@ -4,6 +4,8 @@ from fastapi import APIRouter, HTTPException, Query, Path, Body
 from typing import List, Optional, Dict, Any
 import logging
 
+from apps.api.utils.errors import TradeeonError, NotFoundError, DatabaseError
+
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
@@ -40,9 +42,15 @@ async def list_bots(
             "count": len(bots)
         }
     
+    except TradeeonError:
+        raise
     except Exception as e:
         logger.error(f"Error listing bots: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise TradeeonError(
+            f"Failed to list bots: {str(e)}",
+            "INTERNAL_SERVER_ERROR",
+            status_code=500
+        )
 
 
 @router.post("/")
@@ -146,7 +154,7 @@ async def create_dca_bot(
             sys.path.insert(0, bots_path)
         
         # Import alert converter
-        from apps.bots.alert_converter import convert_bot_entry_to_alert_conditions, convert_playbook_conditions_to_alert
+        from apps.api.modules.bots.alert_converter import convert_bot_entry_to_alert_conditions, convert_playbook_conditions_to_alert
         from apps.api.clients.supabase_client import supabase
         
         bot_id = f"dca_bot_{int(time.time())}"

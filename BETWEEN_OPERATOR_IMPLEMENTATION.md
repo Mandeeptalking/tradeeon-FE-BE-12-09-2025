@@ -245,3 +245,4 @@ Range entry: 75% position
 Your strategy can now capture BOTH RSI bounce and consolidation scenarios without missing opportunities or catching bad entries.
 
 
+

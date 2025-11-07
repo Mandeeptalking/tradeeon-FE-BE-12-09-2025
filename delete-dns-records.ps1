@@ -108,3 +108,4 @@ Write-Host "2. Go to Route 53 console and verify only NS and SOA records remain"
 Write-Host "3. Then delete the hosted zone" -ForegroundColor White
 Write-Host ""
 
+

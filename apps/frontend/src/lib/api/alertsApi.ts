@@ -86,18 +86,23 @@ async function getAuthToken(): Promise<string> {
       return session.access_token
     }
   } catch (error) {
-    console.warn('Supabase auth error:', error)
+    // Supabase auth error - return null to force proper auth
+    if (import.meta.env.DEV) {
+      console.warn('Supabase auth error:', error)
+    }
   }
   
-  // Fallback to mock token if no session
-  return 'mock-jwt-token-for-testing'
+  // No valid session - return null to force authentication
+  return null
 }
 
 // API client functions
 export async function createAlert(payload: AlertCreate): Promise<AlertRow> {
-  console.log('Creating alert with payload:', payload)
   const token = await getAuthToken()
-  console.log('Using token:', token)
+  
+  if (!token) {
+    throw new Error('Authentication required. Please sign in.')
+  }
   
   const response = await fetch(`${API_BASE_URL}/alerts`, {
     method: 'POST',
@@ -108,17 +113,15 @@ export async function createAlert(payload: AlertCreate): Promise<AlertRow> {
     body: JSON.stringify(payload)
   })
   
-  console.log('Response status:', response.status)
-  console.log('Response ok:', response.ok)
-  
   if (!response.ok) {
     const errorText = await response.text()
-    console.error('Error response:', errorText)
+    if (import.meta.env.DEV) {
+      console.error('Error response:', errorText)
+    }
     throw new Error(`Failed to create alert: ${response.statusText} - ${errorText}`)
   }
   
   const result = await response.json()
-  console.log('Alert created successfully:', result)
   return result
 }
 

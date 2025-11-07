@@ -7,20 +7,31 @@ import { supabase } from '../supabase';
 
 /**
  * Get the current user's JWT token from Supabase
- * Returns null if user is not authenticated
+ * Returns null if user is not authenticated or Supabase is not configured
  */
 export async function getAuthToken(): Promise<string | null> {
+  if (!supabase) {
+    if (import.meta.env.DEV) {
+      console.warn('Supabase client not initialized. Cannot get auth token.');
+    }
+    return null;
+  }
+  
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
     
     if (error || !session?.access_token) {
-      console.warn('No auth token available:', error?.message);
+      if (import.meta.env.DEV) {
+        console.warn('No auth token available:', error?.message);
+      }
       return null;
     }
     
     return session.access_token;
   } catch (error) {
-    console.error('Error getting auth token:', error);
+    if (import.meta.env.DEV) {
+      console.error('Error getting auth token:', error);
+    }
     return null;
   }
 }

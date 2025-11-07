@@ -198,3 +198,4 @@ Win Rate: 65%
 **Your edge**: Most traders miss consolidation entries. You catch them. 🎉
 
 
+

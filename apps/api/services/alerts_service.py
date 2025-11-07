@@ -2,11 +2,8 @@ from typing import List, Optional, Dict, Any
 from apps.api.clients.supabase_client import supabase
 from apps.api.schemas.alerts import AlertCreate, AlertRow, AlertUpdate, AlertLogRow
 from apps.api.middleware.rate_limiting import check_alert_quota, increment_alert_count, decrement_alert_count
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'alerts'))
-from alert_manager import AlertManager
-from datasource import CandleSource
+from apps.api.modules.alerts.alert_manager import AlertManager
+from apps.api.modules.alerts.datasource import CandleSource
 
 TABLE = "alerts"
 LOG_TABLE = "alerts_log"

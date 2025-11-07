@@ -14,6 +14,7 @@ from apps.api.deps.auth import get_current_user, AuthedUser
 from apps.api.clients.supabase_client import supabase
 from apps.api.utils.encryption import encrypt_value, decrypt_value
 from apps.api.binance_authenticated_client import BinanceAuthenticatedClient
+from apps.api.utils.errors import DatabaseError, NotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +126,7 @@ async def upsert_connection(body: UpsertBody, user: AuthedUser = Depends(get_cur
         _ensure_user_profile(user.user_id)
         
         if not supabase:
-            raise HTTPException(status_code=503, detail="Database not available")
+            raise DatabaseError("Database service is not available")
         
         # Encrypt API keys
         encrypted_api_key = encrypt_value(body.api_key)
@@ -205,13 +206,13 @@ async def rotate_keys(connection_id: str, body: RotateBody, user: AuthedUser = D
     """Rotate API keys for a connection"""
     try:
         if not supabase:
-            raise HTTPException(status_code=503, detail="Database not available")
+            raise DatabaseError("Database service is not available")
         
         # Verify connection belongs to user
         result = supabase.table("exchange_keys").select("*").eq("id", connection_id).eq("user_id", user.user_id).execute()
         
         if not result.data:
-            raise HTTPException(status_code=404, detail="Connection not found")
+            raise NotFoundError("Connection", connection_id)
         
         # Encrypt new keys
         encrypted_api_key = encrypt_value(body.api_key)
@@ -243,13 +244,13 @@ async def revoke_connection(connection_id: str, user: AuthedUser = Depends(get_c
     """Revoke a connection"""
     try:
         if not supabase:
-            raise HTTPException(status_code=503, detail="Database not available")
+            raise DatabaseError("Database service is not available")
         
         # Verify connection belongs to user
         result = supabase.table("exchange_keys").select("*").eq("id", connection_id).eq("user_id", user.user_id).execute()
         
         if not result.data:
-            raise HTTPException(status_code=404, detail="Connection not found")
+            raise NotFoundError("Connection", connection_id)
         
         # Deactivate connection (soft delete)
         supabase.table("exchange_keys").update({

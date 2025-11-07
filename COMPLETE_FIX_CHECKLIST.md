@@ -89,3 +89,4 @@ Open production site → F12 → Console:
 
 Let me update the code to handle missing env vars better:
 
+

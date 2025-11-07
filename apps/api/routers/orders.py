@@ -9,6 +9,7 @@ from apps.api.deps.auth import get_current_user, AuthedUser
 from apps.api.clients.supabase_client import supabase
 from apps.api.utils.encryption import decrypt_value
 from apps.api.binance_authenticated_client import BinanceAuthenticatedClient
+from apps.api.utils.errors import NotFoundError, DatabaseError, ExternalServiceError
 
 import sys
 import os
@@ -51,7 +52,7 @@ async def preview_order(
     try:
         connection = _get_user_binance_connection(user.user_id)
         if not connection:
-            raise HTTPException(status_code=404, detail="No active Binance connection found")
+            raise NotFoundError("Binance connection", "No active connection found")
         
         # Decrypt API keys
         api_key = decrypt_value(connection["api_key_encrypted"])
@@ -109,7 +110,10 @@ async def preview_order(
         raise
     except Exception as e:
         logger.error(f"Error previewing order: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to preview order: {str(e)}")
+        from apps.api.utils.errors import TradeeonError
+        if isinstance(e, TradeeonError):
+            raise
+        raise ExternalServiceError("Binance", f"Failed to preview order: {str(e)}")
 
 
 @router.post("/place")
@@ -129,7 +133,7 @@ async def place_order(
     try:
         connection = _get_user_binance_connection(user.user_id)
         if not connection:
-            raise HTTPException(status_code=404, detail="No active Binance connection found")
+            raise NotFoundError("Binance connection", "No active connection found")
         
         # Decrypt API keys
         api_key = decrypt_value(connection["api_key_encrypted"])
@@ -181,7 +185,8 @@ async def place_order(
         logger.error(f"Error placing order: {e}")
         error_msg = str(e)
         if "insufficient balance" in error_msg.lower():
-            raise HTTPException(status_code=400, detail="Insufficient balance for this order")
+            from apps.api.utils.errors import ValidationError
+            raise ValidationError("Insufficient balance for this order")
         raise HTTPException(status_code=500, detail=f"Failed to place order: {str(e)}")
 
 
@@ -198,7 +203,7 @@ async def list_orders(
     try:
         connection = _get_user_binance_connection(user.user_id)
         if not connection:
-            raise HTTPException(status_code=404, detail="No active Binance connection found")
+            raise NotFoundError("Binance connection", "No active connection found")
         
         # Decrypt API keys
         api_key = decrypt_value(connection["api_key_encrypted"])
@@ -247,7 +252,12 @@ async def get_order(
     """Get order details"""
     try:
         # TODO: Get from database first, then from exchange if needed
-        raise HTTPException(status_code=501, detail="Not yet implemented - need exchange_order_id")
+        from apps.api.utils.errors import TradeeonError
+        raise TradeeonError(
+            "Not yet implemented - need exchange_order_id",
+            "NOT_IMPLEMENTED",
+            status_code=501
+        )
     
     except HTTPException:
         raise
@@ -266,7 +276,7 @@ async def cancel_order(
     try:
         connection = _get_user_binance_connection(user.user_id)
         if not connection:
-            raise HTTPException(status_code=404, detail="No active Binance connection found")
+            raise NotFoundError("Binance connection", "No active connection found")
         
         # Decrypt API keys
         api_key = decrypt_value(connection["api_key_encrypted"])

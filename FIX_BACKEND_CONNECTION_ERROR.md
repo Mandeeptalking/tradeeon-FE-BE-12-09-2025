@@ -241,3 +241,4 @@ curl https://api.tradeeon.com/health
 4. **Route 53 record**: Does `api.tradeeon.com` A record exist?
 5. **CloudWatch logs**: Any errors in backend logs?
 
+

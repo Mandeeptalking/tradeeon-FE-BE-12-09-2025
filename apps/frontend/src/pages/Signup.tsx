@@ -108,7 +108,12 @@ const Signup = () => {
     try {
       // Check if Supabase is initialized
       if (!supabase) {
-        throw new Error('Authentication service is not available. Please check your configuration.');
+        throw new Error('Authentication service is not available. Please check your configuration. Make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your environment variables.');
+      }
+
+      // Check if supabase.auth exists (defensive check)
+      if (!supabase.auth) {
+        throw new Error('Supabase authentication is not properly initialized. Please refresh the page and try again.');
       }
 
       // Sign up the user with Supabase Auth
@@ -140,17 +145,17 @@ const Signup = () => {
             });
 
           if (profileError) {
-            console.warn('Failed to create user profile (may already exist):', profileError);
+            // Profile may already exist, continue
             // Don't fail signup if profile creation fails - it might already exist
           }
         } catch (profileErr) {
-          console.warn('Error creating user profile:', profileErr);
+          // Error creating user profile (non-critical)
           // Continue with signup even if profile creation fails
         }
       }
 
       setSuccess(true);
-      console.log('User created successfully:', authData);
+      // User created successfully
 
       // Redirect to signin page after 2 seconds
       setTimeout(() => {

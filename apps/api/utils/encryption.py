@@ -5,41 +5,39 @@ Uses Fernet (symmetric encryption) for encrypting exchange API keys
 
 import os
 import base64
+import secrets
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.backends import default_backend
 
-# Get encryption key from environment or generate one
+# Get encryption key from environment
 ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", "")
 
 def get_encryption_key() -> bytes:
-    """Get or generate encryption key"""
-    if ENCRYPTION_KEY:
-        # Try to use as Fernet key directly (base64 URL-safe)
-        try:
-            # If it's already a valid Fernet key, use it
-            Fernet(ENCRYPTION_KEY.encode())
-            return ENCRYPTION_KEY.encode()
-        except:
-            # If not, derive a key from the string
-            kdf = PBKDF2HMAC(
-                algorithm=hashes.SHA256(),
-                length=32,
-                salt=b'tradeeon_salt',  # In production, use random salt per user
-                iterations=100000,
-                backend=default_backend()
-            )
-            key = base64.urlsafe_b64encode(kdf.derive(ENCRYPTION_KEY.encode()))
-            return key
-    else:
-        # Generate a key (for development only - should be set in production)
-        # WARNING: This will generate a new key each time if ENCRYPTION_KEY is not set
-        # In production, ENCRYPTION_KEY must be set as environment variable
-        key = Fernet.generate_key()
-        print("WARNING: Generated new encryption key. Set ENCRYPTION_KEY env var for production!")
-        print(f"Generated key (save this): {key.decode()}")
-        return key
+    """Get encryption key from environment variable.
+    
+    In production, ENCRYPTION_KEY must be set as a valid Fernet key (32-byte base64 URL-safe).
+    For security, keys should be generated using: Fernet.generate_key()
+    """
+    if not ENCRYPTION_KEY:
+        raise ValueError(
+            "ENCRYPTION_KEY environment variable is required. "
+            "Generate a key using: from cryptography.fernet import Fernet; Fernet.generate_key()"
+        )
+    
+    # Try to use as Fernet key directly (base64 URL-safe)
+    try:
+        # Validate it's a valid Fernet key
+        Fernet(ENCRYPTION_KEY.encode())
+        return ENCRYPTION_KEY.encode()
+    except Exception:
+        # If not a valid Fernet key, raise error instead of deriving
+        # This prevents using weak keys derived from passwords
+        raise ValueError(
+            "ENCRYPTION_KEY must be a valid Fernet key (32-byte base64 URL-safe). "
+            "Generate one using: from cryptography.fernet import Fernet; Fernet.generate_key()"
+        )
 
 def encrypt_value(value: str) -> str:
     """Encrypt a string value"""

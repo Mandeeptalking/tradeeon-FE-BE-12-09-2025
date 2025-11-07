@@ -80,3 +80,4 @@ if __name__ == "__main__":
     success = setup_schema()
     sys.exit(0 if success else 1)
 
+

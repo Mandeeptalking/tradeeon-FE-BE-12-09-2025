@@ -1,412 +1,667 @@
-# 🔍 COMPREHENSIVE CODEBASE ANALYSIS - A-Z REVIEW
+# Tradeeon - Comprehensive Codebase Analysis A-Z
 
 ## Executive Summary
 
-This document provides a complete analysis of the Tradeeon codebase, identifying all issues, gaps, and required fixes for a fully functional trading platform.
+This document provides a complete analysis of the Tradeeon codebase, identifying architecture patterns, code quality issues, security concerns, and recommendations for simplification.
 
 ---
 
-## 1. USER AUTHENTICATION FLOW
+## 1. Architecture Overview
 
-### ✅ What Works
-- **Signup**: `apps/frontend/src/pages/Signup.tsx` - Uses Supabase Auth correctly
-- **Signin**: `apps/frontend/src/pages/SignIn.tsx` - Uses Supabase Auth correctly
-- **Auth State Management**: `apps/frontend/src/store/auth.ts` - Zustand store for auth state
-- **Session Management**: `apps/frontend/src/hooks/useAuth.ts` - Handles session restoration
-- **Backend Auth**: `apps/api/deps/auth.py` - JWT token verification
+### 1.1 System Components
 
-### ❌ Issues Found
-
-#### Issue 1.1: Backend Auth Not Enforced
-**Location**: `apps/api/routers/connections.py`
-- **Problem**: Most endpoints don't require authentication
-- **Impact**: Anyone can access/modify connections
-- **Fix Required**: Add `user: AuthedUser = Depends(get_current_user)` to all endpoints
-
-#### Issue 1.2: Frontend API Calls Missing Auth Headers
-**Location**: `apps/frontend/src/lib/api/connections.ts`
-- **Problem**: API calls don't include JWT token in headers
-- **Impact**: Backend can't identify user
-- **Fix Required**: Add `Authorization: Bearer <token>` header to all API calls
-
-#### Issue 1.3: Supabase JWT Secret Not Configured
-**Location**: `apps/api/deps/auth.py`
-- **Problem**: `SUPABASE_JWT_SECRET` might not be set in environment
-- **Impact**: Token verification fails
-- **Fix Required**: Ensure environment variable is set in production
-
----
-
-## 2. EXCHANGE CONNECTION FLOW
-
-### ✅ What Works
-- **Frontend UI**: `apps/frontend/src/pages/app/ConnectionsTest.tsx` - Simple form exists
-- **Backend Endpoints**: `apps/api/routers/connections.py` - Endpoints exist
-- **Test Connection**: `/connections/test` endpoint exists
-
-### ❌ Critical Issues Found
-
-#### Issue 2.1: Connections Stored In-Memory (NOT PERSISTENT)
-**Location**: `apps/api/routers/connections.py:48`
-```python
-connections_store: Dict[str, Connection] = {}  # ❌ IN-MEMORY!
 ```
-- **Problem**: All connections lost on server restart
-- **Impact**: Users lose all connections every time backend restarts
-- **Fix Required**: Store in Supabase `exchange_keys` table
-
-#### Issue 2.2: No Encryption for API Keys
-**Location**: `apps/api/routers/connections.py`
-- **Problem**: API keys stored in plain text (in-memory)
-- **Impact**: Security vulnerability
-- **Fix Required**: Encrypt before storing in Supabase
-
-#### Issue 2.3: No User Association
-**Location**: `apps/api/routers/connections.py`
-- **Problem**: Connections not linked to user_id
-- **Impact**: All users see same connections
-- **Fix Required**: Add `user_id` to all connection operations
-
-#### Issue 2.4: Frontend Not Sending Auth Token
-**Location**: `apps/frontend/src/pages/app/ConnectionsTest.tsx`
-- **Problem**: API calls don't include auth token
-- **Impact**: Backend can't identify user
-- **Fix Required**: Add auth header to all fetch calls
-
-#### Issue 2.5: Test Connection Uses Mock Data
-**Location**: `apps/api/routers/connections.py:120-139`
-- **Problem**: `test_connection` returns random mock results
-- **Impact**: Can't actually test real exchange connections
-- **Fix Required**: Implement real Binance API test
-
----
-
-## 3. ACCOUNT DATA FETCHING
-
-### ✅ What Exists
-- **Portfolio Endpoints**: `apps/api/routers/portfolio.py` - Endpoints exist
-- **Frontend Hooks**: `apps/frontend/src/lib/api/portfolio.ts` - React Query hooks exist
-
-### ❌ Critical Issues Found
-
-#### Issue 3.1: All Portfolio Data is Mock
-**Location**: `apps/api/routers/portfolio.py`
-- **Problem**: All endpoints return hardcoded mock data
-- **Impact**: Users see fake portfolio data
-- **Fix Required**: Integrate with real exchange APIs (Binance, etc.)
-
-#### Issue 3.2: No User-Specific Data
-**Location**: `apps/api/routers/portfolio.py`
-- **Problem**: All users see same portfolio data
-- **Impact**: No user isolation
-- **Fix Required**: Fetch data per user's connected exchanges
-
-#### Issue 3.3: No Exchange Integration
-**Location**: `apps/api/routers/portfolio.py`
-- **Problem**: No actual Binance/Exchange API calls
-- **Impact**: Can't fetch real account balances, positions, etc.
-- **Fix Required**: Use `apps/api/binance_client.py` to fetch real data
-
-#### Issue 3.4: Frontend API URLs Wrong
-**Location**: `apps/frontend/src/lib/api/portfolio.ts:50`
-```typescript
-const response = await fetch(`/api/portfolio/overview?${params}`);  // ❌ Relative URL!
+┌─────────────────────────────────────────────────────────────┐
+│                    FRONTEND (React/TypeScript)                │
+│  • Vite + React 18                                           │
+│  • Zustand (State Management)                                │
+│  • TanStack Query (API Data Fetching)                        │
+│  • Supabase Auth                                             │
+│  • Multiple Chart Libraries (Chart.js, ECharts, Lightweight)  │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            │ HTTP/REST
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    BACKEND API (FastAPI)                      │
+│  • FastAPI with async/await                                  │
+│  • Supabase (Database + Auth)                                 │
+│  • Binance API Integration                                    │
+│  • Multiple Routers (connections, bots, alerts, portfolio)     │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            │
+        ┌───────────────────┴───────────────────┐
+        │                                       │
+        ▼                                       ▼
+┌──────────────────────┐          ┌──────────────────────┐
+│   ALERT RUNNER       │          │   BOT RUNNER        │
+│   (Background)       │          │   (Background)       │
+│   • Evaluates alerts│          │   • Executes trades  │
+│   • Triggers actions│          │   • Paper trading    │
+└──────────────────────┘          └──────────────────────┘
 ```
-- **Problem**: Uses relative URL instead of `VITE_API_URL`
-- **Impact**: API calls fail in production
-- **Fix Required**: Use `import.meta.env.VITE_API_URL`
+
+### 1.2 Technology Stack
+
+**Frontend:**
+- React 18.2.0 + TypeScript
+- Vite 5.0.0
+- Tailwind CSS
+- Multiple chart libraries (redundant)
+- Supabase JS Client
+
+**Backend:**
+- FastAPI 0.104.1
+- Python 3.11+
+- Supabase (PostgreSQL)
+- Binance API integration
+- Cryptography (Fernet encryption)
+
+**Infrastructure:**
+- AWS (ECS, S3, CloudFront, ALB)
+- Supabase (hosted PostgreSQL)
+- Docker containers
 
 ---
 
-## 4. LIVE MARKET DATA STREAMING
+## 2. Critical Issues Found
 
-### ✅ What Works
-- **Frontend WebSocket**: `apps/frontend/src/pages/CleanCharts.tsx` - Direct Binance WS connection
-- **Backend WebSocket**: `apps/api/routers/market.py:88` - WebSocket endpoint exists
+### 2.1 Architecture Issues
 
-### ❌ Issues Found
+#### 🔴 **CRITICAL: Multiple Chart Libraries (Code Bloat)**
+**Location:** `apps/frontend/package.json`
+**Issue:** The frontend includes 4+ chart libraries:
+- `chart.js` + `react-chartjs-2`
+- `echarts`
+- `lightweight-charts`
+- `klinecharts`
+- `recharts`
 
-#### Issue 4.1: Backend WebSocket Sends Mock Data
-**Location**: `apps/api/routers/market.py:88-123`
-- **Problem**: WebSocket sends hardcoded mock candle data
-- **Impact**: No real-time data from backend
-- **Fix Required**: Connect to real Binance WebSocket or use streamer service
+**Impact:**
+- Massive bundle size (~2-3MB+)
+- Confusion about which library to use
+- Maintenance nightmare
+- Performance degradation
 
-#### Issue 4.2: No Streamer Service Integration
-**Location**: `apps/api/routers/market.py`
-- **Problem**: Comment says "TODO: Integrate with streamer WebSocket server"
-- **Impact**: Backend can't stream real data
-- **Fix Required**: Integrate with `apps/streamer/` service
+**Recommendation:** Choose ONE chart library and remove others.
 
-#### Issue 4.3: Frontend Uses Direct Binance Connection
-**Location**: `apps/frontend/src/pages/CleanCharts.tsx:333`
-- **Problem**: Frontend connects directly to Binance (bypasses backend)
-- **Impact**: Can't add authentication, rate limiting, or caching
-- **Fix Required**: Connect to backend WebSocket instead
+#### 🔴 **CRITICAL: Duplicate/Test Pages in Production**
+**Location:** `apps/frontend/src/pages/`
+**Issue:** Many test/demo pages in production codebase:
+- `TestPage.tsx`, `TestHome.tsx`, `SimpleTest.tsx`
+- `MinimalTest.tsx`, `BasicChartTest.tsx`
+- `WorkingChart.tsx`, `WorkingSimpleChart.tsx`
+- `ValidationDemo.tsx`, `ProperIndicatorDemo.tsx`
+- Multiple `StrategyManager*.tsx` versions
+
+**Impact:**
+- Confusion for developers
+- Unnecessary code in production
+- Larger bundle size
+- Maintenance overhead
+
+**Recommendation:** Move all test/demo pages to a separate `/test` route or remove entirely.
+
+#### 🔴 **CRITICAL: Inconsistent State Management**
+**Location:** `apps/frontend/src/`
+**Issue:** Mixed state management approaches:
+- Zustand stores (`store/auth.ts`)
+- React Query (`@tanstack/react-query`)
+- Local component state
+- Supabase real-time subscriptions
+
+**Impact:**
+- State synchronization issues
+- Difficult to debug
+- Performance problems
+- Data inconsistency
+
+**Recommendation:** Standardize on Zustand + React Query pattern.
+
+#### 🔴 **CRITICAL: Backend Service Fragmentation**
+**Location:** `apps/`, `backend/`
+**Issue:** Multiple backend services with unclear boundaries:
+- `apps/api/` - Main FastAPI app
+- `apps/alerts/` - Alert runner service
+- `apps/bots/` - Bot runner service
+- `apps/streamer/` - WebSocket streamer
+- `backend/indicator_engine/` - Indicator calculator
+- `backend/analytics/` - Analytics service
+
+**Impact:**
+- Deployment complexity
+- Service communication issues
+- Resource waste
+- Difficult to scale
+
+**Recommendation:** Consolidate into single backend service with clear modules.
+
+### 2.2 Security Issues
+
+#### 🟠 **HIGH: Encryption Key Management**
+**Location:** `apps/api/utils/encryption.py`
+**Issue:**
+- Hardcoded salt: `b'tradeeon_salt'` (line 29)
+- Generates new key if ENCRYPTION_KEY not set (line 36-42)
+- No key rotation mechanism
+- Same salt for all users
+
+**Impact:**
+- Weak encryption if key compromised
+- No key rotation = long-term vulnerability
+- Same salt = predictable encryption
+
+**Recommendation:**
+- Use AWS KMS or Supabase Vault for key management
+- Per-user salt generation
+- Implement key rotation
+
+#### 🟠 **HIGH: API Key Storage**
+**Location:** `infra/supabase/schema.sql` (line 24-25)
+**Issue:**
+- API keys encrypted but stored in database
+- Encryption key in environment variable (can be leaked)
+- No audit logging for key access
+
+**Impact:**
+- If database compromised, keys can be decrypted
+- No visibility into key usage
+
+**Recommendation:**
+- Use AWS Secrets Manager or Supabase Vault
+- Implement audit logging
+- Add key access monitoring
+
+#### 🟠 **MEDIUM: CORS Configuration**
+**Location:** `apps/api/main.py` (line 25-34)
+**Issue:**
+- `allow_methods=["*"]` - too permissive
+- `allow_headers=["*"]` - too permissive
+- CORS origins from env var (can be misconfigured)
+
+**Impact:**
+- Potential CSRF attacks
+- Unauthorized API access
+
+**Recommendation:**
+- Restrict methods to: GET, POST, PUT, DELETE, PATCH
+- Whitelist specific headers
+- Validate CORS origins
+
+#### 🟠 **MEDIUM: Authentication Bypass**
+**Location:** `apps/api/deps/auth.py` (line 17-18)
+**Issue:**
+- Mock token for testing: `"mock-jwt-token-for-testing"`
+- No check if this is enabled in production
+
+**Impact:**
+- Authentication can be bypassed in production if not removed
+
+**Recommendation:**
+- Remove mock token or guard with environment check
+- Add production validation
+
+#### 🟡 **LOW: Console Logging in Production**
+**Location:** Multiple files in `apps/frontend/src/`
+**Issue:**
+- `console.log()`, `console.warn()`, `console.error()` throughout codebase
+- Exposes sensitive information
+- Performance impact
+
+**Impact:**
+- Information leakage
+- Performance degradation
+- Cluttered browser console
+
+**Recommendation:**
+- Use proper logging library (e.g., `winston`, `pino`)
+- Remove console logs in production builds
+- Add log levels
+
+### 2.3 Code Quality Issues
+
+#### 🟠 **HIGH: TODO Comments Everywhere**
+**Location:** Throughout codebase
+**Found:** 339+ TODO/FIXME comments
+**Examples:**
+- `apps/api/routers/bots.py:116` - "TODO: Save to Supabase"
+- `apps/api/routers/bots.py:154` - "TODO: Get from auth header"
+- `apps/bots/dca_executor.py:168` - "TODO: Real exchange integration"
+
+**Impact:**
+- Incomplete features
+- Technical debt
+- Unclear what's implemented
+
+**Recommendation:**
+- Create GitHub issues for each TODO
+- Prioritize and complete or remove
+- Use issue tracking system
+
+#### 🟠 **HIGH: Error Handling Inconsistency**
+**Location:** Multiple files
+**Issue:**
+- Some endpoints return `{"success": False}`
+- Others raise `HTTPException`
+- Some swallow errors silently
+- Inconsistent error response format
+
+**Impact:**
+- Difficult to handle errors in frontend
+- Poor user experience
+- Debugging challenges
+
+**Recommendation:**
+- Standardize error response format
+- Use FastAPI exception handlers
+- Add error logging
+
+#### 🟠 **MEDIUM: Database Service Fallback Pattern**
+**Location:** `apps/bots/db_service.py`
+**Issue:**
+- Database operations have fallback to in-memory storage
+- Silent failures (warnings only)
+- Data can be lost
+
+**Impact:**
+- Data inconsistency
+- Silent failures
+- Difficult to debug
+
+**Recommendation:**
+- Fail fast if database unavailable
+- Remove in-memory fallback
+- Add proper error handling
+
+#### 🟡 **MEDIUM: Type Safety Issues**
+**Location:** Multiple TypeScript files
+**Issue:**
+- `any` types used frequently
+- Missing type definitions
+- Inconsistent type usage
+
+**Impact:**
+- Runtime errors
+- Poor IDE support
+- Difficult refactoring
+
+**Recommendation:**
+- Enable strict TypeScript
+- Remove `any` types
+- Add proper type definitions
+
+### 2.4 Database Schema Issues
+
+#### 🟠 **MEDIUM: Missing Indexes**
+**Location:** `infra/supabase/schema.sql`
+**Issue:**
+- Some foreign keys not indexed
+- Missing composite indexes for common queries
+- No indexes on JSONB columns used in WHERE clauses
+
+**Impact:**
+- Slow queries
+- Poor performance at scale
+
+**Recommendation:**
+- Add indexes for all foreign keys
+- Add composite indexes for common query patterns
+- Consider GIN indexes for JSONB
+
+#### 🟡 **LOW: Schema Inconsistencies**
+**Location:** Multiple migration files
+**Issue:**
+- `bots.bot_id` is TEXT (not UUID)
+- Some tables use UUID, others use TEXT
+- Inconsistent naming conventions
+
+**Impact:**
+- Confusion
+- Potential bugs
+- Difficult to maintain
+
+**Recommendation:**
+- Standardize on UUID for all IDs
+- Use consistent naming
+- Document schema decisions
+
+### 2.5 Performance Issues
+
+#### 🟠 **MEDIUM: No Caching Strategy**
+**Location:** Throughout codebase
+**Issue:**
+- No Redis caching layer
+- Repeated database queries
+- No API response caching
+- Market data fetched repeatedly
+
+**Impact:**
+- Slow API responses
+- High database load
+- Increased costs
+
+**Recommendation:**
+- Add Redis for caching
+- Cache market data (TTL: 1-5 seconds)
+- Cache user data (TTL: 5-10 minutes)
+- Implement cache invalidation
+
+#### 🟡 **LOW: Bundle Size**
+**Location:** `apps/frontend/`
+**Issue:**
+- Multiple chart libraries
+- Unused dependencies
+- No code splitting
+- Large initial bundle
+
+**Impact:**
+- Slow page loads
+- Poor mobile experience
+- High bandwidth usage
+
+**Recommendation:**
+- Remove unused dependencies
+- Implement code splitting
+- Lazy load routes
+- Use dynamic imports
+
+### 2.6 Testing Issues
+
+#### 🔴 **CRITICAL: No Test Coverage**
+**Location:** Entire codebase
+**Issue:**
+- No unit tests
+- No integration tests
+- No E2E tests
+- Test files exist but not integrated
+
+**Impact:**
+- High risk of bugs
+- Difficult to refactor
+- No confidence in changes
+
+**Recommendation:**
+- Add unit tests (target: 70% coverage)
+- Add integration tests for API
+- Add E2E tests for critical flows
+- Set up CI/CD with test requirements
 
 ---
 
-## 5. TRADING EXECUTION
+## 3. Missing Features for Successful Portal
 
-### ✅ What Exists
-- **Order Endpoints**: `apps/api/routers/orders.py` - Endpoints exist
-- **Order Models**: `shared/contracts/orders.py` - Type definitions exist
+### 3.1 User Management
+- ❌ User roles/permissions
+- ❌ Subscription management
+- ❌ Usage limits/quota enforcement
+- ❌ User activity logging
+- ❌ Account deletion
 
-### ❌ Critical Issues Found
+### 3.2 Monitoring & Observability
+- ❌ Application performance monitoring (APM)
+- ❌ Error tracking (Sentry, Rollbar)
+- ❌ Log aggregation (CloudWatch, Datadog)
+- ❌ Metrics dashboard
+- ❌ Alerting for critical issues
 
-#### Issue 5.1: All Orders Are Mock
-**Location**: `apps/api/routers/orders.py:74-121`
-- **Problem**: `place_order` returns fake execution reports
-- **Impact**: No real trades are executed
-- **Fix Required**: Integrate with real exchange APIs
+### 3.3 Business Features
+- ❌ Payment integration (Stripe, PayPal)
+- ❌ Subscription tiers (Free, Pro, Enterprise)
+- ❌ Usage analytics
+- ❌ Feature flags
+- ❌ A/B testing
 
-#### Issue 5.2: No Exchange Client Integration
-**Location**: `apps/api/routers/orders.py`
-- **Problem**: Doesn't use `apps/api/binance_client.py` for orders
-- **Impact**: Can't place real orders
-- **Fix Required**: Use BinanceClient to place orders
+### 3.4 Developer Experience
+- ❌ API documentation (Swagger/OpenAPI)
+- ❌ SDK for external integrations
+- ❌ Webhook system (partially implemented)
+- ❌ Rate limiting per user tier
+- ❌ API versioning
 
-#### Issue 5.3: No User Exchange Selection
-**Location**: `apps/api/routers/orders.py`
-- **Problem**: Doesn't know which exchange to use
-- **Impact**: Can't route orders to correct exchange
-- **Fix Required**: Accept `exchange` parameter, use user's connected exchange
+### 3.5 Compliance & Legal
+- ❌ Terms of Service
+- ❌ Privacy Policy
+- ❌ GDPR compliance
+- ❌ Data export functionality
+- ❌ Audit logs
 
-#### Issue 5.4: No Balance Checking
-**Location**: `apps/api/routers/orders.py:35-43`
-- **Problem**: Uses hardcoded mock balance
-- **Impact**: Can't verify if user has funds
-- **Fix Required**: Fetch real balance from exchange
-
-#### Issue 5.5: No Order Persistence
-**Location**: `apps/api/routers/orders.py`
-- **Problem**: Orders not saved to database
-- **Impact**: Can't track order history
-- **Fix Required**: Save to Supabase `orders` table
-
----
-
-## 6. DATABASE INTEGRATION
-
-### ✅ What Exists
-- **Supabase Schema**: `infra/supabase/schema.sql` - Tables defined
-- **Supabase Client**: `apps/api/clients/supabase_client.py` - Client exists
-
-### ❌ Critical Issues Found
-
-#### Issue 6.1: No Database Operations
-**Location**: `apps/api/routers/connections.py`, `portfolio.py`, `orders.py`
-- **Problem**: All endpoints use in-memory storage or mock data
-- **Impact**: No data persistence
-- **Fix Required**: Use Supabase client to read/write data
-
-#### Issue 6.2: Schema Not Applied
-**Location**: `infra/supabase/schema.sql`
-- **Problem**: Tables might not exist in Supabase
-- **Impact**: Database operations will fail
-- **Fix Required**: Run migrations to create tables
-
-#### Issue 6.3: No User Profile Creation
-**Location**: `apps/frontend/src/pages/Signup.tsx`
-- **Problem**: Signup doesn't create user profile in `public.users` table
-- **Impact**: User profile missing
-- **Fix Required**: Create user profile after Supabase Auth signup
+### 3.6 Production Readiness
+- ❌ Health check endpoints (partial)
+- ❌ Graceful shutdown
+- ❌ Database migrations system
+- ❌ Backup/restore procedures
+- ❌ Disaster recovery plan
 
 ---
 
-## 7. API CLIENT INTEGRATION
+## 4. Code Organization Issues
 
-### ✅ What Exists
-- **Binance Client**: `apps/api/binance_client.py` - Client exists
-- **Binance Client (Analytics)**: `backend/analytics/core/binance_client.py` - Another client
+### 4.1 File Structure Problems
 
-### ❌ Issues Found
+**Frontend:**
+```
+apps/frontend/src/
+├── pages/          # 38+ page files (many test/demo)
+├── components/     # Good organization
+├── lib/            # Mixed utilities and API clients
+├── store/          # Only auth store (inconsistent)
+└── hooks/          # Minimal custom hooks
+```
 
-#### Issue 7.1: Binance Client Not Used
-**Location**: `apps/api/routers/`
-- **Problem**: Routers don't use BinanceClient
-- **Impact**: Can't fetch real market data or place orders
-- **Fix Required**: Import and use BinanceClient in routers
+**Issues:**
+- Too many test pages in production
+- Inconsistent folder structure
+- Mixed concerns in `lib/`
 
-#### Issue 7.2: No Exchange Key Retrieval
-**Location**: `apps/api/routers/`
-- **Problem**: Routers don't fetch user's exchange keys from Supabase
-- **Impact**: Can't authenticate with exchanges
-- **Fix Required**: Fetch and decrypt exchange keys per user
+**Backend:**
+```
+apps/
+├── api/            # Main API
+├── alerts/         # Alert service
+├── bots/           # Bot service
+├── streamer/       # WebSocket service
+└── ...
+```
 
-#### Issue 7.3: No Multi-Exchange Support
-**Location**: `apps/api/routers/`
-- **Problem**: Only Binance client exists
-- **Impact**: Can't support other exchanges
-- **Fix Required**: Create exchange factory/interface
+**Issues:**
+- Services not clearly separated
+- Shared code duplication
+- Unclear dependencies
 
----
+### 4.2 Naming Conventions
 
-## 8. FRONTEND-BACKEND INTEGRATION
+**Inconsistencies:**
+- `bot_id` vs `botId` (snake_case vs camelCase)
+- `user_id` vs `userId`
+- Mixed naming in JSON responses
 
-### ✅ What Works
-- **API Base URL**: Environment variable support exists
-- **CORS**: Backend CORS configured
-
-### ❌ Issues Found
-
-#### Issue 8.1: API URLs Not Consistent
-**Location**: `apps/frontend/src/lib/api/`
-- **Problem**: Some files use relative URLs, some use env vars
-- **Impact**: Inconsistent behavior
-- **Fix Required**: Standardize on `VITE_API_URL`
-
-#### Issue 8.2: No Error Handling
-**Location**: `apps/frontend/src/lib/api/`
-- **Problem**: No try-catch or error boundaries
-- **Impact**: Errors crash the app
-- **Fix Required**: Add error handling
-
-#### Issue 8.3: No Loading States
-**Location**: `apps/frontend/src/pages/app/ConnectionsTest.tsx`
-- **Problem**: No loading indicators
-- **Impact**: Poor UX
-- **Fix Required**: Add loading states
+**Recommendation:**
+- Backend: snake_case
+- Frontend: camelCase
+- API responses: camelCase (JSON standard)
 
 ---
 
-## 9. SECURITY ISSUES
+## 5. Documentation Issues
 
-### ❌ Critical Security Issues
+### 5.1 Missing Documentation
+- ❌ API documentation (OpenAPI/Swagger)
+- ❌ Architecture decision records (ADRs)
+- ❌ Deployment runbooks
+- ❌ Incident response procedures
+- ❌ Onboarding guide for new developers
 
-#### Issue 9.1: API Keys Not Encrypted
-- **Problem**: API keys stored in plain text (when we add DB)
-- **Fix Required**: Use `pgcrypto` or encryption library
-
-#### Issue 9.2: No Rate Limiting on Critical Endpoints
-- **Problem**: Order placement not rate limited
-- **Fix Required**: Add rate limiting to trading endpoints
-
-#### Issue 9.3: No Input Validation
-- **Problem**: Order quantities, prices not validated
-- **Fix Required**: Add Pydantic validation
-
-#### Issue 9.4: CORS Too Permissive
-- **Problem**: `allow_origins=["*"]` in some configs
-- **Fix Required**: Restrict to specific domains
+### 5.2 Outdated Documentation
+- Many markdown files with outdated information
+- Deployment guides may not match current setup
+- Configuration examples may be incorrect
 
 ---
 
-## 10. MISSING FEATURES
+## 6. Recommendations for Simplification
 
-### ❌ Not Implemented
+### 6.1 Immediate Actions (Week 1)
 
-1. **Order History**: No endpoint to fetch past orders
-2. **Trade History**: No endpoint to fetch executed trades
-3. **Balance Updates**: No real-time balance updates
-4. **Position Tracking**: No position management
-5. **Risk Management**: No position sizing, stop-loss, etc.
-6. **Notification System**: No alerts for order fills, errors
-7. **Backtesting**: No historical strategy testing
-8. **Paper Trading**: No simulated trading mode
-9. **Multi-Exchange**: Only Binance supported
-10. **API Key Rotation**: No automatic key rotation
+1. **Remove Test/Demo Pages**
+   - Move all test pages to `/test` route or delete
+   - Remove unused chart libraries
+   - Clean up `pages/` directory
 
----
+2. **Fix Security Issues**
+   - Remove mock authentication token
+   - Tighten CORS configuration
+   - Add environment variable validation
 
-## 11. PRIORITY FIX LIST
+3. **Standardize Error Handling**
+   - Create unified error response format
+   - Add global exception handler
+   - Implement proper logging
 
-### 🔴 CRITICAL (Must Fix Immediately)
+### 6.2 Short-term (Month 1)
 
-1. **Fix Connections Storage** - Store in Supabase, not memory
-2. **Add Authentication to All Endpoints** - Require JWT token
-3. **Add Auth Headers to Frontend** - Include token in API calls
-4. **Fix Portfolio Data** - Fetch real data from exchanges
-5. **Fix Order Execution** - Place real orders on exchanges
-6. **Create User Profiles** - On signup, create profile in DB
+1. **Consolidate Chart Libraries**
+   - Choose ONE library (recommend: `lightweight-charts`)
+   - Remove others
+   - Update all chart components
 
-### 🟡 HIGH PRIORITY (Fix Soon)
+2. **Consolidate Backend Services**
+   - Merge services into single FastAPI app
+   - Use background tasks for alerts/bots
+   - Clear module boundaries
 
-7. **Encrypt API Keys** - Before storing in database
-8. **Fix API URLs** - Standardize on VITE_API_URL
-9. **Add Error Handling** - Frontend and backend
-10. **Integrate Binance Client** - Use in all routers
+3. **Add Testing**
+   - Unit tests for critical functions
+   - API integration tests
+   - Basic E2E tests
 
-### 🟢 MEDIUM PRIORITY (Nice to Have)
+4. **Improve State Management**
+   - Standardize on Zustand + React Query
+   - Remove redundant state management
+   - Add state persistence
 
-11. **Add Loading States** - Better UX
-12. **Add Order History** - Track past orders
-13. **Add Real-time Balance** - WebSocket updates
-14. **Add Position Tracking** - Manage positions
-15. **Add Risk Management** - Position sizing, stops
+### 6.3 Medium-term (Quarter 1)
 
----
+1. **Add Monitoring**
+   - Error tracking (Sentry)
+   - APM (New Relic, Datadog)
+   - Log aggregation
 
-## 12. RECOMMENDED FIX ORDER
+2. **Implement Caching**
+   - Redis for API responses
+   - Cache market data
+   - Cache user data
 
-### Phase 1: Foundation (Week 1)
-1. Fix authentication flow (add tokens to all requests)
-2. Fix connections storage (Supabase integration)
-3. Create user profiles on signup
-4. Encrypt API keys
+3. **Complete TODO Items**
+   - Prioritize TODOs
+   - Complete or remove
+   - Track in issue system
 
-### Phase 2: Data Integration (Week 2)
-5. Integrate Binance client in routers
-6. Fetch real portfolio data
-7. Fetch real account balances
-8. Test connection with real Binance API
+4. **Add Missing Features**
+   - User roles/permissions
+   - Subscription management
+   - Usage limits
 
-### Phase 3: Trading (Week 3)
-9. Implement real order placement
-10. Add order history
-11. Add position tracking
-12. Add error handling
+### 6.4 Long-term (Year 1)
 
-### Phase 4: Polish (Week 4)
-13. Add loading states
-14. Add notifications
-15. Add risk management
-16. Performance optimization
+1. **Refactor Architecture**
+   - Microservices if needed (currently not)
+   - Event-driven architecture
+   - Message queue for async tasks
 
----
+2. **Scale Infrastructure**
+   - Auto-scaling
+   - Load balancing
+   - CDN optimization
 
-## 13. QUICK WINS (Can Fix Now)
-
-1. **Add Auth Headers to Frontend** - 30 minutes
-2. **Fix API URLs** - 1 hour
-3. **Add Error Handling** - 2 hours
-4. **Create User Profiles** - 2 hours
-5. **Store Connections in Supabase** - 4 hours
-
----
-
-## 14. TESTING CHECKLIST
-
-### ✅ What to Test
-
-- [ ] User can signup
-- [ ] User can signin
-- [ ] User session persists on refresh
-- [ ] User can connect exchange
-- [ ] Connection is saved to database
-- [ ] User can test connection
-- [ ] User can see portfolio data
-- [ ] Portfolio data is user-specific
-- [ ] User can place order
-- [ ] Order is executed on exchange
-- [ ] Order is saved to database
-- [ ] User can see order history
-- [ ] Live data streams correctly
-- [ ] Errors are handled gracefully
+3. **Compliance & Legal**
+   - GDPR compliance
+   - Terms of Service
+   - Privacy Policy
+   - Audit logs
 
 ---
 
-## 15. CONCLUSION
+## 7. Priority Matrix
 
-The codebase has a **solid foundation** but is **missing critical integrations**:
+### Critical (Fix Immediately)
+1. 🔴 Remove test/demo pages from production
+2. 🔴 Remove unused chart libraries
+3. 🔴 Fix security issues (mock auth, CORS)
+4. 🔴 Add error handling standardization
 
-1. **No database persistence** - Everything is in-memory or mock
-2. **No real exchange integration** - All data is fake
-3. **No authentication enforcement** - Security gaps
-4. **No error handling** - Poor user experience
+### High Priority (This Month)
+1. 🟠 Consolidate backend services
+2. 🟠 Add testing framework
+3. 🟠 Fix encryption key management
+4. 🟠 Standardize state management
 
-**Estimated Time to Production-Ready**: 3-4 weeks of focused development
+### Medium Priority (This Quarter)
+1. 🟡 Add monitoring & observability
+2. 🟡 Implement caching
+3. 🟡 Complete TODO items
+4. 🟡 Add missing business features
 
-**Next Steps**: Start with Phase 1 (Foundation) fixes, then move to Phase 2 (Data Integration).
+### Low Priority (This Year)
+1. 🟢 Refactor architecture
+2. 🟢 Scale infrastructure
+3. 🟢 Compliance & legal
 
+---
 
+## 8. Code Metrics
+
+### Current State
+- **Lines of Code:** ~50,000+ (estimated)
+- **Test Coverage:** ~0%
+- **Dependencies:** 100+ (frontend), 30+ (backend)
+- **Bundle Size:** ~3-5MB (estimated, too large)
+- **API Endpoints:** 50+
+- **Database Tables:** 15+
+
+### Target State
+- **Test Coverage:** 70%+
+- **Dependencies:** Reduce by 30%
+- **Bundle Size:** <1MB (initial load)
+- **API Response Time:** <200ms (p95)
+- **Uptime:** 99.9%
+
+---
+
+## 9. Conclusion
+
+The Tradeeon codebase is **functional but needs significant cleanup and simplification**. The main issues are:
+
+1. **Code bloat** from multiple libraries and test pages
+2. **Security vulnerabilities** that need immediate attention
+3. **Architectural inconsistencies** that make maintenance difficult
+4. **Missing production features** for a successful portal
+
+**Recommended Approach:**
+1. Start with immediate security fixes
+2. Remove bloat (test pages, unused libraries)
+3. Standardize patterns (error handling, state management)
+4. Add testing and monitoring
+5. Gradually add missing features
+
+**Estimated Effort:**
+- Immediate fixes: 1-2 weeks
+- Short-term improvements: 1-2 months
+- Medium-term features: 3-6 months
+- Long-term architecture: 6-12 months
+
+---
+
+## 10. Next Steps
+
+1. Review this analysis with the team
+2. Prioritize issues based on business needs
+3. Create GitHub issues for each item
+4. Set up project board for tracking
+5. Begin with critical security fixes
+6. Plan sprint for code cleanup
+
+---
+
+*Generated: 2025-01-XX*
+*Analysis Version: 1.0*

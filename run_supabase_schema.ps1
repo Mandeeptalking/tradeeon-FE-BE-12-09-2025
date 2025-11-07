@@ -55,3 +55,4 @@ Write-Host "`n💡 Tip: You can also open the file directly:" -ForegroundColor C
 Write-Host "   code $schemaFile" -ForegroundColor Gray
 Write-Host "   (or notepad $schemaFile)" -ForegroundColor Gray
 
+
