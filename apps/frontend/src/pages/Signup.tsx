@@ -115,6 +115,11 @@ const Signup = () => {
         throw new Error('Authentication service is not configured. Please check your environment variables.');
       }
 
+      // Additional check: ensure supabase.auth exists
+      if (!supabase || !supabase.auth) {
+        throw new Error('Authentication service is not available. Please check your configuration.');
+      }
+
       // Sign up the user with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,

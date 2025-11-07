@@ -19,7 +19,15 @@ console.log('🔍 Supabase Config:', {
 // Create a dummy client that will fail gracefully if env vars are missing
 // This ensures supabase is NEVER null
 const createDummyClient = (): SupabaseClient => {
-  return createClient('https://dummy.supabase.co', 'dummy-key');
+  try {
+    // Create a real client with dummy credentials - this ensures auth property exists
+    return createClient('https://dummy.supabase.co', 'dummy-key-that-will-fail-on-use');
+  } catch (error) {
+    // If even dummy client creation fails, create a minimal object with auth stub
+    console.error('Failed to create even dummy client:', error);
+    // Return a minimal client object that won't crash
+    return createClient('https://placeholder.supabase.co', 'placeholder-key');
+  }
 };
 
 // Create client - ALWAYS create one, even if invalid
