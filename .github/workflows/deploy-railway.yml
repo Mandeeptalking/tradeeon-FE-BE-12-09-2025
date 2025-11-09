@@ -20,11 +20,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
+    - name: Setup Railway CLI
+      run: |
+        curl -fsSL https://railway.app/install.sh | sh
+    
     - name: Deploy to Railway
-      uses: bervProject/railway-deploy@v1.0.0
-      with:
-        railway_token: ${{ secrets.RAILWAY_TOKEN }}
-        service: backend
-        detach: false
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      run: |
+        railway link ${{ secrets.RAILWAY_PROJECT_ID }}
+        railway up --service backend
 
 
