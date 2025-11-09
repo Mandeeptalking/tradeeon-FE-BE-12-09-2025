@@ -44,10 +44,14 @@ class BinanceAuthenticatedClient:
         Generate HMAC SHA256 signature for authenticated requests.
         Binance requires parameters to be sorted alphabetically before signing.
         """
+        # Filter out None values and empty strings (Binance requirement)
+        filtered_params = {k: v for k, v in params.items() if v is not None and v != ''}
         # Sort parameters alphabetically by key (Binance requirement)
-        sorted_params = sorted(params.items())
+        sorted_params = sorted(filtered_params.items())
         # Create query string from sorted parameters
         query_string = urlencode(sorted_params)
+        # Log for debugging (remove in production)
+        logger.debug(f"Generating signature from query string: {query_string[:100]}...")
         # Generate HMAC SHA256 signature
         signature = hmac.new(
             self.api_secret.encode('utf-8'),
@@ -93,6 +97,8 @@ class BinanceAuthenticatedClient:
                     if response.status != 200:
                         error_msg = data.get('msg', data.get('message', 'Unknown error'))
                         error_code = data.get('code', response.status)
+                        # Log full error details for debugging
+                        logger.error(f"Binance API error {error_code}: {error_msg}. Full response: {data}")
                         raise Exception(f"Binance API error {error_code}: {error_msg}")
                     return data
             elif method.upper() == 'POST':
