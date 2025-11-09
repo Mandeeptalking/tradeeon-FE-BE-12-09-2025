@@ -40,8 +40,15 @@ class BinanceAuthenticatedClient:
             await self.session.close()
     
     def _generate_signature(self, params: Dict) -> str:
-        """Generate HMAC SHA256 signature for authenticated requests"""
-        query_string = urlencode(params)
+        """
+        Generate HMAC SHA256 signature for authenticated requests.
+        Binance requires parameters to be sorted alphabetically before signing.
+        """
+        # Sort parameters alphabetically by key (Binance requirement)
+        sorted_params = sorted(params.items())
+        # Create query string from sorted parameters
+        query_string = urlencode(sorted_params)
+        # Generate HMAC SHA256 signature
         signature = hmac.new(
             self.api_secret.encode('utf-8'),
             query_string.encode('utf-8'),
@@ -64,9 +71,14 @@ class BinanceAuthenticatedClient:
             params = {}
         
         # Add timestamp for signed requests
+        # IMPORTANT: Generate signature BEFORE adding it to params
+        # Signature must be calculated from params that don't include 'signature' itself
         if signed:
             params['timestamp'] = int(time.time() * 1000)
-            params['signature'] = self._generate_signature(params)
+            # Generate signature from params (without signature field)
+            signature = self._generate_signature(params)
+            # Now add signature to params
+            params['signature'] = signature
         
         headers = {
             'X-MBX-APIKEY': self.api_key
@@ -79,7 +91,9 @@ class BinanceAuthenticatedClient:
                 async with self.session.get(url, params=params, headers=headers) as response:
                     data = await response.json()
                     if response.status != 200:
-                        raise Exception(f"Binance API error {response.status}: {data.get('msg', 'Unknown error')}")
+                        error_msg = data.get('msg', data.get('message', 'Unknown error'))
+                        error_code = data.get('code', response.status)
+                        raise Exception(f"Binance API error {error_code}: {error_msg}")
                     return data
             elif method.upper() == 'POST':
                 async with self.session.post(url, params=params, headers=headers) as response:
@@ -119,24 +133,25 @@ class BinanceAuthenticatedClient:
             }
         except Exception as e:
             error_msg = str(e)
+            logger.error(f"Binance connection test failed: {error_msg}")
             # Parse common Binance errors
             if "Invalid API-key" in error_msg or "invalid signature" in error_msg.lower():
                 return {
                     "ok": False,
                     "code": "invalid_credentials",
-                    "message": "Invalid API credentials"
+                    "message": f"Invalid API credentials: {error_msg}"
                 }
             elif "IP" in error_msg or "whitelist" in error_msg.lower():
                 return {
                     "ok": False,
                     "code": "ip_not_whitelisted",
-                    "message": "IP address not whitelisted. Please add your server IP to Binance API key whitelist."
+                    "message": f"IP address not whitelisted: {error_msg}. Please add your server IP (52.77.227.148) to Binance API key whitelist."
                 }
             elif "permission" in error_msg.lower() or "scope" in error_msg.lower():
                 return {
                     "ok": False,
                     "code": "scope_missing",
-                    "message": "API key missing required permissions"
+                    "message": f"API key missing required permissions: {error_msg}"
                 }
             else:
                 return {
