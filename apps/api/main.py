@@ -24,7 +24,8 @@ import logging
 app = FastAPI(
     title="Tradeeon API",
     description="Backend API for Tradeeon trading platform with Binance integration",
-    version="1.0.0"
+    version="1.0.0",
+    redirect_slashes=False  # Prevent automatic redirects for trailing slashes
 )
 
 # Configure CORS - get allowed origins from environment variable
