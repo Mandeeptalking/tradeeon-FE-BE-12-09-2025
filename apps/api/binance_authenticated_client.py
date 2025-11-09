@@ -28,7 +28,12 @@ class BinanceAuthenticatedClient:
         """
         self.api_key = api_key
         self.api_secret = api_secret
-        self.base_url = "https://testnet.binance.vision" if testnet else "https://api.binance.com"
+        if testnet:
+            self.base_url = "https://testnet.binance.vision"
+            self.futures_base_url = "https://testnet.binancefuture.com"
+        else:
+            self.base_url = "https://api.binance.com"
+            self.futures_base_url = "https://fapi.binance.com"  # USDT-M Futures
         self.session: Optional[aiohttp.ClientSession] = None
     
     async def __aenter__(self):
@@ -121,13 +126,37 @@ class BinanceAuthenticatedClient:
     
     async def test_connection(self) -> Dict[str, Any]:
         """
-        Test API key connection by getting account info
-        Returns: Dict with 'ok', 'code', 'message', and optionally 'latency_ms'
+        Test API key connection by getting account info for SPOT and Futures
+        Returns: Dict with 'ok', 'code', 'message', 'latency_ms', and 'account_types' list
         """
         start_time = time.time()
+        account_types = []
+        
         try:
-            # Use account info endpoint to test connection
-            account_info = await self.get_account_info()
+            # Test SPOT account
+            try:
+                account_info = await self.get_account_info()
+                account_types.append("SPOT")
+                logger.info("SPOT account detected")
+            except Exception as e:
+                logger.debug(f"SPOT account check failed (may not have SPOT access): {e}")
+            
+            # Test USDT-M Futures account
+            try:
+                futures_info = await self.get_futures_account_info()
+                account_types.append("FUTURES")
+                logger.info("USDT-M Futures account detected")
+            except Exception as e:
+                logger.debug(f"Futures account check failed (may not have Futures access): {e}")
+            
+            # If no account types found, return error
+            if not account_types:
+                return {
+                    "ok": False,
+                    "code": "no_account_access",
+                    "message": "Unable to access any Binance account type. Please check API key permissions."
+                }
+            
             latency_ms = int((time.time() - start_time) * 1000)
             
             return {
@@ -135,7 +164,8 @@ class BinanceAuthenticatedClient:
                 "code": "ok",
                 "message": "Connection successful",
                 "latency_ms": latency_ms,
-                "account_type": account_info.get("accountType", "SPOT")
+                "account_type": account_types[0],  # Keep for backward compatibility
+                "account_types": account_types  # List of all available account types
             }
         except Exception as e:
             error_msg = str(e)
@@ -167,8 +197,18 @@ class BinanceAuthenticatedClient:
                 }
     
     async def get_account_info(self) -> Dict:
-        """Get account information"""
+        """Get SPOT account information"""
         return await self._make_authenticated_request('GET', '/api/v3/account')
+    
+    async def get_futures_account_info(self) -> Dict:
+        """Get USDT-M Futures account information"""
+        # Temporarily override base_url for futures endpoint
+        original_base_url = self.base_url
+        self.base_url = self.futures_base_url
+        try:
+            return await self._make_authenticated_request('GET', '/fapi/v1/account')
+        finally:
+            self.base_url = original_base_url
     
     async def get_balance(self, asset: Optional[str] = None) -> List[Dict]:
         """
