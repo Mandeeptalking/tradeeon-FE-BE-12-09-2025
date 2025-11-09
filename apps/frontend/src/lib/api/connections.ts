@@ -128,22 +128,24 @@ export const connectionsApi = {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to save connection');
+        // Try to extract error message from response
+        let errorMessage = 'Failed to save connection';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorData.message || errorMessage;
+        } catch {
+          // If response is not JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        const error: any = new Error(errorMessage);
+        error.response = { data: { detail: errorMessage }, status: response.status };
+        throw error;
       }
       return await response.json();
-    } catch (error) {
-      // Using mock response (development fallback)
-      // Create mock connection
-      const newConnection: Connection = {
-        id: Date.now().toString(),
-        exchange: body.exchange,
-        nickname: body.nickname,
-        status: 'connected',
-        last_check_at: new Date().toISOString(),
-        next_check_eta_sec: 60,
-        features: { trading: true, wallet: true, paper: false },
-      };
-      return newConnection;
+    } catch (error: any) {
+      // Re-throw the error instead of returning mock data
+      // This allows the UI to properly handle and display the error
+      throw error;
     }
   },
 

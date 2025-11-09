@@ -31,6 +31,10 @@
         {
           "name": "SUPABASE_JWT_SECRET",
           "value": "b5xpWCI1kSA9+zuP39rNJ3RIJiwHa86gGsL6mBcUpl6u6VxFaTowQcHoNpJhrYTacxAdsHBosS+k88xHlNdXyQ=="
+        },
+        {
+          "name": "ENCRYPTION_KEY",
+          "value": "TIqxctfuLihJNhsVO7XBErFkdWiTM4N968T-YKsKij0="
         }
       ],
       "environmentFiles": [],

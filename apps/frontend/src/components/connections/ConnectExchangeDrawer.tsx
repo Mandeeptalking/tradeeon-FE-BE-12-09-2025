@@ -24,6 +24,7 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
   const [isTesting, setIsTesting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const steps = [
     { title: 'Exchange', description: 'Select your exchange' },
@@ -117,6 +118,7 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
 
   const handleSave = async () => {
     setIsSaving(true);
+    setSaveError(null);
     
     try {
       const connectionBody: UpsertConnectionBody = {
@@ -131,8 +133,15 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
       onConnected(connection);
       onClose();
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save connection:', error);
+      // Extract error message from API response
+      const errorMessage = error?.response?.data?.detail || 
+                         error?.message || 
+                         'Failed to save connection. Please check your credentials and try again.';
+      setSaveError(errorMessage);
+      // Show alert for user visibility
+      alert(`Failed to save connection: ${errorMessage}`);
     } finally {
       setIsSaving(false);
     }
@@ -147,6 +156,7 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
     setNickname('');
     setTestResult(null);
     setErrors({});
+    setSaveError(null);
   };
 
   // Initialize form when editing existing connection
@@ -407,6 +417,17 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
             {currentStep === 3 && (
               <div className="space-y-4 pb-4">
                 <h3 className="text-lg font-medium text-gray-900">Review Connection</h3>
+                {saveError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <div className="flex items-start space-x-2">
+                      <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-red-800">Error</p>
+                        <p className="text-sm text-red-700 mt-1">{saveError}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">{selectedExchange?.logo}</span>
