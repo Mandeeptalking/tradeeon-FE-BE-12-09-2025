@@ -1,0 +1,18 @@
+{
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "api.tradeeon.com",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "18.136.45.140"
+          }
+        ]
+      }
+    }
+  ]
+}
+

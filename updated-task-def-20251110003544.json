@@ -1,0 +1,118 @@
+﻿{
+    "taskDefinition":  {
+                           "containerDefinitions":  [
+                                                        {
+                                                            "name":  "tradeeon-backend",
+                                                            "image":  "531604848081.dkr.ecr.ap-southeast-1.amazonaws.com/tradeeon-backend:latest",
+                                                            "cpu":  0,
+                                                            "links":  [
+
+                                                                      ],
+                                                            "portMappings":  [
+                                                                                 {
+                                                                                     "containerPort":  8000,
+                                                                                     "hostPort":  8000,
+                                                                                     "protocol":  "tcp"
+                                                                                 }
+                                                                             ],
+                                                            "essential":  true,
+                                                            "entryPoint":  [
+
+                                                                           ],
+                                                            "command":  [
+
+                                                                        ],
+                                                            "environment":  [
+                                                                                {
+                                                                                    "name":  "SUPABASE_SERVICE_ROLE_KEY",
+                                                                                    "value":  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2aWZhYW9scmx3ZXFzcHVvcG9kIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTE2MDg0MiwiZXhwIjoyMDcwNzM2ODQyfQ.kBPT_ej2cNGKM4shU8JO4l95FNwjZLKl3X_ba5lQoaA"
+                                                                                },
+                                                                                {
+                                                                                    "name":  "CORS_ORIGINS",
+                                                                                    "value":  "https://www.tradeeon.com,https://tradeeon.com"
+                                                                                },
+                                                                                {
+                                                                                    "name":  "SUPABASE_URL",
+                                                                                    "value":  "https://mgjlnmlhwuqspctanaik.supabase.co"
+                                                                                },
+                                                                                {
+                                                                                    "name":  "SUPABASE_JWT_SECRET",
+                                                                                    "value":  "HgxV7OkdtPPDno7ZPIBwInGl3aVKx1Q18KU/GHGUiisCxdYAvtFx4o3RRtDX77cZBsdezceRjvUnk9xYg2VgTQ=="
+                                                                                }
+                                                                            ],
+                                                            "environmentFiles":  [
+
+                                                                                 ],
+                                                            "mountPoints":  [
+
+                                                                            ],
+                                                            "volumesFrom":  [
+
+                                                                            ],
+                                                            "secrets":  [
+
+                                                                        ],
+                                                            "dnsServers":  [
+
+                                                                           ],
+                                                            "dnsSearchDomains":  [
+
+                                                                                 ],
+                                                            "extraHosts":  [
+
+                                                                           ],
+                                                            "dockerSecurityOptions":  [
+
+                                                                                      ],
+                                                            "dockerLabels":  {
+
+                                                                             },
+                                                            "ulimits":  [
+
+                                                                        ],
+                                                            "logConfiguration":  {
+                                                                                     "logDriver":  "awslogs",
+                                                                                     "options":  {
+                                                                                                     "awslogs-group":  "/ecs/tradeeon-backend-ap-southeast-1",
+                                                                                                     "awslogs-region":  "ap-southeast-1",
+                                                                                                     "awslogs-stream-prefix":  "ecs"
+                                                                                                 },
+                                                                                     "secretOptions":  [
+
+                                                                                                       ]
+                                                                                 },
+                                                            "healthCheck":  {
+                                                                                "command":  [
+                                                                                                "CMD-SHELL",
+                                                                                                "curl -f http://localhost:8000/health || exit 1"
+                                                                                            ],
+                                                                                "interval":  30,
+                                                                                "timeout":  5,
+                                                                                "retries":  3,
+                                                                                "startPeriod":  60
+                                                                            },
+                                                            "systemControls":  [
+
+                                                                               ],
+                                                            "credentialSpecs":  [
+
+                                                                                ]
+                                                        }
+                                                    ],
+                           "family":  "tradeeon-backend-ap",
+                           "taskRoleArn":  "arn:aws:iam::531604848081:role/tradeeon-ap-ecs-task-role",
+                           "executionRoleArn":  "arn:aws:iam::531604848081:role/tradeeon-ap-ecs-execution-role",
+                           "networkMode":  "awsvpc",
+                           "volumes":  [
+
+                                       ],
+                           "placementConstraints":  [
+
+                                                    ],
+                           "requiresCompatibilities":  [
+                                                           "FARGATE"
+                                                       ],
+                           "cpu":  "512",
+                           "memory":  "1024"
+                       }
+}

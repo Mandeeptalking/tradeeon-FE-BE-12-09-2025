@@ -2,51 +2,37 @@
   "family": "tradeeon-backend",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
-  "cpu": "256",
-  "memory": "512",
+  "cpu": "512",
+  "memory": "1024",
   "executionRoleArn": "arn:aws:iam::531604848081:role/ecsTaskExecutionRole",
   "containerDefinitions": [
     {
-      "name": "tradeeon-backend",
-      "image": "531604848081.dkr.ecr.us-east-1.amazonaws.com/tradeeon-backend:latest",
+      "name": "api",
+      "image": "531604848081.dkr.ecr.ap-southeast-1.amazonaws.com/tradeeon-backend:latest",
       "essential": true,
       "portMappings": [
-        {
-          "containerPort": 8000,
-          "protocol": "tcp"
-        }
+        { "containerPort": 8000, "protocol": "tcp" }
       ],
       "environment": [
+        { "name": "AWS_REGION", "value": "ap-southeast-1" }
+      ],
+      "secrets": [
         {
           "name": "SUPABASE_URL",
-          "value": "https://mgjlnmlhwuqspctanaik.supabase.co"
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:531604848081:secret:tradeeon-supabase-url"
         },
         {
-          "name": "SUPABASE_SERVICE_ROLE_KEY",
-          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1namxubWxod3Vxc3BjdGFuYWlrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzQxNDMwNSwiZXhwIjoyMDcyOTkwMzA1fQ.AgWM1MZCPGQHgpZ4749KtgAOOGQZoI7wFvBqp_2p8Ng"
-        },
-        {
-          "name": "CORS_ORIGINS",
-          "value": "https://tradeeon.com,https://www.tradeeon.com"
+          "name": "SUPABASE_ANON_KEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:531604848081:secret:tradeeon-supabase-anon-key"
         }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/tradeeon-backend",
-          "awslogs-region": "us-east-1",
+          "awslogs-group": "/aws/ecs/tradeeon-backend",
+          "awslogs-region": "ap-southeast-1",
           "awslogs-stream-prefix": "ecs"
         }
-      },
-      "healthCheck": {
-        "command": [
-          "CMD-SHELL",
-          "curl -f http://localhost:8000/health || exit 1"
-        ],
-        "interval": 30,
-        "timeout": 5,
-        "retries": 3,
-        "startPeriod": 60
       }
     }
   ]

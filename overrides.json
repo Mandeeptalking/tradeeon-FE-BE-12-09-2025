@@ -1,0 +1,1 @@
+{"containerOverrides": [{"name": "tradeeon-backend", "command": ["/bin/sh", "-c", "curl -s https://api.binance.com/api/v3/ping; echo; curl -s https://checkip.amazonaws.com; sleep 2"]}]}
