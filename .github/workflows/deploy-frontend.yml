@@ -59,14 +59,8 @@ jobs:
     
     - name: Invalidate CloudFront cache
       continue-on-error: true
-      env:
-        CLOUDFRONT_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
       run: |
-        if [ -n "$CLOUDFRONT_ID" ]; then
-          aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_ID" --paths "/*"
-        else
-          echo "CloudFront distribution ID not set, skipping invalidation"
-        fi
+        aws cloudfront create-invalidation --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
     
     - name: Verify deployment
       run: |
