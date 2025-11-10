@@ -8,9 +8,9 @@ on:
   workflow_dispatch:  # Allow manual trigger
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: ap-southeast-1
   S3_BUCKET: tradeeon-frontend
-  CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+  CLOUDFRONT_DISTRIBUTION_ID: EMF4IMNT9637C
 
 jobs:
   deploy:
