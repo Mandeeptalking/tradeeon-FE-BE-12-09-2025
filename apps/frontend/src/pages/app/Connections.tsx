@@ -63,12 +63,16 @@ const FALLBACK_BINANCE_GUIDANCE: ConnectionGuidance = {
     'Do NOT enable Withdrawals',
   ],
   recommendations: [
-    'Add the whitelist IP before testing the connection in Binance API management.',
+    '⚠️ CRITICAL: You MUST whitelist IP 52.77.227.148 before enabling trading permissions.',
+    'Binance will revoke unrestricted API keys with trading permissions for security.',
+    'In Binance API Management, select "Restrict access to trusted IPs only" and add 52.77.227.148.',
     'Generate a fresh API key pair dedicated to Tradeeon.',
     'Label the API key clearly so you can rotate or revoke it later.',
   ],
   testing_notes: [
     'Connection test calls Binance spot `/api/v3/account` and futures `/fapi/v1/account` endpoints.',
+    '⚠️ IMPORTANT: Unrestricted IP access with trading permissions will be revoked by Binance.',
+    'You MUST whitelist IP 52.77.227.148 before testing or Binance may revoke your key.',
     'If you receive IP whitelist errors, confirm 52.77.227.148 is whitelisted for this key.',
     'Invalid credential errors usually indicate key/secret mismatch or missing permissions.',
   ],

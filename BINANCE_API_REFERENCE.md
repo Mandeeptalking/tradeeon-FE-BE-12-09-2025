@@ -151,7 +151,34 @@ Body:
   - Verify order parameters
   - Check market status
 
-## 🔒 Security Best Practices
+## ⚠️ CRITICAL: Binance Default Security Controls
+
+**Binance will REVOKE API keys that have unrestricted IP access AND trading permissions.**
+
+### Binance Policy:
+- **Symmetric HMAC Unrestricted-IP-Access API Keys:**
+  - Prevented from enabling trading or transfer permissions
+  - Periodically or immediately revoked if previously enabled with trading permissions
+
+- **Asymmetric Ed25519 and RSA Unrestricted-IP-Access API Keys:**
+  - Periodically or immediately revoked if enabled with trading permissions
+
+### ⚠️ REQUIRED ACTION:
+**You MUST whitelist IP `52.77.227.148` before enabling trading permissions.**
+
+**Steps:**
+1. Go to Binance API Management
+2. Select "Restrict access to trusted IPs only" (NOT "Unrestricted")
+3. Add IP: `52.77.227.148`
+4. Save changes
+5. Then enable trading permissions
+
+**If you use "Unrestricted" IP access:**
+- Binance will revoke your key if trading permissions are enabled
+- Your connection will stop working
+- You'll need to create a new API key with IP restrictions
+
+---
 
 1. **API Key Permissions:**
    - ✅ Enable only required permissions
