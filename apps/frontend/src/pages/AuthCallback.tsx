@@ -13,17 +13,28 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get the hash fragment from the URL
+        // Supabase automatically processes hash fragments when getSession() is called
+        // First, let Supabase process the hash fragment
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        // Also check URL hash for error parameters
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
         const error = hashParams.get('error');
         const errorDescription = hashParams.get('error_description');
+        const accessToken = hashParams.get('access_token');
 
         // Check for errors first
         if (error) {
           console.error('Auth callback error:', error, errorDescription);
           setStatus('error');
-          setMessage(errorDescription || error || 'An error occurred during email verification');
+          
+          // Provide more specific error messages
+          let errorMsg = errorDescription || 'An error occurred during email verification';
+          if (error === 'server_error' && errorDescription?.includes('confirming')) {
+            errorMsg = 'Failed to confirm email. The verification link may have expired or already been used. Please try signing up again or request a new confirmation email.';
+          }
+          
+          setMessage(errorMsg);
           
           // Redirect to signin after 5 seconds
           setTimeout(() => {
@@ -36,47 +47,71 @@ const AuthCallback = () => {
           return;
         }
 
-        // If we have an access token, exchange it for a session
-        if (accessToken) {
-          console.log('Processing email confirmation callback...');
+        // If we have a session, check if email is verified
+        if (session?.user) {
+          // Check if email is verified
+          const isEmailVerified = session.user.email_confirmed_at !== null && session.user.email_confirmed_at !== undefined;
           
-          // Get the session from Supabase
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-          
-          if (sessionError) {
-            throw sessionError;
-          }
-
-          if (session?.user) {
-            // Check if email is verified
-            const isEmailVerified = session.user.email_confirmed_at !== null && session.user.email_confirmed_at !== undefined;
+          if (isEmailVerified) {
+            console.log('✅ Email verified successfully');
+            setStatus('success');
+            setMessage('Email verified successfully! Redirecting to your dashboard...');
             
-            if (isEmailVerified) {
-              console.log('✅ Email verified successfully');
+            // Set user in auth store
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || ''
+            });
+
+            // Redirect to app after 2 seconds
+            setTimeout(() => {
+              navigate('/app');
+            }, 2000);
+          } else {
+            // Session exists but email not verified - might be a timing issue
+            // Wait a moment and check again
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const { data: { session: retrySession } } = await supabase.auth.getSession();
+            if (retrySession?.user?.email_confirmed_at) {
               setStatus('success');
               setMessage('Email verified successfully! Redirecting to your dashboard...');
-              
-              // Set user in auth store
               setUser({
-                id: session.user.id,
-                email: session.user.email || '',
-                name: session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || ''
+                id: retrySession.user.id,
+                email: retrySession.user.email || '',
+                name: retrySession.user.user_metadata?.first_name || retrySession.user.email?.split('@')[0] || ''
               });
-
-              // Redirect to app after 2 seconds
-              setTimeout(() => {
-                navigate('/app');
-              }, 2000);
+              setTimeout(() => navigate('/app'), 2000);
             } else {
-              throw new Error('Email verification token received but email is still not verified');
+              throw new Error('Email verification token received but email is still not verified. Please try again.');
+            }
+          }
+        } else if (accessToken) {
+          // We have an access token but no session - try to get session again
+          console.log('Access token found, waiting for session...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          const { data: { session: retrySession } } = await supabase.auth.getSession();
+          if (retrySession?.user) {
+            const isEmailVerified = retrySession.user.email_confirmed_at !== null && retrySession.user.email_confirmed_at !== undefined;
+            if (isEmailVerified) {
+              setStatus('success');
+              setMessage('Email verified successfully! Redirecting to your dashboard...');
+              setUser({
+                id: retrySession.user.id,
+                email: retrySession.user.email || '',
+                name: retrySession.user.user_metadata?.first_name || retrySession.user.email?.split('@')[0] || ''
+              });
+              setTimeout(() => navigate('/app'), 2000);
+            } else {
+              throw new Error('Email verification incomplete. Please try again.');
             }
           } else {
-            throw new Error('No session found after email confirmation');
+            throw new Error('Failed to create session. Please try signing up again.');
           }
         } else {
-          // No token in URL - might be a direct visit
+          // No token and no session - might be a direct visit or expired token
           setStatus('error');
-          setMessage('Invalid verification link. Please check your email and try again.');
+          setMessage('Invalid or expired verification link. Please check your email and try again, or sign up again.');
           
           setTimeout(() => {
             navigate('/signin');

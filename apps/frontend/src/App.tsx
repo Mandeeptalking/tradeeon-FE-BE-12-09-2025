@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { useAuthStore } from './store/auth'
@@ -33,6 +34,21 @@ function App() {
     authInitialized,
     path: location.pathname 
   });
+
+  // Check for auth callback errors in hash fragment (when redirected to root)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes('error=')) {
+      // Redirect to auth callback handler
+      const hashParams = new URLSearchParams(hash.substring(1));
+      const error = hashParams.get('error');
+      if (error) {
+        // Redirect to auth callback to handle the error properly
+        window.location.replace(`/auth/callback${hash}`);
+      }
+    }
+  }, []);
+
 
 
   return (
