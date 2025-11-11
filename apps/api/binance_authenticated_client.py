@@ -195,20 +195,35 @@ class BinanceAuthenticatedClient:
         except Exception as e:
             futures_error = str(e)
             error_code = None
-            # Try to extract error code from error message
-            if "error" in futures_error.lower():
-                parts = futures_error.split(":")
-                if len(parts) > 1:
-                    try:
-                        error_code = int(parts[0].split()[-1])
-                    except:
-                        pass
             
-            errors["futures"] = {
-                "error": futures_error,
-                "code": error_code
-            }
-            logger.error(f"❌ Futures account check failed: {futures_error}")
+            # Check if it's a 404 (Futures not enabled)
+            if "404" in futures_error or "Not Found" in futures_error or "not enabled" in futures_error.lower():
+                # This is expected if Futures trading is not enabled - not a critical error
+                logger.info(f"ℹ️ Futures trading not available: {futures_error}")
+                errors["futures"] = {
+                    "error": "Futures trading not enabled or not available for this API key",
+                    "code": None,
+                    "note": "This is normal if Futures trading is not enabled on your Binance account"
+                }
+            else:
+                # Try to extract error code from error message
+                if "error" in futures_error.lower() or "code" in futures_error.lower():
+                    parts = futures_error.split(":")
+                    if len(parts) > 1:
+                        try:
+                            error_code = int(parts[0].split()[-1])
+                        except:
+                            # Try to find error code in the message
+                            import re
+                            code_match = re.search(r'error\s+(-?\d+)', futures_error, re.IGNORECASE)
+                            if code_match:
+                                error_code = int(code_match.group(1))
+                
+                errors["futures"] = {
+                    "error": futures_error,
+                    "code": error_code
+                }
+                logger.error(f"❌ Futures account check failed: {futures_error}")
         
         latency_ms = int((time.time() - start_time) * 1000)
         
@@ -233,12 +248,26 @@ class BinanceAuthenticatedClient:
         # Check for specific error codes
         spot_code = errors.get("spot", {}).get("code")
         futures_code = errors.get("futures", {}).get("code")
+        futures_note = errors.get("futures", {}).get("note")
         
         # -2015: Invalid API-key, IP, or permissions for action
         if spot_code == -2015 or futures_code == -2015:
             spot_msg = errors.get("spot", {}).get("error", "")
             futures_msg = errors.get("futures", {}).get("error", "")
-            combined_msg = f"SPOT: {spot_msg}; Futures: {futures_msg}" if spot_msg and futures_msg else (spot_msg or futures_msg)
+            
+            # If Futures error is just "not enabled", focus on SPOT error
+            if futures_note and "not enabled" in futures_msg.lower():
+                return {
+                    "ok": False,
+                    "code": "ip_not_whitelisted",
+                    "message": f"IP address not whitelisted. Please add IP 52.77.227.148 to Binance API key whitelist. SPOT error: {spot_msg}. Note: Futures trading is not enabled (this is normal).",
+                    "errors": errors
+                }
+            
+            combined_msg = f"SPOT: {spot_msg}"
+            if futures_msg and "not enabled" not in futures_msg.lower():
+                combined_msg += f"; Futures: {futures_msg}"
+            
             return {
                 "ok": False,
                 "code": "ip_not_whitelisted",
@@ -291,6 +320,12 @@ class BinanceAuthenticatedClient:
         self.base_url = self.futures_base_url
         try:
             return await self._make_authenticated_request('GET', '/fapi/v1/account')
+        except Exception as e:
+            # If Futures endpoint returns 404, it likely means Futures trading is not enabled
+            error_str = str(e)
+            if "404" in error_str or "Not Found" in error_str:
+                raise Exception("Futures trading not enabled or not available for this API key")
+            raise
         finally:
             self.base_url = original_base_url
     
