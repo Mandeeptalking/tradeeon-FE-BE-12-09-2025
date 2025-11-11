@@ -160,32 +160,10 @@ const Signup = () => {
         return; // Exit early - success message will be shown
       }
 
-      // Email is verified - proceed with profile creation and login
-      // Create user profile in public.users table
-      // Note: Database trigger should auto-create this, but we do it here as fallback
+      // Email is verified - proceed with login
+      // Note: User profile is created automatically by database trigger
+      // No need to manually insert - trigger handles it
       if (authData.user) {
-        try {
-          const { error: profileError } = await supabase
-            .from('users')
-            .insert({
-              id: authData.user.id,
-              email: formData.email,
-              first_name: formData.firstName,
-              last_name: formData.lastName,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            });
-
-          if (profileError) {
-            // Profile may already exist (trigger created it), or there's an error
-            console.warn('Profile creation warning:', profileError);
-            // Don't fail signup if profile creation fails - trigger will handle it
-          }
-        } catch (profileErr) {
-          // Error creating user profile (non-critical - trigger will handle it)
-          console.warn('Profile creation error:', profileErr);
-        }
-
         // Only set user and navigate if email is verified
         setUser({
           id: authData.user.id,
