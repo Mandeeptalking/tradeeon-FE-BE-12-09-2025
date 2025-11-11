@@ -1,8 +1,7 @@
--- COMPLETE FIX: User Profile Creation Trigger
--- Run this ENTIRE script in Supabase SQL Editor
--- This fixes the "Database error saving new user" issue
+-- COMPLETE FIX: Ensure trigger creates user profiles
+-- Run this AFTER running diagnose-trigger-issue.sql to see what's wrong
 
--- Step 1: Ensure first_name and last_name columns exist with proper defaults
+-- Step 1: Ensure columns exist with proper defaults
 DO $$
 BEGIN
     -- Add columns if they don't exist
@@ -12,12 +11,11 @@ BEGIN
         AND table_name = 'users' 
         AND column_name = 'first_name'
     ) THEN
-        -- Add columns
         ALTER TABLE public.users 
         ADD COLUMN IF NOT EXISTS first_name TEXT DEFAULT 'User',
         ADD COLUMN IF NOT EXISTS last_name TEXT DEFAULT '';
         
-        -- Migrate existing data
+        -- Update existing NULL values
         UPDATE public.users 
         SET first_name = COALESCE(SPLIT_PART(full_name, ' ', 1), 'User'),
             last_name = CASE 
@@ -27,7 +25,7 @@ BEGIN
             END
         WHERE first_name IS NULL OR first_name = '';
         
-        -- Set NOT NULL constraints with defaults
+        -- Set NOT NULL constraints
         ALTER TABLE public.users 
         ALTER COLUMN first_name SET DEFAULT 'User',
         ALTER COLUMN first_name SET NOT NULL;
@@ -36,35 +34,34 @@ BEGIN
         ALTER COLUMN last_name SET DEFAULT '',
         ALTER COLUMN last_name SET NOT NULL;
     ELSE
-        -- Columns exist, but ensure they have defaults
+        -- Ensure defaults exist
         ALTER TABLE public.users 
         ALTER COLUMN first_name SET DEFAULT 'User';
-        
         ALTER TABLE public.users 
         ALTER COLUMN last_name SET DEFAULT '';
         
-        -- Update any NULL values
-        UPDATE public.users 
-        SET first_name = 'User' 
-        WHERE first_name IS NULL;
-        
-        UPDATE public.users 
-        SET last_name = '' 
-        WHERE last_name IS NULL;
+        -- Fix any NULL values
+        UPDATE public.users SET first_name = 'User' WHERE first_name IS NULL;
+        UPDATE public.users SET last_name = '' WHERE last_name IS NULL;
     END IF;
 END $$;
 
--- Step 2: Drop existing function and recreate with better error handling
+-- Step 2: Drop and recreate function with better error handling
 DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
 DECLARE
     v_first_name TEXT;
     v_last_name TEXT;
     v_email TEXT;
 BEGIN
-    -- Extract metadata safely
+    -- Extract values safely
+    v_email := COALESCE(NEW.email, '');
     v_first_name := COALESCE(
         NEW.raw_user_meta_data->>'first_name',
         'User'
@@ -73,14 +70,13 @@ BEGIN
         NEW.raw_user_meta_data->>'last_name',
         ''
     );
-    v_email := COALESCE(NEW.email, '');
     
-    -- Ensure first_name is not empty
+    -- Ensure first_name is never empty
     IF v_first_name IS NULL OR v_first_name = '' THEN
         v_first_name := 'User';
     END IF;
     
-    -- Insert or update user profile
+    -- Insert user profile
     INSERT INTO public.users (
         id,
         email,
@@ -98,7 +94,7 @@ BEGIN
         NOW()
     )
     ON CONFLICT (id) DO UPDATE SET
-        email = COALESCE(EXCLUDED.email, public.users.email),
+        email = COALESCE(NULLIF(EXCLUDED.email, ''), public.users.email),
         first_name = COALESCE(NULLIF(EXCLUDED.first_name, ''), public.users.first_name),
         last_name = COALESCE(EXCLUDED.last_name, public.users.last_name),
         updated_at = NOW();
@@ -106,14 +102,15 @@ BEGIN
     RETURN NEW;
 EXCEPTION
     WHEN OTHERS THEN
-        -- Log the error but don't fail the signup
-        RAISE WARNING 'Error in handle_new_user for user %: %', NEW.id, SQLERRM;
+        -- Log error details
+        RAISE WARNING 'handle_new_user error for user %: % (SQLSTATE: %)', 
+            NEW.id, SQLERRM, SQLSTATE;
         -- Still return NEW to allow signup to proceed
         RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
--- Step 3: Drop and recreate trigger WITHOUT email_confirmed_at condition
+-- Step 3: Drop and recreate trigger
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
 CREATE TRIGGER on_auth_user_created
@@ -125,7 +122,11 @@ CREATE TRIGGER on_auth_user_created
 DROP FUNCTION IF EXISTS public.handle_user_email_verified() CASCADE;
 
 CREATE OR REPLACE FUNCTION public.handle_user_email_verified()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
 DECLARE
     v_first_name TEXT;
     v_last_name TEXT;
@@ -137,7 +138,8 @@ BEGIN
     FROM public.users
     WHERE id = NEW.id;
     
-    -- Extract metadata
+    -- Extract values
+    v_email := COALESCE(NEW.email, '');
     v_first_name := COALESCE(
         NEW.raw_user_meta_data->>'first_name',
         (SELECT first_name FROM public.users WHERE id = NEW.id),
@@ -148,7 +150,6 @@ BEGIN
         (SELECT last_name FROM public.users WHERE id = NEW.id),
         ''
     );
-    v_email := COALESCE(NEW.email, '');
     
     IF v_first_name IS NULL OR v_first_name = '' THEN
         v_first_name := 'User';
@@ -180,10 +181,11 @@ BEGIN
     RETURN NEW;
 EXCEPTION
     WHEN OTHERS THEN
-        RAISE WARNING 'Error in handle_user_email_verified for user %: %', NEW.id, SQLERRM;
+        RAISE WARNING 'handle_user_email_verified error for user %: % (SQLSTATE: %)', 
+            NEW.id, SQLERRM, SQLSTATE;
         RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- Step 5: Recreate email verification trigger
 DROP TRIGGER IF EXISTS on_auth_user_email_verified ON auth.users;
@@ -199,28 +201,54 @@ GRANT USAGE ON SCHEMA public TO postgres, anon, authenticated, service_role;
 GRANT ALL ON public.users TO postgres, service_role;
 GRANT SELECT, INSERT, UPDATE ON public.users TO authenticated;
 
--- Step 7: Ensure RLS policies allow trigger inserts
--- The trigger runs as SECURITY DEFINER, so it bypasses RLS, but we need the policy for manual inserts
+-- Step 7: Ensure RLS allows trigger inserts
+-- Triggers run as SECURITY DEFINER, so they bypass RLS, but we need the policy for manual inserts
 DROP POLICY IF EXISTS "Users can insert own profile" ON public.users;
 CREATE POLICY "Users can insert own profile" ON public.users
     FOR INSERT
     WITH CHECK (auth.uid() = id);
 
--- Step 8: Verify trigger was created
+-- Step 8: Verify trigger exists and is enabled
 DO $$
+DECLARE
+    trigger_count INTEGER;
 BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_trigger 
-        WHERE tgname = 'on_auth_user_created'
-    ) THEN
-        RAISE EXCEPTION 'Trigger on_auth_user_created was not created successfully';
+    SELECT COUNT(*) INTO trigger_count
+    FROM pg_trigger
+    WHERE tgname = 'on_auth_user_created' AND tgenabled = 'O';
+    
+    IF trigger_count = 0 THEN
+        RAISE EXCEPTION 'Trigger on_auth_user_created is missing or disabled!';
     END IF;
     
-    RAISE NOTICE 'Trigger on_auth_user_created created successfully';
+    RAISE NOTICE 'Trigger on_auth_user_created exists and is enabled';
 END $$;
 
--- Step 9: Test the function (optional - can be removed)
--- This will show if there are any syntax errors
-SELECT 'All migrations completed successfully!' AS status,
-       EXISTS(SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created') AS trigger_exists,
-       EXISTS(SELECT 1 FROM pg_proc WHERE proname = 'handle_new_user') AS function_exists;
+-- Step 9: Backfill existing users (create profiles for users who signed up but don't have profiles)
+INSERT INTO public.users (
+    id,
+    email,
+    first_name,
+    last_name,
+    created_at,
+    updated_at
+)
+SELECT 
+    au.id,
+    COALESCE(au.email, ''),
+    COALESCE(au.raw_user_meta_data->>'first_name', 'User'),
+    COALESCE(au.raw_user_meta_data->>'last_name', ''),
+    au.created_at,
+    NOW()
+FROM auth.users au
+LEFT JOIN public.users pu ON au.id = pu.id
+WHERE pu.id IS NULL
+ON CONFLICT (id) DO NOTHING;
+
+-- Step 10: Final verification
+SELECT 
+    'Fix completed!' AS status,
+    (SELECT COUNT(*) FROM pg_trigger WHERE tgname = 'on_auth_user_created') AS trigger_exists,
+    (SELECT COUNT(*) FROM pg_proc WHERE proname = 'handle_new_user') AS function_exists,
+    (SELECT COUNT(*) FROM public.users) AS users_in_public_table,
+    (SELECT COUNT(*) FROM auth.users) AS users_in_auth_table;
