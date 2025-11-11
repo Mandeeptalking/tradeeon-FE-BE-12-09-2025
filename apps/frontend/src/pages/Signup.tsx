@@ -122,6 +122,12 @@ const Signup = () => {
       }
 
       // Sign up the user with Supabase Auth
+      // IMPORTANT: Use production URL for email redirect, not localhost
+      const productionUrl = import.meta.env.VITE_PRODUCTION_URL || 'https://www.tradeeon.com';
+      const redirectUrl = window.location.hostname === 'localhost' 
+        ? `${window.location.origin}/auth/callback`
+        : `${productionUrl}/auth/callback`;
+      
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -132,7 +138,7 @@ const Signup = () => {
             phone: formData.phone || null,
           },
           // Set redirect URL to production domain for email confirmation
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: redirectUrl
         }
       });
 
