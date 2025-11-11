@@ -68,14 +68,17 @@ def _ensure_user_profile(user_id: str):
         result = supabase.table("users").select("id").eq("id", user_id).execute()
         
         if not result.data:
-            # User doesn't exist, try to get email from auth.users
-            # Note: We need to use service role key to access auth.users
-            # For now, we'll create with a placeholder email and let it be updated later
+            # User doesn't exist, try to create it
+            # First, try to get user info from auth.users via service role
             logger.info(f"Creating user profile for {user_id}")
             try:
+                # Try to insert with minimal required fields
+                # Note: We'll use placeholder values for required fields
                 supabase.table("users").insert({
                     "id": user_id,
-                    "email": f"{user_id}@placeholder.tradeeon.com",  # Placeholder, will be updated
+                    "email": f"{user_id}@placeholder.tradeeon.com",  # Placeholder
+                    "first_name": "User",  # Required field - placeholder
+                    "last_name": "",  # May be required
                     "created_at": datetime.now().isoformat(),
                     "updated_at": datetime.now().isoformat()
                 }).execute()
@@ -90,6 +93,13 @@ def _ensure_user_profile(user_id: str):
                         status_code=400,
                         detail=f"User profile not found. Please ensure you are signed in and try again."
                     )
+                # If it's a NOT NULL constraint, provide better error
+                elif "null value" in error_msg.lower() or "23502" in error_msg:
+                    logger.error(f"User profile creation failed due to missing required fields: {error_msg}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Failed to create user profile. Please contact support or try signing out and signing in again."
+                    )
                 raise
     except HTTPException:
         raise
@@ -100,6 +110,11 @@ def _ensure_user_profile(user_id: str):
             raise HTTPException(
                 status_code=400,
                 detail=f"User profile not found. Please sign out and sign in again, then try connecting your exchange."
+            )
+        elif "null value" in str(e).lower() or "23502" in str(e):
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to create user profile. Please contact support or try signing out and signing in again."
             )
 
 class ConnectionGuidance(BaseModel):
