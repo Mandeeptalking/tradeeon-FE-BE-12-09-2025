@@ -35,6 +35,7 @@ const Signup = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [emailVerificationNeeded, setEmailVerificationNeeded] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { setUser } = useAuthStore();
@@ -135,6 +136,18 @@ const Signup = () => {
 
       if (authError) throw authError;
 
+      // Check if email is verified
+      const isEmailVerified = authData.user?.email_confirmed_at !== null && authData.user?.email_confirmed_at !== undefined;
+
+      if (!isEmailVerified) {
+        // Email not verified - show success message but don't log in
+        setSuccess(true);
+        setEmailVerificationNeeded(true);
+        // Don't set user or navigate - user must verify email first
+        return; // Exit early - success message will be shown
+      }
+
+      // Email is verified - proceed with profile creation and login
       // Create user profile in public.users table
       // Note: Database trigger should auto-create this, but we do it here as fallback
       if (authData.user) {
@@ -160,19 +173,19 @@ const Signup = () => {
           console.warn('Profile creation error:', profileErr);
         }
 
-        // Set user in auth store
+        // Only set user and navigate if email is verified
         setUser({
           id: authData.user.id,
           email: authData.user.email || formData.email,
           name: formData.firstName || formData.email.split('@')[0]
         });
-      }
 
-      setSuccess(true);
-      // Redirect to app after 1 second
-      setTimeout(() => {
-        navigate('/app');
-      }, 1000);
+        // Redirect to app only if email is verified
+        setSuccess(true);
+        setTimeout(() => {
+          navigate('/app');
+        }, 1000);
+      }
     } catch (err: any) {
       setError(err.message || 'An error occurred during signup');
     } finally {
