@@ -11,7 +11,7 @@ from apps.api.models import (
     SymbolListResponse, TickerResponse, KlineResponse, 
     OrderBookResponse, TradesResponse, MarketDataResponse
 )
-from apps.api.routers import connections, portfolio, analytics, market, bots, orders, indicators, alerts
+from apps.api.routers import connections, portfolio, analytics, market, bots, orders, indicators, alerts, dashboard
 from apps.api.middleware.rate_limiting import rate_limit_middleware, cleanup_rate_limits
 from apps.api.metrics import get_metrics_response, record_api_request
 from apps.api.utils.errors import (
@@ -47,6 +47,7 @@ app.middleware("http")(rate_limit_middleware)
 # Include routers
 app.include_router(connections.router, prefix="/connections", tags=["connections"])
 app.include_router(portfolio.router, prefix="/portfolio", tags=["portfolio"])
+app.include_router(dashboard.router, tags=["dashboard"])
 app.include_router(analytics.router, tags=["analytics"])
 app.include_router(market.router, tags=["market"])
 app.include_router(bots.router, tags=["bots"])

@@ -1,181 +1,287 @@
+import { useEffect, useState } from 'react';
+import { dashboardApi, type DashboardSummary } from '../lib/api/dashboard';
+import { Wallet, TrendingUp, Activity, DollarSign, RefreshCw, AlertCircle } from 'lucide-react';
+
 const Dashboard = () => {
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await dashboardApi.getSummary();
+      setSummary(data);
+    } catch (err: any) {
+      console.error('Failed to fetch dashboard data:', err);
+      setError(err.message || 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
+  const formatNumber = (value: number, decimals: number = 8) => {
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: decimals,
+    }).format(value);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="h-12 w-12 text-blue-400 animate-spin mx-auto mb-4" />
+          <p className="text-white/70">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-gray-800/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8 text-center">
+          <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-2">Unable to Load Dashboard</h2>
+          <p className="text-gray-400 mb-4">{error}</p>
+          <button
+            onClick={fetchDashboardData}
+            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!summary) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white/70">No data available</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
-        
-        {/* Welcome Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Welcome to Tradeeon</h2>
-          <p className="text-gray-600">
-            Your comprehensive trading platform with advanced charting, portfolio management, and automated trading capabilities.
-          </p>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+            <p className="text-white/60">Your Binance account overview</p>
+          </div>
+          <button
+            onClick={fetchDashboardData}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg border border-blue-500/20 transition-colors"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </button>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* USDT Balance */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-colors">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-green-500/10 rounded-lg">
+                <DollarSign className="h-6 w-6 text-green-400" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total P&L</p>
-                <p className="text-2xl font-semibold text-gray-900">+$2,450.00</p>
+              <span className="text-xs text-white/60 uppercase tracking-wide">USDT Balance</span>
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold text-white">
+                {formatCurrency(summary.usdt_balance.total)}
+              </p>
+              <div className="flex items-center gap-4 text-sm">
+                <span className="text-white/60">
+                  Free: <span className="text-white">{formatCurrency(summary.usdt_balance.free)}</span>
+                </span>
+                {summary.usdt_balance.locked > 0 && (
+                  <span className="text-white/60">
+                    Locked: <span className="text-white">{formatCurrency(summary.usdt_balance.locked)}</span>
+                  </span>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
+          {/* Total Assets */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-colors">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-blue-500/10 rounded-lg">
+                <Wallet className="h-6 w-6 text-blue-400" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Portfolio Value</p>
-                <p className="text-2xl font-semibold text-gray-900">$45,230.00</p>
-              </div>
+              <span className="text-xs text-white/60 uppercase tracking-wide">Total Assets</span>
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold text-white">{summary.stats.total_assets}</p>
+              <p className="text-sm text-white/60">Different cryptocurrencies</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
+          {/* Active Trades */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-colors">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-purple-500/10 rounded-lg">
+                <Activity className="h-6 w-6 text-purple-400" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Active Bots</p>
-                <p className="text-2xl font-semibold text-gray-900">3</p>
-              </div>
+              <span className="text-xs text-white/60 uppercase tracking-wide">Active Trades</span>
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold text-white">{summary.stats.total_active_trades}</p>
+              <p className="text-sm text-white/60">Open orders</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
+          {/* Account Status */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-colors">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-emerald-500/10 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-emerald-400" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Connected Exchanges</p>
-                <p className="text-2xl font-semibold text-gray-900">2</p>
+              <span className="text-xs text-white/60 uppercase tracking-wide">Account Status</span>
+            </div>
+            <div className="space-y-1">
+              <p className="text-lg font-semibold text-white capitalize">{summary.account.account_type}</p>
+              <div className="flex items-center gap-2 text-xs">
+                {summary.account.can_trade && (
+                  <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded">Trading</span>
+                )}
+                {summary.account.can_deposit && (
+                  <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded">Deposit</span>
+                )}
+                {summary.account.can_withdraw && (
+                  <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded">Withdraw</span>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-900">View Charts</p>
-                    <p className="text-sm text-gray-500">Analyze market trends and patterns</p>
-                  </div>
-                </div>
-              </button>
-              
-              <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-900">Check Portfolio</p>
-                    <p className="text-sm text-gray-500">Review your holdings and performance</p>
-                  </div>
-                </div>
-              </button>
-              
-              <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-900">Manage Bots</p>
-                    <p className="text-sm text-gray-500">Configure automated trading strategies</p>
-                  </div>
-                </div>
-              </button>
-              
-              <button 
-                onClick={() => window.location.href = '/app/rsi'}
-                className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 text-emerald-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-900">RSI Live Chart</p>
-                    <p className="text-sm text-gray-500">Real-time RSI indicator with trading signals</p>
-                  </div>
-                </div>
-              </button>
-              
-              <button 
-                onClick={() => window.location.href = '/app/zscore'}
-                className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 text-indigo-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  <div>
-                    <p className="font-medium text-gray-900">Z-Score Analytics</p>
-                    <p className="text-sm text-gray-500">Analyze correlation and spread trading signals</p>
-                  </div>
-                </div>
-              </button>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Assets List */}
+          <div className="lg:col-span-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-white">Your Assets</h2>
+              <span className="text-sm text-white/60">{summary.assets.length} assets</span>
             </div>
+            {summary.assets.length === 0 ? (
+              <div className="text-center py-12">
+                <Wallet className="h-12 w-12 text-white/20 mx-auto mb-4" />
+                <p className="text-white/60">No assets found</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {summary.assets.map((asset) => (
+                  <div
+                    key={asset.asset}
+                    className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                        <span className="text-lg font-bold text-white">{asset.asset[0]}</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white">{asset.asset}</p>
+                        <p className="text-sm text-white/60">
+                          Total: {formatNumber(asset.total, asset.asset === 'USDT' ? 2 : 8)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-white">
+                        {formatNumber(asset.free, asset.asset === 'USDT' ? 2 : 8)}
+                      </p>
+                      {asset.locked > 0 && (
+                        <p className="text-xs text-white/60">
+                          Locked: {formatNumber(asset.locked, asset.asset === 'USDT' ? 2 : 8)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
-            <div className="space-y-3">
-              <div className="flex items-center p-3 rounded-lg bg-gray-50">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">Bot executed trade</p>
-                  <p className="text-xs text-gray-500">2 minutes ago</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center p-3 rounded-lg bg-gray-50">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">Portfolio updated</p>
-                  <p className="text-xs text-gray-500">5 minutes ago</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center p-3 rounded-lg bg-gray-50">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">Exchange connected</p>
-                  <p className="text-xs text-gray-500">1 hour ago</p>
-                </div>
-              </div>
+          {/* Active Trades */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-white">Active Trades</h2>
+              <span className="text-sm text-white/60">{summary.active_trades.length}</span>
             </div>
+            {summary.active_trades.length === 0 ? (
+              <div className="text-center py-12">
+                <Activity className="h-12 w-12 text-white/20 mx-auto mb-4" />
+                <p className="text-white/60">No active trades</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {summary.active_trades.map((trade) => (
+                  <div
+                    key={trade.order_id}
+                    className="p-4 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-white">{trade.symbol}</span>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          trade.side === 'BUY'
+                            ? 'bg-green-500/20 text-green-400'
+                            : 'bg-red-500/20 text-red-400'
+                        }`}
+                      >
+                        {trade.side}
+                      </span>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-white/60">Type:</span>
+                        <span className="text-white">{trade.type}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-white/60">Quantity:</span>
+                        <span className="text-white">{formatNumber(trade.quantity)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-white/60">Price:</span>
+                        <span className="text-white">{formatCurrency(trade.price)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-white/60">Status:</span>
+                        <span className="text-white capitalize">{trade.status.toLowerCase()}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;

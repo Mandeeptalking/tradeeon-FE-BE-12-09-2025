@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Eye, EyeOff, TestTube, CheckCircle, XCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { X, Eye, EyeOff, TestTube, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Exchange, UpsertConnectionBody, TestConnectionBody, Connection } from '../../types/connections';
 import { connectionsApi } from '../../lib/api/connections';
 
@@ -11,6 +12,7 @@ interface ConnectExchangeDrawerProps {
 }
 
 const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection }: ConnectExchangeDrawerProps) => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [exchange, setExchange] = useState<Exchange>('BINANCE');
   const [apiKey, setApiKey] = useState('');
@@ -139,6 +141,8 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
       onConnected(connection);
       onClose();
       resetForm();
+      // Redirect to dashboard after successful connection
+      navigate('/app');
     } catch (error: any) {
       console.error('Failed to save connection:', error);
       // Extract error message from API response
