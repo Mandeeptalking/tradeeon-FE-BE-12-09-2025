@@ -105,11 +105,17 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
       
       const result = await connectionsApi.testConnection(testBody);
       setTestResult(result);
-    } catch (error) {
+    } catch (error: any) {
+      // Extract actual error message from API response
+      const errorMessage = error?.response?.data?.detail || 
+                          error?.response?.data?.message || 
+                          error?.message || 
+                          'Failed to test connection';
+      
       setTestResult({
         ok: false,
-        code: 'error',
-        message: 'Failed to test connection'
+        code: error?.response?.status === 401 ? 'authentication_failed' : 'error',
+        message: errorMessage
       });
     } finally {
       setIsTesting(false);

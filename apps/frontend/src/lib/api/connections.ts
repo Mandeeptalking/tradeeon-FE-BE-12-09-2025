@@ -134,19 +134,30 @@ export const connectionsApi = {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to test connection');
+        // Try to extract error message from response
+        let errorMessage = 'Failed to test connection';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorData.message || errorMessage;
+        } catch {
+          // If response is not JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        
+        // If it's a 401, provide more specific error
+        if (response.status === 401) {
+          errorMessage = 'Authentication failed. Please sign in again.';
+        }
+        
+        const error: any = new Error(errorMessage);
+        error.response = { data: { detail: errorMessage }, status: response.status };
+        throw error;
       }
       return await response.json();
-    } catch (error) {
-      // Using mock response (development fallback)
-      // Randomize response for demo
-      const responses = [
-        { ok: true, code: 'ok', latency_ms: 120 },
-        { ok: false, code: 'invalid_credentials', message: 'Invalid API credentials' },
-        { ok: false, code: 'scope_missing', message: 'Trading scope required' },
-        { ok: true, code: 'ok', latency_ms: 89 },
-      ];
-      return responses[Math.floor(Math.random() * responses.length)];
+    } catch (error: any) {
+      // Re-throw the error instead of returning mock data
+      // This allows the UI to properly handle and display the error
+      throw error;
     }
   },
 
