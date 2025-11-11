@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../store/auth';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
-  const { setUser } = useAuthStore();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState<string>('');
 
@@ -36,14 +34,7 @@ const AuthCallback = () => {
           
           setMessage(errorMsg);
           
-          // Redirect to signin after 5 seconds
-          setTimeout(() => {
-            navigate('/signin', { 
-              state: { 
-                error: 'Email verification failed. Please try signing up again.' 
-              } 
-            });
-          }, 5000);
+          // Don't redirect automatically - let user see the error and decide what to do
           return;
         }
 
@@ -55,18 +46,16 @@ const AuthCallback = () => {
           if (isEmailVerified) {
             console.log('✅ Email verified successfully');
             setStatus('success');
-            setMessage('Email verified successfully! Redirecting to your dashboard...');
+            setMessage('Email verified successfully! Redirecting to login...');
             
-            // Set user in auth store
-            setUser({
-              id: session.user.id,
-              email: session.user.email || '',
-              name: session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || ''
-            });
-
-            // Redirect to app after 2 seconds
+            // Don't set user here - let them sign in manually
+            // Redirect to signin after 2 seconds
             setTimeout(() => {
-              navigate('/app');
+              navigate('/signin', {
+                state: {
+                  message: 'Email verified successfully! Please sign in to continue.'
+                }
+              });
             }, 2000);
           } else {
             // Session exists but email not verified - might be a timing issue
@@ -75,13 +64,14 @@ const AuthCallback = () => {
             const { data: { session: retrySession } } = await supabase.auth.getSession();
             if (retrySession?.user?.email_confirmed_at) {
               setStatus('success');
-              setMessage('Email verified successfully! Redirecting to your dashboard...');
-              setUser({
-                id: retrySession.user.id,
-                email: retrySession.user.email || '',
-                name: retrySession.user.user_metadata?.first_name || retrySession.user.email?.split('@')[0] || ''
-              });
-              setTimeout(() => navigate('/app'), 2000);
+              setMessage('Email verified successfully! Redirecting to login...');
+              setTimeout(() => {
+                navigate('/signin', {
+                  state: {
+                    message: 'Email verified successfully! Please sign in to continue.'
+                  }
+                });
+              }, 2000);
             } else {
               throw new Error('Email verification token received but email is still not verified. Please try again.');
             }
@@ -95,13 +85,14 @@ const AuthCallback = () => {
             const isEmailVerified = retrySession.user.email_confirmed_at !== null && retrySession.user.email_confirmed_at !== undefined;
             if (isEmailVerified) {
               setStatus('success');
-              setMessage('Email verified successfully! Redirecting to your dashboard...');
-              setUser({
-                id: retrySession.user.id,
-                email: retrySession.user.email || '',
-                name: retrySession.user.user_metadata?.first_name || retrySession.user.email?.split('@')[0] || ''
-              });
-              setTimeout(() => navigate('/app'), 2000);
+              setMessage('Email verified successfully! Redirecting to login...');
+              setTimeout(() => {
+                navigate('/signin', {
+                  state: {
+                    message: 'Email verified successfully! Please sign in to continue.'
+                  }
+                });
+              }, 2000);
             } else {
               throw new Error('Email verification incomplete. Please try again.');
             }
@@ -113,27 +104,19 @@ const AuthCallback = () => {
           setStatus('error');
           setMessage('Invalid or expired verification link. Please check your email and try again, or sign up again.');
           
-          setTimeout(() => {
-            navigate('/signin');
-          }, 5000);
+          // Don't redirect automatically - let user see the error
         }
       } catch (err: any) {
         console.error('Error handling auth callback:', err);
         setStatus('error');
         setMessage(err.message || 'An error occurred during email verification');
         
-        setTimeout(() => {
-          navigate('/signin', { 
-            state: { 
-              error: 'Email verification failed. Please try signing up again.' 
-            } 
-          });
-        }, 5000);
+        // Don't redirect automatically - let user see the error
       }
     };
 
     handleAuthCallback();
-  }, [navigate, setUser]);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center px-4">
@@ -159,7 +142,12 @@ const AuthCallback = () => {
             <XCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-white mb-2">Verification Failed</h2>
             <p className="text-gray-400 mb-4">{message}</p>
-            <p className="text-sm text-gray-500">Redirecting to sign in page...</p>
+            <button
+              onClick={() => navigate('/signin')}
+              className="mt-4 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+            >
+              Go to Sign In
+            </button>
           </>
         )}
       </div>
