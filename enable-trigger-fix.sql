@@ -61,7 +61,13 @@ ON CONFLICT (id) DO NOTHING;
 -- Step 6: Final verification
 SELECT 
     'Trigger Enabled!' AS status,
-    (SELECT COUNT(*) FROM pg_trigger WHERE tgname = 'on_auth_user_created' AND tgenabled = 'O') AS trigger_enabled,
+    (SELECT COUNT(*) FROM pg_trigger WHERE tgname = 'on_auth_user_created' AND tgenabled = 'O') AS trigger_enabled_count,
+    (SELECT tgenabled FROM pg_trigger WHERE tgname = 'on_auth_user_created' LIMIT 1) AS trigger_status_code,
+    CASE 
+        WHEN (SELECT tgenabled FROM pg_trigger WHERE tgname = 'on_auth_user_created' LIMIT 1) = 'O' THEN 'Enabled ✅'
+        WHEN (SELECT tgenabled FROM pg_trigger WHERE tgname = 'on_auth_user_created' LIMIT 1) = 'D' THEN 'Disabled ❌'
+        ELSE 'Unknown'
+    END AS trigger_status,
     (SELECT COUNT(*) FROM auth.users) AS auth_users,
     (SELECT COUNT(*) FROM public.users) AS public_users,
     CASE 
