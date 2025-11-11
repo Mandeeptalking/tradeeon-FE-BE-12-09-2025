@@ -93,9 +93,14 @@ export const useAuth = () => {
                       name: session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || ''
                     })
                   } else {
-                    console.log('⚠️ Sign in attempted but email not verified');
-                    // Sign out the user - they need to verify email first
-                    await supabase.auth.signOut();
+                    console.log('⚠️ Sign in attempted but email not verified - signing out');
+                    // Sign out the user immediately - they need to verify email first
+                    try {
+                      await supabase.auth.signOut();
+                      console.log('✅ Unverified session cleared');
+                    } catch (signOutError) {
+                      console.error('❌ Error signing out unverified user:', signOutError);
+                    }
                   }
                 } else if (event === 'SIGNED_OUT') {
                   console.log('👋 User signed out');

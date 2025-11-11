@@ -139,7 +139,12 @@ const Signup = () => {
       // Check if email is verified
       const isEmailVerified = authData.user?.email_confirmed_at !== null && authData.user?.email_confirmed_at !== undefined;
 
+      // IMPORTANT: Supabase may create a session even if email confirmation is required
+      // We need to sign out immediately if email is not verified
       if (!isEmailVerified) {
+        // Sign out any session that might have been created
+        await supabase.auth.signOut();
+        
         // Email not verified - show success message but don't log in
         setSuccess(true);
         setEmailVerificationNeeded(true);
