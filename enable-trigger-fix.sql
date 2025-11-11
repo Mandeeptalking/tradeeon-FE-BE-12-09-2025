@@ -1,10 +1,28 @@
 -- ENABLE TRIGGER: Fix disabled trigger
 -- The trigger exists but is DISABLED - this is why profiles aren't being created
+-- Note: We can't use ALTER TABLE ENABLE TRIGGER on auth.users (permission issue)
+-- Solution: Drop and recreate the trigger (it will be enabled by default)
 
--- Step 1: Enable the trigger
-ALTER TABLE auth.users ENABLE TRIGGER on_auth_user_created;
+-- Step 1: Drop the existing disabled trigger
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
--- Step 2: Verify trigger is now enabled
+-- Step 2: Recreate the trigger (it will be enabled by default)
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_new_user();
+
+-- Step 3: Verify function exists (must exist before creating trigger)
+SELECT 
+    proname AS function_name,
+    CASE 
+        WHEN proname = 'handle_new_user' THEN 'Exists ✅'
+        ELSE 'Missing ❌'
+    END AS status
+FROM pg_proc
+WHERE proname = 'handle_new_user';
+
+-- Step 4: Verify trigger is now enabled
 SELECT 
     tgname AS trigger_name,
     tgenabled AS enabled_code,
@@ -19,17 +37,7 @@ SELECT
 FROM pg_trigger
 WHERE tgname = 'on_auth_user_created';
 
--- Step 3: Verify function exists
-SELECT 
-    proname AS function_name,
-    CASE 
-        WHEN proname = 'handle_new_user' THEN 'Exists ✅'
-        ELSE 'Missing ❌'
-    END AS status
-FROM pg_proc
-WHERE proname = 'handle_new_user';
-
--- Step 4: Backfill any existing users who don't have profiles
+-- Step 5: Backfill any existing users who don't have profiles
 INSERT INTO public.users (
     id,
     email,
@@ -50,7 +58,7 @@ LEFT JOIN public.users pu ON au.id = pu.id
 WHERE pu.id IS NULL
 ON CONFLICT (id) DO NOTHING;
 
--- Step 5: Final verification
+-- Step 6: Final verification
 SELECT 
     'Trigger Enabled!' AS status,
     (SELECT COUNT(*) FROM pg_trigger WHERE tgname = 'on_auth_user_created' AND tgenabled = 'O') AS trigger_enabled,
