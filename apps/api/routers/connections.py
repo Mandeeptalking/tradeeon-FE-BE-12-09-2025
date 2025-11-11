@@ -58,7 +58,10 @@ class RotateBody(BaseModel):
     passphrase: Optional[str] = None
 
 def _ensure_user_profile(user_id: str):
-    """Ensure user profile exists in public.users table"""
+    """
+    Ensure user profile exists in public.users table.
+    Note: Database trigger should auto-create profiles, but this is a fallback.
+    """
     if not supabase:
         logger.warning("Supabase client not available")
         return
@@ -68,21 +71,23 @@ def _ensure_user_profile(user_id: str):
         result = supabase.table("users").select("id").eq("id", user_id).execute()
         
         if not result.data:
-            # User doesn't exist, try to create it
-            # First, try to get user info from auth.users via service role
-            logger.info(f"Creating user profile for {user_id}")
+            # User doesn't exist - this shouldn't happen if triggers are set up correctly
+            # But we'll try to create it as a fallback
+            logger.warning(f"User profile not found for {user_id}. Database trigger should have created it.")
+            logger.info(f"Attempting to create user profile as fallback for {user_id}")
+            
             try:
-                # Try to insert with minimal required fields
-                # Note: We'll use placeholder values for required fields
+                # Try to get user info from auth.users via service role
+                # Note: This requires service role key, which we have
                 supabase.table("users").insert({
                     "id": user_id,
                     "email": f"{user_id}@placeholder.tradeeon.com",  # Placeholder
                     "first_name": "User",  # Required field - placeholder
-                    "last_name": "",  # May be required
+                    "last_name": "",  # Required field
                     "created_at": datetime.now().isoformat(),
                     "updated_at": datetime.now().isoformat()
                 }).execute()
-                logger.info(f"✅ Created user profile for {user_id}")
+                logger.info(f"✅ Created user profile fallback for {user_id}")
             except Exception as insert_error:
                 error_msg = str(insert_error)
                 logger.error(f"Failed to create user profile: {error_msg}")
@@ -100,7 +105,11 @@ def _ensure_user_profile(user_id: str):
                         status_code=500,
                         detail=f"Failed to create user profile. Please contact support or try signing out and signing in again."
                     )
-                raise
+                # Don't fail if profile already exists (trigger might have created it)
+                elif "duplicate" in error_msg.lower() or "unique" in error_msg.lower():
+                    logger.info(f"User profile already exists (trigger created it): {user_id}")
+                else:
+                    raise
     except HTTPException:
         raise
     except Exception as e:
