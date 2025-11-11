@@ -47,6 +47,7 @@ BEGIN
 END $$;
 
 -- Step 2: Drop and recreate function with better error handling
+-- IMPORTANT: This function runs as SECURITY DEFINER to bypass RLS
 DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -60,7 +61,7 @@ DECLARE
     v_last_name TEXT;
     v_email TEXT;
 BEGIN
-    -- Extract values safely
+    -- Extract values safely from raw_user_meta_data (set during signup)
     v_email := COALESCE(NEW.email, '');
     v_first_name := COALESCE(
         NEW.raw_user_meta_data->>'first_name',
@@ -71,12 +72,13 @@ BEGIN
         ''
     );
     
-    -- Ensure first_name is never empty
+    -- Ensure first_name is never empty (required NOT NULL constraint)
     IF v_first_name IS NULL OR v_first_name = '' THEN
         v_first_name := 'User';
     END IF;
     
     -- Insert user profile
+    -- ON CONFLICT ensures we don't break if trigger fires twice
     INSERT INTO public.users (
         id,
         email,
@@ -94,6 +96,7 @@ BEGIN
         NOW()
     )
     ON CONFLICT (id) DO UPDATE SET
+        -- Only update if new values are provided and not empty
         email = COALESCE(NULLIF(EXCLUDED.email, ''), public.users.email),
         first_name = COALESCE(NULLIF(EXCLUDED.first_name, ''), public.users.first_name),
         last_name = COALESCE(EXCLUDED.last_name, public.users.last_name),
@@ -102,15 +105,19 @@ BEGIN
     RETURN NEW;
 EXCEPTION
     WHEN OTHERS THEN
-        -- Log error details
+        -- Log error details but don't fail the signup
+        -- This ensures auth.users is created even if public.users insert fails
         RAISE WARNING 'handle_new_user error for user %: % (SQLSTATE: %)', 
             NEW.id, SQLERRM, SQLSTATE;
         -- Still return NEW to allow signup to proceed
+        -- Backend has fallback logic to create profile if trigger fails
         RETURN NEW;
 END;
 $$;
 
 -- Step 3: Drop and recreate trigger
+-- IMPORTANT: Trigger fires on EVERY INSERT, regardless of email_confirmed_at
+-- This ensures user profile exists immediately after signup
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
 CREATE TRIGGER on_auth_user_created
@@ -225,6 +232,8 @@ BEGIN
 END $$;
 
 -- Step 9: Backfill existing users (create profiles for users who signed up but don't have profiles)
+-- This is SAFE: Only inserts users who don't have profiles yet
+-- Uses ON CONFLICT DO NOTHING to prevent errors if profile already exists
 INSERT INTO public.users (
     id,
     email,
@@ -242,8 +251,8 @@ SELECT
     NOW()
 FROM auth.users au
 LEFT JOIN public.users pu ON au.id = pu.id
-WHERE pu.id IS NULL
-ON CONFLICT (id) DO NOTHING;
+WHERE pu.id IS NULL  -- Only users without profiles
+ON CONFLICT (id) DO NOTHING;  -- Safe: won't overwrite existing profiles
 
 -- Step 10: Final verification
 SELECT 
