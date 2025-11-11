@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { dashboardApi, type DashboardSummary } from '../lib/api/dashboard';
 import { Wallet, TrendingUp, Activity, DollarSign, RefreshCw, AlertCircle } from 'lucide-react';
 
+// Dashboard component - displays Binance account info, assets, and active trades
 const Dashboard = () => {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
