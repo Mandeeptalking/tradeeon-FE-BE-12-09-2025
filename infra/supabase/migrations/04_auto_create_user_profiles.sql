@@ -61,6 +61,8 @@ BEGIN
     )
     ON CONFLICT (id) DO UPDATE SET
         email = EXCLUDED.email,
+        first_name = COALESCE(EXCLUDED.first_name, public.users.first_name),
+        last_name = COALESCE(EXCLUDED.last_name, public.users.last_name),
         updated_at = NOW();
     RETURN NEW;
 END;
@@ -69,9 +71,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Step 3: Create trigger to auto-create user profile when user signs up
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
-    AFTER INSERT OR UPDATE ON auth.users
+    AFTER INSERT ON auth.users
     FOR EACH ROW
-    WHEN (NEW.email_confirmed_at IS NOT NULL OR OLD.email_confirmed_at IS NULL)
+    WHEN (NEW.email_confirmed_at IS NOT NULL)
     EXECUTE FUNCTION public.handle_new_user();
 
 -- Step 4: Create function to update user profile when email is verified
