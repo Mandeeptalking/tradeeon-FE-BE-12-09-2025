@@ -68,11 +68,11 @@ def _ensure_user_profile(user_id: str):
         result = supabase.table("users").select("id").eq("id", user_id).execute()
         
         if not result.data:
-            # Create user profile
+            # Create user profile (only include fields that exist in the table)
+            # Note: full_name may not be in PostgREST schema cache, so we skip it
             supabase.table("users").insert({
                 "id": user_id,
                 "email": "",  # Will be updated from auth.users
-                "full_name": "",
                 "created_at": datetime.now().isoformat(),
                 "updated_at": datetime.now().isoformat()
             }).execute()
