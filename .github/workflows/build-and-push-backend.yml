@@ -1,9 +1,11 @@
 name: Build and Push Backend Image
 
+# DISABLED: Backend is now deployed on Lightsail, not ECS
+# This workflow can still be run manually if needed
 on:
-  workflow_dispatch:
-  push:
-    branches: [ main ]
+  workflow_dispatch:  # Manual trigger only - won't run on push
+  # push:
+  #   branches: [ main ]
 
 env:
   AWS_REGION: ap-southeast-1

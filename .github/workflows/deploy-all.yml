@@ -48,7 +48,9 @@ jobs:
   deploy-backend:
     name: Deploy Backend
     needs: detect-changes
-    if: needs.detect-changes.outputs.backend == 'true'
+    # DISABLED: Backend is now deployed on Lightsail, not ECS
+    # Changed condition to always be false so this job is skipped
+    if: false && needs.detect-changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

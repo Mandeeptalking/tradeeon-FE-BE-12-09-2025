@@ -1,15 +1,17 @@
 name: Deploy Backend to ECS
 
+# DISABLED: Backend is now deployed on Lightsail, not ECS
+# To re-enable: Remove the 'on:' section below and uncomment the original 'on:' above
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'apps/api/**'
-      - 'backend/**'
-      - 'shared/**'
-      - 'requirements.txt'
-      - 'Dockerfile'
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:  # Manual trigger only - won't run on push
+  # push:
+  #   branches: [ main ]
+  #   paths:
+  #     - 'apps/api/**'
+  #     - 'backend/**'
+  #     - 'shared/**'
+  #     - 'requirements.txt'
+  #     - 'Dockerfile'
 
 env:
   AWS_REGION: us-east-1
