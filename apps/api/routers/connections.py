@@ -68,17 +68,39 @@ def _ensure_user_profile(user_id: str):
         result = supabase.table("users").select("id").eq("id", user_id).execute()
         
         if not result.data:
-            # Create user profile (only include fields that exist in the table)
-            # Note: full_name may not be in PostgREST schema cache, so we skip it
-            supabase.table("users").insert({
-                "id": user_id,
-                "email": "",  # Will be updated from auth.users
-                "created_at": datetime.now().isoformat(),
-                "updated_at": datetime.now().isoformat()
-            }).execute()
-            logger.info(f"Created user profile for {user_id}")
+            # User doesn't exist, try to get email from auth.users
+            # Note: We need to use service role key to access auth.users
+            # For now, we'll create with a placeholder email and let it be updated later
+            logger.info(f"Creating user profile for {user_id}")
+            try:
+                supabase.table("users").insert({
+                    "id": user_id,
+                    "email": f"{user_id}@placeholder.tradeeon.com",  # Placeholder, will be updated
+                    "created_at": datetime.now().isoformat(),
+                    "updated_at": datetime.now().isoformat()
+                }).execute()
+                logger.info(f"✅ Created user profile for {user_id}")
+            except Exception as insert_error:
+                error_msg = str(insert_error)
+                logger.error(f"Failed to create user profile: {error_msg}")
+                # If it's a foreign key constraint, the user might not exist in auth.users
+                if "foreign key" in error_msg.lower() or "23503" in error_msg:
+                    logger.error(f"User {user_id} does not exist in auth.users table. User needs to sign up first.")
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"User profile not found. Please ensure you are signed in and try again."
+                    )
+                raise
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error ensuring user profile: {e}")
+        # Don't fail silently - re-raise if it's a critical error
+        if "foreign key" in str(e).lower() or "23503" in str(e):
+            raise HTTPException(
+                status_code=400,
+                detail=f"User profile not found. Please sign out and sign in again, then try connecting your exchange."
+            )
 
 class ConnectionGuidance(BaseModel):
     exchange: Exchange
