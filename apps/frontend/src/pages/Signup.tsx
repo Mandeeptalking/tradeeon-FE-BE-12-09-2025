@@ -130,7 +130,9 @@ const Signup = () => {
             first_name: formData.firstName,
             last_name: formData.lastName,
             phone: formData.phone || null,
-          }
+          },
+          // Set redirect URL to production domain for email confirmation
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
