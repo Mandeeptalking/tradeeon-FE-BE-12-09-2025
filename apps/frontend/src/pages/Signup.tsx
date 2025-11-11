@@ -363,7 +363,24 @@ const Signup = () => {
               )}
 
               {/* Success Message */}
-              {success && (
+              {success && emailVerificationNeeded && (
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-4">
+                  <div className="flex items-start space-x-3">
+                    <Mail className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-blue-400 font-semibold text-sm mb-1">Check your email!</p>
+                      <p className="text-blue-300 text-sm">
+                        We've sent a verification link to <strong className="text-blue-200">{formData.email}</strong>. 
+                        Please click the link in the email to verify your account before signing in.
+                      </p>
+                      <p className="text-blue-300/80 text-xs mt-2">
+                        Once verified, you can sign in to access your account.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {success && !emailVerificationNeeded && (
                 <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 mb-4">
                   <p className="text-green-400 text-sm">Account created successfully! Redirecting...</p>
                 </div>
