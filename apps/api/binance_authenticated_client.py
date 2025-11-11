@@ -95,10 +95,21 @@ class BinanceAuthenticatedClient:
         
         url = f"{self.base_url}{endpoint}"
         
+        # Log request details for debugging
+        logger.debug(f"Making {method} request to {url}")
+        logger.debug(f"Params: timestamp={params.get('timestamp')}, signature={params.get('signature', '')[:20]}...")
+        
         try:
             if method.upper() == 'GET':
                 async with self.session.get(url, params=params, headers=headers) as response:
-                    data = await response.json()
+                    response_text = await response.text()
+                    try:
+                        data = await response.json()
+                    except:
+                        # If response is not JSON, log the text
+                        logger.error(f"Binance API returned non-JSON response: {response_text[:200]}")
+                        raise Exception(f"Binance API returned non-JSON response (status {response.status}): {response_text[:200]}")
+                    
                     if response.status != 200:
                         error_msg = data.get('msg', data.get('message', 'Unknown error'))
                         error_code = data.get('code', response.status)
@@ -108,15 +119,33 @@ class BinanceAuthenticatedClient:
                     return data
             elif method.upper() == 'POST':
                 async with self.session.post(url, params=params, headers=headers) as response:
-                    data = await response.json()
+                    response_text = await response.text()
+                    try:
+                        data = await response.json()
+                    except:
+                        logger.error(f"Binance API returned non-JSON response: {response_text[:200]}")
+                        raise Exception(f"Binance API returned non-JSON response (status {response.status}): {response_text[:200]}")
+                    
                     if response.status != 200:
-                        raise Exception(f"Binance API error {response.status}: {data.get('msg', 'Unknown error')}")
+                        error_msg = data.get('msg', data.get('message', 'Unknown error'))
+                        error_code = data.get('code', response.status)
+                        logger.error(f"Binance API error {error_code}: {error_msg}. Full response: {data}")
+                        raise Exception(f"Binance API error {error_code}: {error_msg}")
                     return data
             elif method.upper() == 'DELETE':
                 async with self.session.delete(url, params=params, headers=headers) as response:
-                    data = await response.json()
+                    response_text = await response.text()
+                    try:
+                        data = await response.json()
+                    except:
+                        logger.error(f"Binance API returned non-JSON response: {response_text[:200]}")
+                        raise Exception(f"Binance API returned non-JSON response (status {response.status}): {response_text[:200]}")
+                    
                     if response.status != 200:
-                        raise Exception(f"Binance API error {response.status}: {data.get('msg', 'Unknown error')}")
+                        error_msg = data.get('msg', data.get('message', 'Unknown error'))
+                        error_code = data.get('code', response.status)
+                        logger.error(f"Binance API error {error_code}: {error_msg}. Full response: {data}")
+                        raise Exception(f"Binance API error {error_code}: {error_msg}")
                     return data
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
@@ -139,7 +168,10 @@ class BinanceAuthenticatedClient:
                 account_types.append("SPOT")
                 logger.info("SPOT account detected")
             except Exception as e:
-                logger.debug(f"SPOT account check failed (may not have SPOT access): {e}")
+                error_msg = str(e)
+                logger.warning(f"SPOT account check failed: {error_msg}")
+                # Log full error details for debugging
+                logger.debug(f"SPOT error details: {type(e).__name__}: {error_msg}", exc_info=True)
             
             # Test USDT-M Futures account
             try:
@@ -147,14 +179,18 @@ class BinanceAuthenticatedClient:
                 account_types.append("FUTURES")
                 logger.info("USDT-M Futures account detected")
             except Exception as e:
-                logger.debug(f"Futures account check failed (may not have Futures access): {e}")
+                error_msg = str(e)
+                logger.warning(f"Futures account check failed: {error_msg}")
+                # Log full error details for debugging
+                logger.debug(f"Futures error details: {type(e).__name__}: {error_msg}", exc_info=True)
             
-            # If no account types found, return error
+            # If no account types found, return error with details
             if not account_types:
+                logger.error("Both SPOT and Futures account checks failed. Unable to access any Binance account type.")
                 return {
                     "ok": False,
                     "code": "no_account_access",
-                    "message": "Unable to access any Binance account type. Please check API key permissions."
+                    "message": "Unable to access any Binance account type. Please check API key permissions and IP whitelist (52.77.227.148)."
                 }
             
             latency_ms = int((time.time() - start_time) * 1000)
