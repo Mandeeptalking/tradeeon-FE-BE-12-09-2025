@@ -1,6 +1,9 @@
 from fastapi import Depends, Header, HTTPException, status
 import jwt
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")  # service role secret for verify
 
@@ -26,7 +29,14 @@ def get_current_user(authorization: str = Header(None)) -> AuthedUser:
         if not user_id:
             raise ValueError("No user id in token")
         return AuthedUser(user_id=user_id)
+    except jwt.ExpiredSignatureError:
+        logger.error("JWT token expired")
+        raise HTTPException(status_code=401, detail="Token expired. Please sign in again.")
+    except jwt.InvalidTokenError as e:
+        logger.error(f"Invalid JWT token: {e}")
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid token: {e}")
+        logger.error(f"JWT validation error: {e}")
+        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
 
 
