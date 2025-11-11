@@ -55,8 +55,6 @@ class BinanceAuthenticatedClient:
         sorted_params = sorted(filtered_params.items())
         # Create query string from sorted parameters
         query_string = urlencode(sorted_params)
-        # Log for debugging (remove in production)
-        logger.debug(f"Generating signature from query string: {query_string[:100]}...")
         # Generate HMAC SHA256 signature
         signature = hmac.new(
             self.api_secret.encode('utf-8'),
@@ -95,26 +93,23 @@ class BinanceAuthenticatedClient:
         
         url = f"{self.base_url}{endpoint}"
         
-        # Log request details for debugging
-        logger.debug(f"Making {method} request to {url}")
-        logger.debug(f"Params: timestamp={params.get('timestamp')}, signature={params.get('signature', '')[:20]}...")
-        
         try:
             if method.upper() == 'GET':
                 async with self.session.get(url, params=params, headers=headers) as response:
                     response_text = await response.text()
                     try:
                         data = await response.json()
-                    except:
+                    except Exception as json_error:
                         # If response is not JSON, log the text
-                        logger.error(f"Binance API returned non-JSON response: {response_text[:200]}")
+                        logger.error(f"Binance API returned non-JSON response (status {response.status}): {response_text[:500]}")
                         raise Exception(f"Binance API returned non-JSON response (status {response.status}): {response_text[:200]}")
                     
                     if response.status != 200:
                         error_msg = data.get('msg', data.get('message', 'Unknown error'))
                         error_code = data.get('code', response.status)
-                        # Log full error details for debugging
-                        logger.error(f"Binance API error {error_code}: {error_msg}. Full response: {data}")
+                        # Log full error details
+                        logger.error(f"Binance API error {error_code}: {error_msg}. URL: {url}. Full response: {data}")
+                        # Raise exception with detailed error
                         raise Exception(f"Binance API error {error_code}: {error_msg}")
                     return data
             elif method.upper() == 'POST':
@@ -122,14 +117,14 @@ class BinanceAuthenticatedClient:
                     response_text = await response.text()
                     try:
                         data = await response.json()
-                    except:
-                        logger.error(f"Binance API returned non-JSON response: {response_text[:200]}")
+                    except Exception as json_error:
+                        logger.error(f"Binance API returned non-JSON response (status {response.status}): {response_text[:500]}")
                         raise Exception(f"Binance API returned non-JSON response (status {response.status}): {response_text[:200]}")
                     
                     if response.status != 200:
                         error_msg = data.get('msg', data.get('message', 'Unknown error'))
                         error_code = data.get('code', response.status)
-                        logger.error(f"Binance API error {error_code}: {error_msg}. Full response: {data}")
+                        logger.error(f"Binance API error {error_code}: {error_msg}. URL: {url}. Full response: {data}")
                         raise Exception(f"Binance API error {error_code}: {error_msg}")
                     return data
             elif method.upper() == 'DELETE':
@@ -137,65 +132,89 @@ class BinanceAuthenticatedClient:
                     response_text = await response.text()
                     try:
                         data = await response.json()
-                    except:
-                        logger.error(f"Binance API returned non-JSON response: {response_text[:200]}")
+                    except Exception as json_error:
+                        logger.error(f"Binance API returned non-JSON response (status {response.status}): {response_text[:500]}")
                         raise Exception(f"Binance API returned non-JSON response (status {response.status}): {response_text[:200]}")
                     
                     if response.status != 200:
                         error_msg = data.get('msg', data.get('message', 'Unknown error'))
                         error_code = data.get('code', response.status)
-                        logger.error(f"Binance API error {error_code}: {error_msg}. Full response: {data}")
+                        logger.error(f"Binance API error {error_code}: {error_msg}. URL: {url}. Full response: {data}")
                         raise Exception(f"Binance API error {error_code}: {error_msg}")
                     return data
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
         except aiohttp.ClientError as e:
-            logger.error(f"Network error: {e}")
+            logger.error(f"Network error connecting to Binance: {e}")
             raise Exception(f"Network error: {str(e)}")
+        except Exception as e:
+            # Re-raise Binance API errors as-is
+            raise
     
     async def test_connection(self) -> Dict[str, Any]:
         """
         Test API key connection by getting account info for SPOT and Futures
-        Returns: Dict with 'ok', 'code', 'message', 'latency_ms', and 'account_types' list
+        Returns: Dict with 'ok', 'code', 'message', 'latency_ms', 'account_types' list, and 'errors' dict
         """
         start_time = time.time()
         account_types = []
+        errors = {}
         
+        # Test SPOT account
+        spot_error = None
         try:
-            # Test SPOT account
-            try:
-                account_info = await self.get_account_info()
-                account_types.append("SPOT")
-                logger.info("SPOT account detected")
-            except Exception as e:
-                error_msg = str(e)
-                logger.warning(f"SPOT account check failed: {error_msg}")
-                # Log full error details for debugging
-                logger.debug(f"SPOT error details: {type(e).__name__}: {error_msg}", exc_info=True)
+            logger.info(f"Testing SPOT account access for API key: {self.api_key[:10]}...")
+            account_info = await self.get_account_info()
+            account_types.append("SPOT")
+            logger.info("✅ SPOT account access successful")
+        except Exception as e:
+            spot_error = str(e)
+            error_code = None
+            # Try to extract error code from error message
+            if "error" in spot_error.lower():
+                parts = spot_error.split(":")
+                if len(parts) > 1:
+                    try:
+                        error_code = int(parts[0].split()[-1])
+                    except:
+                        pass
             
-            # Test USDT-M Futures account
-            try:
-                futures_info = await self.get_futures_account_info()
-                account_types.append("FUTURES")
-                logger.info("USDT-M Futures account detected")
-            except Exception as e:
-                error_msg = str(e)
-                logger.warning(f"Futures account check failed: {error_msg}")
-                # Log full error details for debugging
-                logger.debug(f"Futures error details: {type(e).__name__}: {error_msg}", exc_info=True)
+            errors["spot"] = {
+                "error": spot_error,
+                "code": error_code
+            }
+            logger.error(f"❌ SPOT account check failed: {spot_error}")
+        
+        # Test USDT-M Futures account
+        futures_error = None
+        try:
+            logger.info(f"Testing Futures account access for API key: {self.api_key[:10]}...")
+            futures_info = await self.get_futures_account_info()
+            account_types.append("FUTURES")
+            logger.info("✅ Futures account access successful")
+        except Exception as e:
+            futures_error = str(e)
+            error_code = None
+            # Try to extract error code from error message
+            if "error" in futures_error.lower():
+                parts = futures_error.split(":")
+                if len(parts) > 1:
+                    try:
+                        error_code = int(parts[0].split()[-1])
+                    except:
+                        pass
             
-            # If no account types found, return error with details
-            if not account_types:
-                logger.error("Both SPOT and Futures account checks failed. Unable to access any Binance account type.")
-                return {
-                    "ok": False,
-                    "code": "no_account_access",
-                    "message": "Unable to access any Binance account type. Please check API key permissions and IP whitelist (52.77.227.148)."
-                }
-            
-            latency_ms = int((time.time() - start_time) * 1000)
-            
-            return {
+            errors["futures"] = {
+                "error": futures_error,
+                "code": error_code
+            }
+            logger.error(f"❌ Futures account check failed: {futures_error}")
+        
+        latency_ms = int((time.time() - start_time) * 1000)
+        
+        # If we have at least one account type, return success
+        if account_types:
+            result = {
                 "ok": True,
                 "code": "ok",
                 "message": "Connection successful",
@@ -203,34 +222,63 @@ class BinanceAuthenticatedClient:
                 "account_type": account_types[0],  # Keep for backward compatibility
                 "account_types": account_types  # List of all available account types
             }
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"Binance connection test failed: {error_msg}")
-            # Parse common Binance errors
-            if "Invalid API-key" in error_msg or "invalid signature" in error_msg.lower():
-                return {
-                    "ok": False,
-                    "code": "invalid_credentials",
-                    "message": f"Invalid API credentials: {error_msg}"
-                }
-            elif "IP" in error_msg or "whitelist" in error_msg.lower():
-                return {
-                    "ok": False,
-                    "code": "ip_not_whitelisted",
-                    "message": f"IP address not whitelisted: {error_msg}. Please add your server IP (52.77.227.148) to Binance API key whitelist."
-                }
-            elif "permission" in error_msg.lower() or "scope" in error_msg.lower():
-                return {
-                    "ok": False,
-                    "code": "scope_missing",
-                    "message": f"API key missing required permissions: {error_msg}"
-                }
-            else:
-                return {
-                    "ok": False,
-                    "code": "connection_error",
-                    "message": f"Connection failed: {error_msg}"
-                }
+            # Include errors for account types that failed (for debugging)
+            if errors:
+                result["partial_errors"] = errors
+            return result
+        
+        # If no account types found, determine the most specific error
+        logger.error(f"Both SPOT and Futures account checks failed. Errors: {errors}")
+        
+        # Check for specific error codes
+        spot_code = errors.get("spot", {}).get("code")
+        futures_code = errors.get("futures", {}).get("code")
+        
+        # -2015: Invalid API-key, IP, or permissions for action
+        if spot_code == -2015 or futures_code == -2015:
+            spot_msg = errors.get("spot", {}).get("error", "")
+            futures_msg = errors.get("futures", {}).get("error", "")
+            combined_msg = f"SPOT: {spot_msg}; Futures: {futures_msg}" if spot_msg and futures_msg else (spot_msg or futures_msg)
+            return {
+                "ok": False,
+                "code": "ip_not_whitelisted",
+                "message": f"IP address not whitelisted or invalid API key permissions. Please add IP 52.77.227.148 to Binance API key whitelist. Details: {combined_msg}",
+                "errors": errors
+            }
+        
+        # -1022: Invalid signature
+        if spot_code == -1022 or futures_code == -1022:
+            return {
+                "ok": False,
+                "code": "invalid_signature",
+                "message": "Invalid signature. This usually indicates an API secret mismatch.",
+                "errors": errors
+            }
+        
+        # Generic error - return the actual error messages
+        spot_msg = errors.get("spot", {}).get("error", "Unknown error")
+        futures_msg = errors.get("futures", {}).get("error", "Unknown error")
+        
+        # Determine primary error message
+        if "IP" in spot_msg or "whitelist" in spot_msg.lower() or "IP" in futures_msg or "whitelist" in futures_msg.lower():
+            primary_code = "ip_not_whitelisted"
+            primary_msg = f"IP address not whitelisted. Please add IP 52.77.227.148 to Binance API key whitelist. SPOT error: {spot_msg}; Futures error: {futures_msg}"
+        elif "Invalid API-key" in spot_msg or "Invalid API-key" in futures_msg:
+            primary_code = "invalid_credentials"
+            primary_msg = f"Invalid API credentials. SPOT error: {spot_msg}; Futures error: {futures_msg}"
+        elif "permission" in spot_msg.lower() or "permission" in futures_msg.lower() or "scope" in spot_msg.lower() or "scope" in futures_msg.lower():
+            primary_code = "scope_missing"
+            primary_msg = f"API key missing required permissions. SPOT error: {spot_msg}; Futures error: {futures_msg}"
+        else:
+            primary_code = "no_account_access"
+            primary_msg = f"Unable to access any Binance account type. SPOT error: {spot_msg}; Futures error: {futures_msg}"
+        
+        return {
+            "ok": False,
+            "code": primary_code,
+            "message": primary_msg,
+            "errors": errors
+        }
     
     async def get_account_info(self) -> Dict:
         """Get SPOT account information"""
@@ -364,4 +412,3 @@ class BinanceAuthenticatedClient:
             'orderId': order_id
         }
         return await self._make_authenticated_request('GET', '/api/v3/order', params)
-

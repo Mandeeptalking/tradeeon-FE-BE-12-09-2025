@@ -225,8 +225,12 @@ async def upsert_connection(body: UpsertBody, user: AuthedUser = Depends(get_cur
 
 @router.post("/test")
 async def test_connection(body: TestBody, user: AuthedUser = Depends(get_current_user)):
-    """Test a connection with real exchange API"""
+    """
+    Test a connection with real exchange API.
+    Returns detailed error information if connection fails.
+    """
     try:
+        # Validate input
         if not body.api_key or not body.api_secret:
             return {
                 "ok": False,
@@ -234,20 +238,34 @@ async def test_connection(body: TestBody, user: AuthedUser = Depends(get_current
                 "message": "API key and secret are required"
             }
         
-        # Test with real Binance API
-        if body.exchange.upper() == 'BINANCE':
-            async with BinanceAuthenticatedClient(body.api_key, body.api_secret) as client:
-                result = await client.test_connection()
-                return result
-        else:
-            # For other exchanges, return not implemented
+        # Validate exchange
+        if body.exchange.upper() != 'BINANCE':
             return {
                 "ok": False,
                 "code": "not_implemented",
                 "message": f"Connection testing for {body.exchange} is not yet implemented"
             }
+        
+        # Test with real Binance API
+        logger.info(f"Testing Binance connection for user {user.user_id}")
+        try:
+            async with BinanceAuthenticatedClient(body.api_key, body.api_secret) as client:
+                result = await client.test_connection()
+                logger.info(f"Connection test result: ok={result.get('ok')}, code={result.get('code')}")
+                return result
+        except Exception as e:
+            # Catch any unexpected errors from the client
+            error_msg = str(e)
+            logger.error(f"Unexpected error during connection test: {error_msg}", exc_info=True)
+            return {
+                "ok": False,
+                "code": "connection_error",
+                "message": f"Connection test failed: {error_msg}"
+            }
+            
     except Exception as e:
-        logger.error(f"Error testing connection: {e}")
+        # Catch any other unexpected errors
+        logger.error(f"Error in test_connection endpoint: {e}", exc_info=True)
         return {
             "ok": False,
             "code": "error",
