@@ -144,7 +144,8 @@ async def get_connection_guidance(exchange: Optional[Exchange] = None) -> Dict[s
         return {"exchanges": [guidance.dict()]}
     return {"exchanges": [item.dict() for item in _EXCHANGE_GUIDANCE.values()]}
 
-@router.get("/")
+@router.get("")
+@router.get("/")  # Support both with and without trailing slash
 async def list_connections(user: AuthedUser = Depends(get_current_user)):
     """Get all connections for the authenticated user"""
     try:
@@ -166,7 +167,8 @@ async def list_connections(user: AuthedUser = Depends(get_current_user)):
         logger.error(f"Error listing connections: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to list connections: {str(e)}")
 
-@router.post("/")
+@router.post("")
+@router.post("/")  # Support both with and without trailing slash
 async def upsert_connection(body: UpsertBody, user: AuthedUser = Depends(get_current_user)):
     """Create or update a connection"""
     try:
