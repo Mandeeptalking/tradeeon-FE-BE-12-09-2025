@@ -136,6 +136,7 @@ const Signup = () => {
       if (authError) throw authError;
 
       // Create user profile in public.users table
+      // Note: Database trigger should auto-create this, but we do it here as fallback
       if (authData.user) {
         try {
           const { error: profileError } = await supabase
@@ -143,17 +144,19 @@ const Signup = () => {
             .insert({
               id: authData.user.id,
               email: formData.email,
-              full_name: `${formData.firstName} ${formData.lastName}`,
+              first_name: formData.firstName,
+              last_name: formData.lastName,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });
 
           if (profileError) {
-            // Profile may already exist, continue
+            // Profile may already exist (trigger created it), or there's an error
             console.warn('Profile creation warning:', profileError);
+            // Don't fail signup if profile creation fails - trigger will handle it
           }
         } catch (profileErr) {
-          // Error creating user profile (non-critical)
+          // Error creating user profile (non-critical - trigger will handle it)
           console.warn('Profile creation error:', profileErr);
         }
 
