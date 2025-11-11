@@ -118,8 +118,17 @@ const SignIn = () => {
 
       if (signInError) throw signInError;
 
-      // Update the auth store with user data from Supabase
+      // Check if email is verified before allowing sign in
       if (data.user) {
+        const isEmailVerified = data.user.email_confirmed_at !== null && data.user.email_confirmed_at !== undefined;
+        
+        if (!isEmailVerified) {
+          // Sign out the user immediately
+          await supabase.auth.signOut();
+          throw new Error('Please verify your email address before signing in. Check your inbox for the verification link.');
+        }
+
+        // Email is verified - proceed with sign in
         setUser({
           id: data.user.id,
           email: data.user.email || formData.email,

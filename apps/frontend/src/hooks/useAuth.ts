@@ -37,12 +37,22 @@ export const useAuth = () => {
         }
 
         if (session?.user) {
-          console.log('✅ Session found:', { userId: session.user.id, email: session.user.email });
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || ''
-          })
+          // Check if email is verified
+          const isEmailVerified = session.user.email_confirmed_at !== null && session.user.email_confirmed_at !== undefined;
+          
+          if (isEmailVerified) {
+            console.log('✅ Session found (email verified):', { userId: session.user.id, email: session.user.email });
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || ''
+            })
+          } else {
+            console.log('⚠️ Session found but email not verified:', { userId: session.user.id, email: session.user.email });
+            // Don't set user if email is not verified - user needs to verify first
+            // Sign out the user to clear the unverified session
+            await supabase.auth.signOut();
+          }
         } else {
           console.log('ℹ️ No active session found');
         }
@@ -59,35 +69,70 @@ export const useAuth = () => {
 
     getInitialSession()
 
-    // Listen for auth changes (only if supabase is properly configured)
-    let subscription: { unsubscribe: () => void } | null = null
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
-    if (supabaseUrl && supabaseKey && supabaseUrl.startsWith('http')) {
-      try {
-        console.log('👂 Setting up auth state change listener...');
-        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log('🔄 Auth state changed:', event, { hasSession: !!session, userId: session?.user?.id });
-            if (event === 'SIGNED_IN' && session?.user) {
-              console.log('✅ User signed in via listener:', session.user.id);
-              setUser({
-                id: session.user.id,
-                email: session.user.email || '',
-                name: session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || ''
-              })
-            } else if (event === 'SIGNED_OUT') {
-              console.log('👋 User signed out');
-              setUser(null)
-            }
+        // Listen for auth changes (only if supabase is properly configured)
+        let subscription: { unsubscribe: () => void } | null = null
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+        if (supabaseUrl && supabaseKey && supabaseUrl.startsWith('http')) {
+          try {
+            console.log('👂 Setting up auth state change listener...');
+            const { data: { subscription: sub } } = supabase.auth.onAuthStateChange(
+              async (event, session) => {
+                console.log('🔄 Auth state changed:', event, { hasSession: !!session, userId: session?.user?.id });
+                
+                if (!mounted) return
+                
+                if (event === 'SIGNED_IN' && session?.user) {
+                  // Check if email is verified before setting user
+                  const isEmailVerified = session.user.email_confirmed_at !== null && session.user.email_confirmed_at !== undefined;
+                  if (isEmailVerified) {
+                    console.log('✅ User signed in via listener (email verified):', session.user.id);
+                    setUser({
+                      id: session.user.id,
+                      email: session.user.email || '',
+                      name: session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || ''
+                    })
+                  } else {
+                    console.log('⚠️ Sign in attempted but email not verified');
+                    // Sign out the user - they need to verify email first
+                    await supabase.auth.signOut();
+                  }
+                } else if (event === 'SIGNED_OUT') {
+                  console.log('👋 User signed out');
+                  setUser(null)
+                } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+                  // Check if email is verified before setting user
+                  const isEmailVerified = session.user.email_confirmed_at !== null && session.user.email_confirmed_at !== undefined;
+                  if (isEmailVerified) {
+                    setUser({
+                      id: session.user.id,
+                      email: session.user.email || '',
+                      name: session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || ''
+                    })
+                  } else {
+                    // Email not verified - sign out
+                    await supabase.auth.signOut();
+                  }
+                } else if (event === 'USER_UPDATED' && session?.user) {
+                  // Check if email was just verified
+                  const isEmailVerified = session.user.email_confirmed_at !== null && session.user.email_confirmed_at !== undefined;
+                  if (isEmailVerified) {
+                    console.log('✅ Email verified - setting user');
+                    setUser({
+                      id: session.user.id,
+                      email: session.user.email || '',
+                      name: session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || ''
+                    })
+                  }
+                }
+              }
+            )
+            subscription = sub
+            console.log('✅ Auth listener set up successfully');
+          } catch (error) {
+            console.error('❌ Error setting up auth listener:', error)
           }
-        )
-        subscription = sub
-        console.log('✅ Auth listener set up successfully');
-      } catch (error) {
-        console.error('❌ Error setting up auth listener:', error)
-      }
-    }
+        }
 
     return () => {
       mounted = false
