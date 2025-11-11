@@ -1,4 +1,11 @@
-import { Connection, UpsertConnectionBody, TestConnectionBody, TestConnectionResponse, AuditEvent } from '../../types/connections';
+import {
+  Connection,
+  UpsertConnectionBody,
+  TestConnectionBody,
+  TestConnectionResponse,
+  AuditEvent,
+  ConnectionGuidance,
+} from '../../types/connections';
 import { authenticatedFetch } from './auth';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || 'http://localhost:8000';
@@ -30,6 +37,29 @@ const mockConnections: Connection[] = [
     nickname: 'Coinbase Pro',
     status: 'not_connected',
     features: { trading: false, wallet: false, paper: false },
+  },
+];
+
+const defaultGuidance: ConnectionGuidance[] = [
+  {
+    exchange: 'BINANCE',
+    whitelist_ip: '52.77.227.148',
+    required_permissions: [
+      'Enable Reading (spot)',
+      'Enable Spot & Margin trading',
+      'Optional: Enable Futures trading (if you plan to trade Futures)',
+      'Do NOT enable Withdrawals',
+    ],
+    recommendations: [
+      'Add the whitelist IP before testing the connection in Binance API management.',
+      'Generate a fresh API key pair dedicated to Tradeeon.',
+      'Label the API key clearly so you can rotate or revoke it later.',
+    ],
+    testing_notes: [
+      'Connection test calls Binance spot `/api/v3/account` and futures `/fapi/v1/account` endpoints.',
+      'If you receive IP whitelist errors, confirm 52.77.227.148 is whitelisted for this key.',
+      'Invalid credential errors usually indicate key/secret mismatch or missing permissions.',
+    ],
   },
 ];
 
@@ -210,5 +240,31 @@ export const connectionsApi = {
       // Always return mock data - never fail
       return mockAuditEvents;
     }
+  },
+
+  async getGuidance(exchange?: string): Promise<ConnectionGuidance[]> {
+    try {
+      const query = exchange ? `?exchange=${exchange}` : '';
+      const response = await authenticatedFetch(`${API_BASE_URL}/connections/info${query}`, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load guidance');
+      }
+
+      const data = await response.json();
+      if (Array.isArray(data?.exchanges)) {
+        return data.exchanges as ConnectionGuidance[];
+      }
+    } catch (error) {
+      console.warn('Connection guidance fallback:', error);
+    }
+
+    if (exchange) {
+      return defaultGuidance.filter((g) => g.exchange === exchange);
+    }
+
+    return defaultGuidance;
   },
 };

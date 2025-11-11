@@ -80,6 +80,39 @@ def _ensure_user_profile(user_id: str):
     except Exception as e:
         logger.error(f"Error ensuring user profile: {e}")
 
+class ConnectionGuidance(BaseModel):
+    exchange: Exchange
+    whitelist_ip: str
+    required_permissions: List[str]
+    recommendations: List[str]
+    testing_notes: List[str]
+
+
+BINANCE_WHITELIST_IP = "52.77.227.148"
+_EXCHANGE_GUIDANCE: Dict[str, ConnectionGuidance] = {
+    "BINANCE": ConnectionGuidance(
+        exchange="BINANCE",
+        whitelist_ip=BINANCE_WHITELIST_IP,
+        required_permissions=[
+            "Enable Reading (spot)",
+            "Enable Spot & Margin trading",
+            "Optional: Enable Futures trading (if you plan to trade Futures)",
+            "Do NOT enable Withdrawals"
+        ],
+        recommendations=[
+            "Add the whitelist IP before testing the connection in Binance API management.",
+            "Generate a fresh API key pair dedicated to Tradeeon.",
+            "Label the API key clearly so you can rotate or revoke it later."
+        ],
+        testing_notes=[
+            "Connection test calls Binance spot `/api/v3/account` and futures `/fapi/v1/account` endpoints.",
+            "If you receive IP whitelist error, confirm 52.77.227.148 is whitelisted for this key.",
+            "Invalid credential errors typically mean key/secret mismatch or missing permissions."
+        ]
+    )
+}
+
+
 def _connection_to_dict(conn: Dict, include_keys: bool = False) -> Dict:
     """Convert database row to Connection model"""
     return {
@@ -96,6 +129,20 @@ def _connection_to_dict(conn: Dict, include_keys: bool = False) -> Dict:
         ).dict(),
         "notes": None
     }
+
+
+@router.get("/info")
+async def get_connection_guidance(exchange: Optional[Exchange] = None) -> Dict[str, Any]:
+    """
+    Provide connection guidance such as whitelist IPs and required permissions.
+    If exchange is omitted, return all supported exchanges.
+    """
+    if exchange:
+        guidance = _EXCHANGE_GUIDANCE.get(exchange.upper())
+        if not guidance:
+            raise HTTPException(status_code=404, detail=f"No guidance available for {exchange}")
+        return {"exchanges": [guidance.dict()]}
+    return {"exchanges": [item.dict() for item in _EXCHANGE_GUIDANCE.values()]}
 
 @router.get("/")
 async def list_connections(user: AuthedUser = Depends(get_current_user)):

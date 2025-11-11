@@ -53,3 +53,11 @@ export type ExchangeInfo = {
   color: string;
   requiresPassphrase: boolean;
 };
+
+export type ConnectionGuidance = {
+  exchange: Exchange;
+  whitelist_ip: string;
+  required_permissions: string[];
+  recommendations: string[];
+  testing_notes: string[];
+};
