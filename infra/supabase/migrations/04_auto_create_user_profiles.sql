@@ -69,11 +69,12 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Step 3: Create trigger to auto-create user profile when user signs up
+-- IMPORTANT: Fire on INSERT regardless of email_confirmed_at
+-- This ensures user profile exists even before email verification
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW
-    WHEN (NEW.email_confirmed_at IS NOT NULL)
     EXECUTE FUNCTION public.handle_new_user();
 
 -- Step 4: Create function to update user profile when email is verified
@@ -81,6 +82,7 @@ CREATE OR REPLACE FUNCTION public.handle_user_email_verified()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Update or insert user profile when email is verified
+    -- Use ON CONFLICT to handle case where profile already exists
     INSERT INTO public.users (
         id,
         email,
@@ -94,7 +96,7 @@ BEGIN
         NEW.email,
         COALESCE(NEW.raw_user_meta_data->>'first_name', 'User'),
         COALESCE(NEW.raw_user_meta_data->>'last_name', ''),
-        NOW(),
+        COALESCE((SELECT created_at FROM public.users WHERE id = NEW.id), NOW()),
         NOW()
     )
     ON CONFLICT (id) DO UPDATE SET
