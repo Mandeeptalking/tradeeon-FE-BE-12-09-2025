@@ -111,7 +111,16 @@ const ConnectionsPage = () => {
     [guidance],
   );
 
-import { logger } from '../../utils/logger';
+  const handleCopyIp = async (ip?: string) => {
+    if (!ip) return;
+    try {
+      await navigator.clipboard.writeText(ip);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (error) {
+      logger.error('Failed to copy IP:', error);
+    }
+  };
 
   const handleConnected = (connection: Connection) => {
     setConnections((prev) => {
