@@ -3,6 +3,9 @@ import { dashboardApi, type DashboardSummary } from '../lib/api/dashboard';
 import { Wallet, TrendingUp, Activity, DollarSign, RefreshCw, AlertCircle } from 'lucide-react';
 import { logger } from '../utils/logger';
 import { sanitizeErrorMessage } from '../utils/errorHandler';
+import { AnimatedCounter } from '../components/dashboard/AnimatedCounter';
+import { StatCard } from '../components/dashboard/StatCard';
+import { motion } from 'framer-motion';
 
 // Dashboard component - displays Binance account info, assets, and active trades
 const Dashboard = () => {
@@ -101,37 +104,60 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Enhanced animated background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        {/* Animated gradient orbs */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 p-6">
+        <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center justify-between mb-8"
+        >
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-            <p className="text-white/60">Your Binance account overview</p>
+            <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+              Dashboard
+            </h1>
+            <p className="text-white/60 text-lg">Your Binance account overview</p>
           </div>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={fetchDashboardData}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg border border-blue-500/20 transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg border border-blue-500/20 transition-all backdrop-blur-sm"
           >
             <RefreshCw className="h-4 w-4" />
             Refresh
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* USDT Balance */}
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-green-500/10 rounded-lg">
-                <DollarSign className="h-6 w-6 text-green-400" />
-              </div>
-              <span className="text-xs text-white/60 uppercase tracking-wide">USDT Balance</span>
-            </div>
-            <div className="space-y-1">
-              <p className="text-3xl font-bold text-white">
-                {formatCurrency(summary.usdt_balance.total)}
-              </p>
+          <StatCard
+            title="USDT Balance"
+            value={
+              <AnimatedCounter
+                value={summary.usdt_balance.total}
+                duration={1.5}
+                decimals={2}
+                prefix="$"
+                className="text-3xl font-bold text-white"
+              />
+            }
+            subtitle={
               <div className="flex items-center gap-4 text-sm">
                 <span className="text-white/60">
                   Free: <span className="text-white">{formatCurrency(summary.usdt_balance.free)}</span>
@@ -142,67 +168,90 @@ const Dashboard = () => {
                   </span>
                 )}
               </div>
-            </div>
-          </div>
+            }
+            icon={DollarSign}
+            iconColor="text-green-400"
+            iconBgColor="bg-green-500/10"
+            gradientFrom="from-green-500"
+            gradientTo="to-emerald-500"
+            progress={
+              summary.usdt_balance.total > 0
+                ? (summary.usdt_balance.free / summary.usdt_balance.total) * 100
+                : 0
+            }
+            delay={0}
+          />
 
           {/* Total Assets */}
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-blue-500/10 rounded-lg">
-                <Wallet className="h-6 w-6 text-blue-400" />
-              </div>
-              <span className="text-xs text-white/60 uppercase tracking-wide">Total Assets</span>
-            </div>
-            <div className="space-y-1">
-              <p className="text-3xl font-bold text-white">{summary.stats.total_assets}</p>
-              <p className="text-sm text-white/60">Different cryptocurrencies</p>
-            </div>
-          </div>
+          <StatCard
+            title="Total Assets"
+            value={
+              <AnimatedCounter
+                value={summary.stats.total_assets}
+                duration={1.5}
+                decimals={0}
+                className="text-3xl font-bold text-white"
+              />
+            }
+            subtitle={<span className="text-sm text-white/60">Different cryptocurrencies</span>}
+            icon={Wallet}
+            iconColor="text-blue-400"
+            iconBgColor="bg-blue-500/10"
+            gradientFrom="from-blue-500"
+            gradientTo="to-cyan-500"
+            delay={0.1}
+          />
 
           {/* Active Trades */}
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-purple-500/10 rounded-lg">
-                <Activity className="h-6 w-6 text-purple-400" />
-              </div>
-              <span className="text-xs text-white/60 uppercase tracking-wide">Active Trades</span>
-            </div>
-            <div className="space-y-1">
-              <p className="text-3xl font-bold text-white">
-                {summary.stats.total_active_trades + (summary.stats.total_futures_positions || 0)}
-              </p>
-              <p className="text-sm text-white/60">
+          <StatCard
+            title="Active Trades"
+            value={
+              <AnimatedCounter
+                value={summary.stats.total_active_trades + (summary.stats.total_futures_positions || 0)}
+                duration={1.5}
+                decimals={0}
+                className="text-3xl font-bold text-white"
+              />
+            }
+            subtitle={
+              <span className="text-sm text-white/60">
                 {summary.stats.total_active_trades > 0 && (summary.stats.total_futures_positions || 0) > 0
                   ? `${summary.stats.total_active_trades} orders, ${summary.stats.total_futures_positions || 0} positions`
                   : 'Open orders & positions'}
-              </p>
-            </div>
-          </div>
+              </span>
+            }
+            icon={Activity}
+            iconColor="text-purple-400"
+            iconBgColor="bg-purple-500/10"
+            gradientFrom="from-purple-500"
+            gradientTo="to-pink-500"
+            delay={0.2}
+          />
 
           {/* Account Status */}
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-emerald-500/10 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-emerald-400" />
-              </div>
-              <span className="text-xs text-white/60 uppercase tracking-wide">Account Status</span>
-            </div>
-            <div className="space-y-1">
+          <StatCard
+            title="Account Status"
+            value={
               <div className="flex items-center gap-2 flex-wrap">
                 {summary.account.account_types?.map((type) => (
-                  <span
+                  <motion.span
                     key={type}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 + (summary.account.account_types?.indexOf(type) || 0) * 0.1 }}
                     className="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded text-xs font-medium capitalize"
                   >
                     {type}
-                  </span>
+                  </motion.span>
                 )) || (
                   <span className="text-lg font-semibold text-white capitalize">
                     {summary.account.account_type}
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2 text-xs mt-2">
+            }
+            subtitle={
+              <div className="flex items-center gap-2 text-xs mt-2 flex-wrap">
                 {summary.account.can_trade && (
                   <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded">Trading</span>
                 )}
@@ -213,8 +262,14 @@ const Dashboard = () => {
                   <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded">Withdraw</span>
                 )}
               </div>
-            </div>
-          </div>
+            }
+            icon={TrendingUp}
+            iconColor="text-emerald-400"
+            iconBgColor="bg-emerald-500/10"
+            gradientFrom="from-emerald-500"
+            gradientTo="to-teal-500"
+            delay={0.3}
+          />
         </div>
 
         {/* Main Content Grid */}
@@ -397,6 +452,7 @@ const Dashboard = () => {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
