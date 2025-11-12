@@ -251,7 +251,7 @@ async def get_dashboard_summary(user: AuthedUser = Depends(get_current_user)):
                 if b["total"] > 0
             ]
             
-            # Format active trades
+            # Format active trades (open orders)
             active_trades = [
                 {
                     "order_id": order.get("orderId"),
@@ -261,10 +261,34 @@ async def get_dashboard_summary(user: AuthedUser = Depends(get_current_user)):
                     "quantity": float(order.get("origQty", 0)),
                     "price": float(order.get("price", 0)),
                     "status": order.get("status"),
-                    "time": order.get("time")
+                    "time": order.get("time"),
+                    "account_type": order.get("account_type", "SPOT")  # SPOT or FUTURES
                 }
                 for order in open_orders
             ]
+            
+            # Get Futures positions (active positions, not orders)
+            futures_positions_list = []
+            if futures_enabled:
+                try:
+                    futures_positions = await client.get_futures_positions()
+                    futures_positions_list = [
+                        {
+                            "symbol": pos.get("symbol"),
+                            "position_side": pos.get("positionSide", "BOTH"),  # LONG, SHORT, or BOTH
+                            "position_amount": float(pos.get("positionAmt", 0)),
+                            "entry_price": float(pos.get("entryPrice", 0)),
+                            "mark_price": float(pos.get("markPrice", 0)),
+                            "unrealized_pnl": float(pos.get("unRealizedProfit", 0)),
+                            "leverage": int(pos.get("leverage", 1)),
+                            "liquidation_price": float(pos.get("liquidationPrice", 0)),
+                            "account_type": "FUTURES"
+                        }
+                        for pos in futures_positions
+                        if float(pos.get("positionAmt", 0)) != 0  # Only non-zero positions
+                    ]
+                except Exception as pos_error:
+                    logger.debug(f"Failed to fetch Futures positions: {pos_error}")
             
             return {
                 "success": True,
@@ -277,10 +301,12 @@ async def get_dashboard_summary(user: AuthedUser = Depends(get_current_user)):
                 },
                 "usdt_balance": usdt_balance,
                 "assets": assets,
-                "active_trades": active_trades,
+                "active_trades": active_trades,  # Open orders
+                "futures_positions": futures_positions_list,  # Active Futures positions
                 "stats": {
                     "total_assets": len(assets),
                     "total_active_trades": len(active_trades),
+                    "total_futures_positions": len(futures_positions_list),
                     "total_balance_usdt": usdt_balance["total"]
                 }
             }

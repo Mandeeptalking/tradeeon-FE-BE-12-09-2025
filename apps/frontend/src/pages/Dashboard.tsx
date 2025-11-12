@@ -163,8 +163,14 @@ const Dashboard = () => {
               <span className="text-xs text-white/60 uppercase tracking-wide">Active Trades</span>
             </div>
             <div className="space-y-1">
-              <p className="text-3xl font-bold text-white">{summary.stats.total_active_trades}</p>
-              <p className="text-sm text-white/60">Open orders</p>
+              <p className="text-3xl font-bold text-white">
+                {summary.stats.total_active_trades + (summary.stats.total_futures_positions || 0)}
+              </p>
+              <p className="text-sm text-white/60">
+                {summary.stats.total_active_trades > 0 && (summary.stats.total_futures_positions || 0) > 0
+                  ? `${summary.stats.total_active_trades} orders, ${summary.stats.total_futures_positions || 0} positions`
+                  : 'Open orders & positions'}
+              </p>
             </div>
           </div>
 
@@ -253,16 +259,16 @@ const Dashboard = () => {
             )}
           </div>
 
-          {/* Active Trades */}
+          {/* Active Trades (Open Orders) */}
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-white">Active Trades</h2>
+              <h2 className="text-xl font-semibold text-white">Active Trades (Open Orders)</h2>
               <span className="text-sm text-white/60">{summary.active_trades.length}</span>
             </div>
             {summary.active_trades.length === 0 ? (
               <div className="text-center py-12">
                 <Activity className="h-12 w-12 text-white/20 mx-auto mb-4" />
-                <p className="text-white/60">No active trades</p>
+                <p className="text-white/60">No open orders</p>
               </div>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -272,7 +278,18 @@ const Dashboard = () => {
                     className="p-4 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-colors"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-white">{trade.symbol}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-white">{trade.symbol}</span>
+                        {trade.account_type && (
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            trade.account_type === 'FUTURES'
+                              ? 'bg-purple-500/20 text-purple-400'
+                              : 'bg-blue-500/20 text-blue-400'
+                          }`}>
+                            {trade.account_type}
+                          </span>
+                        )}
+                      </div>
                       <span
                         className={`px-2 py-1 rounded text-xs font-medium ${
                           trade.side === 'BUY'
@@ -306,6 +323,74 @@ const Dashboard = () => {
               </div>
             )}
           </div>
+
+          {/* Futures Positions */}
+          {summary.futures_positions && summary.futures_positions.length > 0 && (
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-white">Futures Positions</h2>
+                <span className="text-sm text-white/60">{summary.futures_positions.length}</span>
+              </div>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {summary.futures_positions.map((position, index) => (
+                  <div
+                    key={`${position.symbol}-${index}`}
+                    className="p-4 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-white">{position.symbol}</span>
+                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-400">
+                          FUTURES
+                        </span>
+                      </div>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          position.position_amount > 0
+                            ? 'bg-green-500/20 text-green-400'
+                            : 'bg-red-500/20 text-red-400'
+                        }`}
+                      >
+                        {position.position_amount > 0 ? 'LONG' : 'SHORT'}
+                      </span>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-white/60">Position:</span>
+                        <span className="text-white">{formatNumber(Math.abs(position.position_amount))}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-white/60">Entry Price:</span>
+                        <span className="text-white">{formatCurrency(position.entry_price)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-white/60">Mark Price:</span>
+                        <span className="text-white">{formatCurrency(position.mark_price)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-white/60">Unrealized PnL:</span>
+                        <span className={`font-medium ${
+                          position.unrealized_pnl >= 0 ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {formatCurrency(position.unrealized_pnl)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-white/60">Leverage:</span>
+                        <span className="text-white">{position.leverage}x</span>
+                      </div>
+                      {position.liquidation_price > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-white/60">Liquidation Price:</span>
+                          <span className="text-red-400">{formatCurrency(position.liquidation_price)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -31,10 +31,23 @@ export interface DashboardSummary {
     price: number;
     status: string;
     time: number;
+    account_type?: string;  // SPOT or FUTURES
+  }>;
+  futures_positions?: Array<{
+    symbol: string;
+    position_side: string;  // LONG, SHORT, or BOTH
+    position_amount: number;
+    entry_price: number;
+    mark_price: number;
+    unrealized_pnl: number;
+    leverage: number;
+    liquidation_price: number;
+    account_type: string;
   }>;
   stats: {
     total_assets: number;
     total_active_trades: number;
+    total_futures_positions?: number;
     total_balance_usdt: number;
   };
 }
