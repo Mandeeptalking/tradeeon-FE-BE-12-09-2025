@@ -1,6 +1,23 @@
 import { authenticatedFetch } from './auth';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+// Security: Enforce HTTPS in production, allow HTTP only in development
+function getApiBaseUrl(): string {
+  const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE;
+  
+  // In production, enforce HTTPS
+  if (import.meta.env.PROD) {
+    if (!apiUrl || !apiUrl.startsWith('https://')) {
+      console.error('CRITICAL: API URL must use HTTPS in production');
+      throw new Error('API URL must use HTTPS in production');
+    }
+    return apiUrl;
+  }
+  
+  // Development fallback (HTTP allowed only in dev)
+  return apiUrl || 'http://localhost:8000';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 export interface DashboardSummary {
   success: boolean;

@@ -10,10 +10,27 @@ export default defineConfig({
     // Type checking is still done via tsc separately
     target: 'es2015',
     minify: true,
-    sourcemap: false,
+    sourcemap: false, // Security: Disable source maps in production
     // Ensure proper base path for production
     outDir: 'dist',
     assetsDir: 'assets',
+    // Security: Remove console.log in production
+    rollupOptions: {
+      output: {
+        // Remove console statements in production
+        plugins: [
+          {
+            name: 'remove-console',
+            transform(code: string) {
+              if (process.env.NODE_ENV === 'production') {
+                return code.replace(/console\.(log|debug|info|warn|error)/g, '// console.$1');
+              }
+              return code;
+            },
+          },
+        ],
+      },
+    },
   },
   // Base path for production (empty for root domain)
   base: '/',
