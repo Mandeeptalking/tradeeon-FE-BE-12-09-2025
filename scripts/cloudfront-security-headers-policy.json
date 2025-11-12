@@ -1,0 +1,43 @@
+{
+  "Name": "TradeeonSecurityHeadersPolicy",
+  "Comment": "Security headers for Tradeeon frontend - HSTS, CSP, X-Frame-Options, etc.",
+  "SecurityHeadersConfig": {
+      "StrictTransportSecurity": {
+        "Override": true,
+        "AccessControlMaxAgeSec": 31536000,
+        "IncludeSubdomains": true,
+        "Preload": true
+      },
+      "ContentTypeOptions": {
+        "Override": true
+      },
+      "FrameOptions": {
+        "Override": true,
+        "FrameOption": "DENY"
+      },
+      "ReferrerPolicy": {
+        "Override": true,
+        "ReferrerPolicy": "strict-origin-when-cross-origin"
+      },
+      "ContentSecurityPolicy": {
+        "Override": true,
+        "ContentSecurityPolicy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://api.tradeeon.com https://*.binance.com wss://*.binance.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;"
+      },
+      "XSSProtection": {
+        "Override": true,
+        "ModeBlock": true,
+        "Protection": true
+      }
+    },
+    "CustomHeadersConfig": {
+      "Quantity": 1,
+      "Items": [
+        {
+          "Header": "Permissions-Policy",
+          "Value": "geolocation=(), microphone=(), camera=()",
+          "Override": true
+        }
+      ]
+    }
+}
+
