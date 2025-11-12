@@ -319,12 +319,35 @@ class BinanceAuthenticatedClient:
         original_base_url = self.base_url
         self.base_url = self.futures_base_url
         try:
-            return await self._make_authenticated_request('GET', '/fapi/v1/account')
+            return await self._make_authenticated_request('GET', '/fapi/v2/account')
         except Exception as e:
             # If Futures endpoint returns 404, it likely means Futures trading is not enabled
             error_str = str(e)
             if "404" in error_str or "Not Found" in error_str:
                 raise Exception("Futures trading not enabled or not available for this API key")
+            raise
+        finally:
+            self.base_url = original_base_url
+    
+    async def get_futures_positions(self) -> List[Dict]:
+        """Get USDT-M Futures positions (including open positions)"""
+        original_base_url = self.base_url
+        self.base_url = self.futures_base_url
+        try:
+            # Use /fapi/v2/positionRisk to get all positions (including zero positions)
+            # Filter for positions with non-zero positionAmt
+            positions = await self._make_authenticated_request('GET', '/fapi/v2/positionRisk')
+            # Filter out zero positions
+            active_positions = [
+                pos for pos in positions 
+                if float(pos.get('positionAmt', 0)) != 0
+            ]
+            return active_positions
+        except Exception as e:
+            error_str = str(e)
+            if "404" in error_str or "Not Found" in error_str:
+                # Futures not enabled - return empty list
+                return []
             raise
         finally:
             self.base_url = original_base_url

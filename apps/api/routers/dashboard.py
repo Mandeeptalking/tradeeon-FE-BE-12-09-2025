@@ -198,17 +198,38 @@ async def get_dashboard_summary(user: AuthedUser = Depends(get_current_user)):
             balances = await client.get_balance()
             open_orders = await client.get_open_orders()
             
-            # Check for Futures account
+            # Check for Futures account - try multiple methods
             account_types = ["SPOT"]
             futures_info = None
+            futures_enabled = False
+            
+            # Method 1: Try to get Futures account info
             try:
                 futures_info = await client.get_futures_account_info()
                 account_types.append("FUTURES")
-                logger.info("Futures account detected")
+                futures_enabled = True
+                logger.info("✅ Futures account detected via account info")
             except Exception as e:
                 error_str = str(e)
-                if "404" not in error_str and "Not Found" not in error_str and "not enabled" not in error_str.lower():
-                    logger.warning(f"Error checking Futures account: {e}")
+                logger.debug(f"Futures account info check failed: {error_str}")
+                
+                # Method 2: Check for active Futures positions (if account info fails)
+                # If user has active positions, Futures is definitely enabled
+                try:
+                    futures_positions = await client.get_futures_positions()
+                    if futures_positions and len(futures_positions) > 0:
+                        account_types.append("FUTURES")
+                        futures_enabled = True
+                        logger.info(f"✅ Futures account detected via active positions: {len(futures_positions)} positions")
+                    else:
+                        logger.debug("No active Futures positions found")
+                except Exception as pos_error:
+                    logger.debug(f"Futures positions check also failed: {pos_error}")
+                
+                # Log warning only if both methods failed and it's not a "not enabled" error
+                if not futures_enabled:
+                    if "404" not in error_str and "Not Found" not in error_str and "not enabled" not in error_str.lower():
+                        logger.warning(f"Error checking Futures account: {e}")
             
             # Get USDT balance
             usdt_balance = {"free": 0.0, "locked": 0.0, "total": 0.0}
