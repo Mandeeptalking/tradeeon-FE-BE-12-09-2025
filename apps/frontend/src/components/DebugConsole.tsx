@@ -12,19 +12,21 @@ const DebugConsole = () => {
     try {
       localStorage.setItem('test', 'value');
       localStorage.removeItem('test');
-      console.log('✅ localStorage: Working');
+      logger.debug('✅ localStorage: Working');
     } catch (error) {
-      console.error('❌ localStorage:', error);
+      logger.error('❌ localStorage:', error);
     }
     
     // Test if we can make a fetch request
     fetch('/api/test')
       .then(response => {
-        console.log('✅ Fetch API: Working (response:', response.status, ')');
+        logger.debug('✅ Fetch API: Working (response:', response.status, ')');
       })
       .catch(error => {
-        console.log('⚠️ Fetch API: Error (expected):', error.message);
+        logger.debug('⚠️ Fetch API: Error (expected):', error.message);
       });
+    };
+    loadLogger();
       
   }, []);
 

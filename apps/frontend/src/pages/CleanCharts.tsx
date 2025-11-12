@@ -230,7 +230,7 @@ const CleanCharts: React.FC = () => {
       chart,
       data: chartData,
       onIndicatorUpdate: (id, updates) => {
-        console.log('Indicator updated:', id, updates);
+        logger.debug('Indicator updated:', id, updates);
       }
     });
 
@@ -560,8 +560,8 @@ const CleanCharts: React.FC = () => {
     };
     
     try {
-      console.log('=== ADDING INDICATOR WITH SETTINGS ===');
-      console.log('Settings being passed:', settings);
+      logger.debug('=== ADDING INDICATOR WITH SETTINGS ===');
+      logger.debug('Settings being passed:', settings);
       
       indicatorEngineRef.current.addIndicator(settings);
       setShowIndicatorModal(false);
@@ -718,11 +718,11 @@ const CleanCharts: React.FC = () => {
                       volumeMaType: 'sma'
                     });
     } catch (error) {
-      console.error('=== FAILED TO ADD INDICATOR ===');
-      console.error('Error object:', error);
-      console.error('Error message:', error instanceof Error ? error.message : String(error));
-      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-      console.error('Settings that were passed:', settings);
+      logger.error('=== FAILED TO ADD INDICATOR ===');
+      logger.error('Error object:', error);
+      logger.error('Error message:', error instanceof Error ? error.message : String(error));
+      logger.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      logger.error('Settings that were passed:', settings);
       alert(`Failed to add indicator: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
@@ -747,11 +747,11 @@ const CleanCharts: React.FC = () => {
 
   // Open settings modal
   const openSettings = (indicator: IndicatorSettings) => {
-    console.log('=== OPENING SETTINGS ===');
-    console.log('Selected indicator:', indicator);
-    console.log('Indicator type:', indicator.type);
-    console.log('Indicator color:', indicator.color);
-    console.log('Indicator EMA color:', indicator.emaColor);
+    logger.debug('=== OPENING SETTINGS ===');
+    logger.debug('Selected indicator:', indicator);
+    logger.debug('Indicator type:', indicator.type);
+    logger.debug('Indicator color:', indicator.color);
+    logger.debug('Indicator EMA color:', indicator.emaColor);
     
     setSelectedIndicator(indicator);
     setShowSettingsModal(true);
@@ -770,11 +770,11 @@ const CleanCharts: React.FC = () => {
     const overboughtColorElement = document.getElementById('settingsOverboughtColor') as HTMLInputElement;
     const oversoldColorElement = document.getElementById('settingsOversoldColor') as HTMLInputElement;
     
-    console.log('=== APPLYING SETTINGS ===');
-    console.log('RSI Color element:', rsiColorElement);
-    console.log('RSI EMA Color element:', rsiEmaColorElement);
-    console.log('RSI Color value:', rsiColorElement?.value);
-    console.log('RSI EMA Color value:', rsiEmaColorElement?.value);
+    logger.debug('=== APPLYING SETTINGS ===');
+    logger.debug('RSI Color element:', rsiColorElement);
+    logger.debug('RSI EMA Color element:', rsiEmaColorElement);
+    logger.debug('RSI Color value:', rsiColorElement?.value);
+    logger.debug('RSI EMA Color value:', rsiEmaColorElement?.value);
     
     if (rsiColorElement && rsiEmaColorElement && rsiLengthElement && rsiEmaLengthElement && 
         overboughtLevelElement && oversoldLevelElement && overboughtColorElement && oversoldColorElement) {
@@ -3037,7 +3037,7 @@ const CleanCharts: React.FC = () => {
                       histogramDownColor
                     };
                     
-                    console.log('Updated settings:', updates);
+                    logger.debug('Updated settings:', updates);
                     
                     // Use updateIndicator method to properly update the existing indicator
                     indicatorEngineRef.current.updateIndicator(selectedIndicator.id, updates);
@@ -3186,7 +3186,7 @@ const CleanCharts: React.FC = () => {
                       cciZeroColor
                     };
                     
-                    console.log('Updated settings:', updates);
+                    logger.debug('Updated settings:', updates);
                     
                     // Use updateIndicator method to properly update the existing indicator
                     indicatorEngineRef.current.updateIndicator(selectedIndicator.id, updates);
@@ -3335,7 +3335,7 @@ const CleanCharts: React.FC = () => {
                       mfiMiddleColor
                     };
                     
-                    console.log('Updated settings:', updates);
+                    logger.debug('Updated settings:', updates);
                     
                     // Use updateIndicator method to properly update the existing indicator
                     indicatorEngineRef.current.updateIndicator(selectedIndicator.id, updates);
@@ -3492,7 +3492,7 @@ const CleanCharts: React.FC = () => {
                       vixFixColor
                     };
                     
-                    console.log('Updated settings:', updates);
+                    logger.debug('Updated settings:', updates);
                     
                     // Use updateIndicator method to properly update the existing indicator
                     indicatorEngineRef.current.updateIndicator(selectedIndicator.id, updates);
@@ -3618,7 +3618,7 @@ const CleanCharts: React.FC = () => {
                       stdDevMultiplier
                     };
                     
-                    console.log('Updated settings:', updates);
+                    logger.debug('Updated settings:', updates);
                     
                     // Use updateIndicator method to properly update the existing indicator
                     indicatorEngineRef.current.updateIndicator(selectedIndicator.id, updates);
@@ -3761,7 +3761,7 @@ const CleanCharts: React.FC = () => {
                       shortExitColor
                     };
                     
-                    console.log('Updated settings:', updates);
+                    logger.debug('Updated settings:', updates);
                     
                     // Use updateIndicator method to properly update the existing indicator
                     indicatorEngineRef.current.updateIndicator(selectedIndicator.id, updates);
@@ -3871,7 +3871,7 @@ const CleanCharts: React.FC = () => {
                       middleLineColor
                     };
                     
-                    console.log('Updated settings:', updates);
+                    logger.debug('Updated settings:', updates);
                     
                     // Use updateIndicator method to properly update the existing indicator
                     indicatorEngineRef.current.updateIndicator(selectedIndicator.id, updates);
