@@ -16,7 +16,21 @@ const Dashboard = () => {
       setSummary(data);
     } catch (err: any) {
       console.error('Failed to fetch dashboard data:', err);
-      setError(err.message || 'Failed to load dashboard data');
+      // Provide more helpful error messages
+      let errorMessage = err.message || 'Failed to load dashboard data';
+      
+      // Check for specific error types
+      if (errorMessage.includes('connect to backend') || errorMessage.includes('Failed to fetch')) {
+        errorMessage = 'Unable to connect to backend server. Please ensure the backend is running and accessible.';
+      } else if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+        errorMessage = 'Authentication failed. Please sign in again.';
+      } else if (errorMessage.includes('404')) {
+        errorMessage = 'Dashboard endpoint not found. The backend may need to be updated.';
+      } else if (errorMessage.includes('500')) {
+        errorMessage = 'Backend server error. Please try again later or contact support.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

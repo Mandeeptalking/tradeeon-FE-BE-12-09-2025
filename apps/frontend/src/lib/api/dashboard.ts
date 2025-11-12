@@ -97,11 +97,28 @@ export interface ActiveTradesResponse {
 
 export const dashboardApi = {
   async getSummary(): Promise<DashboardSummary> {
-    const response = await authenticatedFetch(`${API_BASE_URL}/dashboard/summary`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch dashboard summary');
+    try {
+      const response = await authenticatedFetch(`${API_BASE_URL}/dashboard/summary`);
+      
+      if (!response.ok) {
+        let errorMessage = 'Failed to fetch dashboard summary';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorData.message || errorMessage;
+        } catch {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+      
+      return await response.json();
+    } catch (error: any) {
+      // Handle network errors (backend down, CORS, etc.)
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('Unable to connect to backend. Please check if the server is running.');
+      }
+      throw error;
     }
-    return await response.json();
   },
 
   async getAccountInfo(): Promise<AccountInfo> {
