@@ -4,8 +4,10 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
 const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
-// Debug logging
-console.log('🔍 Supabase Config:', {
+// Debug logging (only in development)
+import { logger } from '../utils/logger';
+
+logger.debug('🔍 Supabase Config:', {
   hasUrl: !!supabaseUrl,
   urlLength: supabaseUrl.length,
   urlValue: supabaseUrl || 'MISSING',
@@ -36,18 +38,18 @@ let supabase: SupabaseClient;
 if (supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http')) {
   try {
     supabase = createClient(supabaseUrl, supabaseAnonKey);
-    console.log('✅ Supabase client initialized successfully');
+    logger.log('✅ Supabase client initialized successfully');
   } catch (error) {
-    console.error('❌ Failed to create Supabase client:', error);
-    console.error('   Falling back to dummy client');
+    logger.error('❌ Failed to create Supabase client:', error);
+    logger.warn('   Falling back to dummy client');
     supabase = createDummyClient();
   }
 } else {
-  console.error('❌ Invalid Supabase configuration');
-  console.error('   supabaseUrl:', supabaseUrl || 'MISSING');
-  console.error('   supabaseAnonKey:', supabaseAnonKey ? 'SET' : 'MISSING');
-  console.error('   supabaseUrl starts with http:', supabaseUrl?.startsWith('http'));
-  console.error('   ⚠️ Using dummy client - authentication will not work!');
+  logger.error('❌ Invalid Supabase configuration');
+  logger.error('   supabaseUrl:', supabaseUrl || 'MISSING');
+  logger.error('   supabaseAnonKey:', supabaseAnonKey ? 'SET' : 'MISSING');
+  logger.error('   supabaseUrl starts with http:', supabaseUrl?.startsWith('http'));
+  logger.warn('   ⚠️ Using dummy client - authentication will not work!');
   supabase = createDummyClient();
 }
 

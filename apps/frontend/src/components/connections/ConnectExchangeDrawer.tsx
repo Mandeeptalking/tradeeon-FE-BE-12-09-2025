@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { X, Eye, EyeOff, TestTube, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Exchange, UpsertConnectionBody, TestConnectionBody, Connection } from '../../types/connections';
 import { connectionsApi } from '../../lib/api/connections';
+import { logger } from '../../utils/logger';
+import { sanitizeInput, validateApiKey, validateApiSecret } from '../../utils/validation';
+import { sanitizeErrorMessage } from '../../utils/errorHandler';
 
 interface ConnectExchangeDrawerProps {
   isOpen: boolean;
@@ -54,9 +57,23 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
     
     // Step 1: API Keys - validate required fields
     if (step === 1) {
-      if (!apiKey.trim()) newErrors.apiKey = 'API Key is required';
-      if (!apiSecret.trim()) newErrors.apiSecret = 'API Secret is required';
-      if (selectedExchange?.requiresPassphrase && !passphrase.trim()) {
+      // Sanitize inputs first
+      const sanitizedApiKey = sanitizeInput(apiKey);
+      const sanitizedApiSecret = sanitizeInput(apiSecret);
+      
+      if (!sanitizedApiKey.trim()) {
+        newErrors.apiKey = 'API Key is required';
+      } else if (!validateApiKey(sanitizedApiKey)) {
+        newErrors.apiKey = 'Invalid API key format';
+      }
+      
+      if (!sanitizedApiSecret.trim()) {
+        newErrors.apiSecret = 'API Secret is required';
+      } else if (!validateApiSecret(sanitizedApiSecret)) {
+        newErrors.apiSecret = 'Invalid API secret format';
+      }
+      
+      if (selectedExchange?.requiresPassphrase && !sanitizeInput(passphrase).trim()) {
         newErrors.passphrase = 'Passphrase is required for this exchange';
       }
     }
@@ -76,13 +93,13 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
   };
 
   const handleNext = () => {
-    console.log('handleNext called, currentStep:', currentStep, 'steps.length:', steps.length);
+    logger.debug('handleNext called', { currentStep, stepsLength: steps.length });
     if (currentStep < steps.length - 1) {
       const isValid = validateStep(currentStep);
-      console.log('Validation result:', isValid);
+      logger.debug('Validation result', { isValid });
       if (isValid) {
         setCurrentStep(currentStep + 1);
-        console.log('Moving to step:', currentStep + 1);
+        logger.debug('Moving to step', { nextStep: currentStep + 1 });
       }
     }
   };

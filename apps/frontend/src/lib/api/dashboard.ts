@@ -1,4 +1,5 @@
 import { authenticatedFetch } from './auth';
+import { sanitizeErrorMessage } from '../../utils/errorHandler';
 
 // Security: Enforce HTTPS in production, allow HTTP only in development
 function getApiBaseUrl(): string {
@@ -147,7 +148,9 @@ export const dashboardApi = {
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         throw new Error('Unable to connect to backend. Please check if the server is running.');
       }
-      throw error;
+      // Sanitize error before throwing
+      const sanitizedError = new Error(sanitizeErrorMessage(error));
+      throw sanitizedError;
     }
   },
 

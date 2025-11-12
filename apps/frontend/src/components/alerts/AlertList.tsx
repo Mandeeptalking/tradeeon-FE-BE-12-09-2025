@@ -15,28 +15,75 @@ export default function AlertList({ className }: AlertListProps) {
 
   useEffect(() => {
     // Load alerts from localStorage instead of API
-    const storedAlerts = JSON.parse(localStorage.getItem('complex_alerts') || '[]')
-    setAlerts(storedAlerts)
+    // Security: Validate and sanitize stored data
+    try {
+      const stored = localStorage.getItem('complex_alerts');
+      if (!stored) {
+        setAlerts([]);
+        return;
+      }
+      
+      const parsed = JSON.parse(stored);
+      // Validate structure
+      if (!Array.isArray(parsed)) {
+        setAlerts([]);
+        return;
+      }
+      
+      // Sanitize: Remove any sensitive fields that shouldn't be stored
+      const sanitized = parsed.map((alert: any) => ({
+        id: alert.id,
+        name: alert.name,
+        status: alert.status,
+        // Don't restore sensitive fields like API keys, tokens, etc.
+      }));
+      
+      setAlerts(sanitized);
+    } catch (error) {
+      // If parsing fails, clear corrupted data
+      localStorage.removeItem('complex_alerts');
+      setAlerts([]);
+    }
   }, [])
 
   const handleToggleStatus = async (alert: any) => {
     const newStatus = alert.status === 'active' ? 'paused' : 'active'
-    // Update in localStorage
-    const storedAlerts = JSON.parse(localStorage.getItem('complex_alerts') || '[]')
-    const updatedAlerts = storedAlerts.map((a: any) => 
-      a.id === alert.id ? { ...a, status: newStatus } : a
-    )
-    localStorage.setItem('complex_alerts', JSON.stringify(updatedAlerts))
-    setAlerts(updatedAlerts)
+    // Update in localStorage (sanitized)
+    try {
+      const stored = localStorage.getItem('complex_alerts') || '[]';
+      const storedAlerts = JSON.parse(stored);
+      const updatedAlerts = storedAlerts.map((a: any) => 
+        a.id === alert.id ? { ...a, status: newStatus } : a
+      );
+      // Only store non-sensitive fields
+      const sanitized = updatedAlerts.map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        status: a.status,
+      }));
+      localStorage.setItem('complex_alerts', JSON.stringify(sanitized));
+      setAlerts(sanitized);
+    } catch (error) {
+      // If update fails, clear corrupted data
+      localStorage.removeItem('complex_alerts');
+      setAlerts([]);
+    }
   }
 
   const handleDelete = async (alertId: string) => {
     if (window.confirm('Are you sure you want to delete this alert?')) {
       // Remove from localStorage
-      const storedAlerts = JSON.parse(localStorage.getItem('complex_alerts') || '[]')
-      const updatedAlerts = storedAlerts.filter((a: any) => a.id !== alertId)
-      localStorage.setItem('complex_alerts', JSON.stringify(updatedAlerts))
-      setAlerts(updatedAlerts)
+      try {
+        const stored = localStorage.getItem('complex_alerts') || '[]';
+        const storedAlerts = JSON.parse(stored);
+        const updatedAlerts = storedAlerts.filter((a: any) => a.id !== alertId);
+        localStorage.setItem('complex_alerts', JSON.stringify(updatedAlerts));
+        setAlerts(updatedAlerts);
+      } catch (error) {
+        // If delete fails, clear corrupted data
+        localStorage.removeItem('complex_alerts');
+        setAlerts([]);
+      }
     }
   }
 

@@ -5,6 +5,20 @@ import Tooltip from '../components/Tooltip';
 
 const AVAILABLE_EXCHANGES = ['Binance', 'Coinbase', 'Kraken'];
 
+// Security: Enforce HTTPS in production
+function getApiBaseUrl(): string {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  if (import.meta.env.PROD) {
+    if (!apiUrl || !apiUrl.startsWith('https://')) {
+      throw new Error('API URL must use HTTPS in production');
+    }
+    return apiUrl;
+  }
+  
+  return apiUrl || 'http://localhost:8000';
+}
+
 // Exchange pair fetching functions
 const fetchBinancePairs = async (): Promise<string[]> => {
   try {
@@ -573,7 +587,7 @@ export default function DCABot() {
     
     try {
       // Send to backend API
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const API_BASE_URL = getApiBaseUrl();
       const response = await fetch(`${API_BASE_URL}/bots/dca-bots`, {
         method: 'POST',
         headers: {
@@ -650,7 +664,7 @@ export default function DCABot() {
     if (!statusPollingRef.current) return; // Stop if polling disabled
     
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const API_BASE_URL = getApiBaseUrl();
       const response = await fetch(`${API_BASE_URL}/bots/dca-bots/status/${id}`);
       if (response.ok) {
         const status = await response.json();

@@ -8,7 +8,21 @@ import {
 } from '../../types/connections';
 import { authenticatedFetch } from './auth';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+// Security: Enforce HTTPS in production
+function getApiBaseUrl(): string {
+  const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE;
+  
+  if (import.meta.env.PROD) {
+    if (!apiUrl || !apiUrl.startsWith('https://')) {
+      throw new Error('API URL must use HTTPS in production');
+    }
+    return apiUrl;
+  }
+  
+  return apiUrl || 'http://localhost:8000';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Mock data for demo purposes
 const mockConnections: Connection[] = [
@@ -118,20 +132,24 @@ export const connectionsApi = {
           // If JSON parse fails, use mock
         }
       }
-    } catch (error) {
-      // Silently fail - use mock data
-    }
+      } catch (error) {
+        logger.debug('Failed to fetch connections from API, using mock data', error);
+      }
     
     // Always return mock data as fallback - ensures page loads instantly
     return mockConnections;
   },
 
   async testConnection(body: TestConnectionBody): Promise<TestConnectionResponse> {
-    try {
-      const response = await authenticatedFetch(`${API_BASE_URL}/connections/test`, {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
+    // Apply rate limiting
+    return withRateLimit(
+      'test-connection',
+      async () => {
+        try {
+          const response = await authenticatedFetch(`${API_BASE_URL}/connections/test`, {
+            method: 'POST',
+            body: JSON.stringify(body),
+          });
       
       if (!response.ok) {
         // Try to extract error message from response
@@ -269,7 +287,7 @@ export const connectionsApi = {
         return data.exchanges as ConnectionGuidance[];
       }
     } catch (error) {
-      console.warn('Connection guidance fallback:', error);
+      logger.warn('Connection guidance fallback:', error);
     }
 
     if (exchange) {

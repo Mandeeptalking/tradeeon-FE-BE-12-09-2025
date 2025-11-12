@@ -2,9 +2,25 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+// Plugin to remove console statements in production
+const removeConsolePlugin = () => {
+  return {
+    name: 'remove-console',
+    transform(code: string, id: string) {
+      if (process.env.NODE_ENV === 'production' && id.endsWith('.ts') || id.endsWith('.tsx') || id.endsWith('.js') || id.endsWith('.jsx')) {
+        return {
+          code: code.replace(/console\.(log|debug|info|warn|error|trace|table|group|groupEnd|time|timeEnd)/g, '// console.$1'),
+          map: null
+        }
+      }
+      return null
+    }
+  }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), removeConsolePlugin()],
   build: {
     // Skip type checking during build for faster production builds
     // Type checking is still done via tsc separately
@@ -14,23 +30,6 @@ export default defineConfig({
     // Ensure proper base path for production
     outDir: 'dist',
     assetsDir: 'assets',
-    // Security: Remove console.log in production
-    rollupOptions: {
-      output: {
-        // Remove console statements in production
-        plugins: [
-          {
-            name: 'remove-console',
-            transform(code: string) {
-              if (process.env.NODE_ENV === 'production') {
-                return code.replace(/console\.(log|debug|info|warn|error)/g, '// console.$1');
-              }
-              return code;
-            },
-          },
-        ],
-      },
-    },
   },
   // Base path for production (empty for root domain)
   base: '/',

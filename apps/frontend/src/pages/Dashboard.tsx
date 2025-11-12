@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { dashboardApi, type DashboardSummary } from '../lib/api/dashboard';
 import { Wallet, TrendingUp, Activity, DollarSign, RefreshCw, AlertCircle } from 'lucide-react';
+import { logger } from '../utils/logger';
+import { sanitizeErrorMessage } from '../utils/errorHandler';
 
 // Dashboard component - displays Binance account info, assets, and active trades
 const Dashboard = () => {
@@ -15,21 +17,9 @@ const Dashboard = () => {
       const data = await dashboardApi.getSummary();
       setSummary(data);
     } catch (err: any) {
-      console.error('Failed to fetch dashboard data:', err);
-      // Provide more helpful error messages
-      let errorMessage = err.message || 'Failed to load dashboard data';
-      
-      // Check for specific error types
-      if (errorMessage.includes('connect to backend') || errorMessage.includes('Failed to fetch')) {
-        errorMessage = 'Unable to connect to backend server. Please ensure the backend is running and accessible.';
-      } else if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
-        errorMessage = 'Authentication failed. Please sign in again.';
-      } else if (errorMessage.includes('404')) {
-        errorMessage = 'Dashboard endpoint not found. The backend may need to be updated.';
-      } else if (errorMessage.includes('500')) {
-        errorMessage = 'Backend server error. Please try again later or contact support.';
-      }
-      
+      logger.error('Failed to fetch dashboard data:', err);
+      // Use sanitized error message
+      const errorMessage = sanitizeErrorMessage(err);
       setError(errorMessage);
     } finally {
       setLoading(false);

@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../supabase';
+import { logger } from '../../utils/logger';
 
 /**
  * Get the current user's JWT token from Supabase
@@ -13,9 +14,7 @@ export async function getAuthToken(): Promise<string | null> {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
   const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
   if (!supabaseUrl || !supabaseKey || !supabaseUrl.startsWith('http')) {
-    if (import.meta.env.DEV) {
-      console.warn('Supabase not properly configured. Cannot get auth token.');
-    }
+    logger.warn('Supabase not properly configured. Cannot get auth token.');
     return null;
   }
   
@@ -23,17 +22,13 @@ export async function getAuthToken(): Promise<string | null> {
     const { data: { session }, error } = await supabase.auth.getSession();
     
     if (error || !session?.access_token) {
-      if (import.meta.env.DEV) {
-        console.warn('No auth token available:', error?.message);
-      }
+      logger.warn('No auth token available:', error?.message);
       return null;
     }
     
     return session.access_token;
   } catch (error) {
-    if (import.meta.env.DEV) {
-      console.error('Error getting auth token:', error);
-    }
+    logger.error('Error getting auth token:', error);
     return null;
   }
 }

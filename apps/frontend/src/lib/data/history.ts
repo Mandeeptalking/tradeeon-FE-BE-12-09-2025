@@ -80,7 +80,12 @@ const generateMockCandles = (symbol: string, interval: string, endTime: number, 
 export async function fetchHistory({ symbol, interval, to, limit = 300 }: FetchHistoryParams): Promise<HistoryCandle[]> {
   try {
     // Try to fetch from backend first
-    const response = await fetch(`http://localhost:8000/api/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`);
+    // Security: Use environment variable for API URL, enforce HTTPS in production
+    const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '');
+    if (!apiUrl) {
+      throw new Error('API URL not configured');
+    }
+    const response = await fetch(`${apiUrl}/api/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`);
     
     if (response.ok) {
       const result = await response.json();
@@ -111,7 +116,12 @@ export async function fetchOlder({ symbol, interval, oldestTs, limit = 500 }: Fe
     const intervalMs = getIntervalMs(interval);
     const endTime = oldestTs - intervalMs; // End just before the oldest we have
     
-    const response = await fetch(`http://localhost:8000/api/klines?symbol=${symbol}&interval=${interval}&limit=${limit}&endTime=${endTime}`);
+    // Security: Use environment variable for API URL, enforce HTTPS in production
+    const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '');
+    if (!apiUrl) {
+      throw new Error('API URL not configured');
+    }
+    const response = await fetch(`${apiUrl}/api/klines?symbol=${symbol}&interval=${interval}&limit=${limit}&endTime=${endTime}`);
     
     if (response.ok) {
       const result = await response.json();

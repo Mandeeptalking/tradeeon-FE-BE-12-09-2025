@@ -1,4 +1,18 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Security: Enforce HTTPS in production
+function getApiBaseUrl(): string {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  if (import.meta.env.PROD) {
+    if (!apiUrl || !apiUrl.startsWith('https://')) {
+      throw new Error('API URL must use HTTPS in production');
+    }
+    return apiUrl;
+  }
+  
+  return apiUrl || 'http://localhost:8000';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 export interface MarketData {
   symbol: string;
