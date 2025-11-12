@@ -155,10 +155,28 @@ export const dashboardApi = {
           
           return await response.json();
         } catch (error: any) {
+          // Log the actual error for debugging
+          logger.error('Dashboard API error:', {
+            name: error?.name,
+            message: error?.message,
+            stack: error?.stack,
+            apiUrl: API_BASE_URL
+          });
+          
           // Handle network errors (backend down, CORS, etc.)
           if (error.name === 'TypeError' && error.message.includes('fetch')) {
-            throw new Error('Unable to connect to backend. Please check if the server is running.');
+            // More specific error message
+            const errorMsg = `Unable to connect to backend at ${API_BASE_URL}. ` +
+              `Possible causes: Backend not running, CORS issue, or network error. ` +
+              `Check browser console for details.`;
+            throw new Error(errorMsg);
           }
+          
+          // Handle CORS errors specifically
+          if (error.message?.includes('CORS') || error.message?.includes('cors')) {
+            throw new Error('CORS error: Backend may not be allowing requests from this origin. Check CORS configuration.');
+          }
+          
           // Sanitize error before throwing
           const sanitizedError = new Error(sanitizeErrorMessage(error));
           throw sanitizedError;

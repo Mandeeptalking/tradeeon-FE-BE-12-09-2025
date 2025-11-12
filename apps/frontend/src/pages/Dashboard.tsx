@@ -14,10 +14,25 @@ const Dashboard = () => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Log API URL for debugging
+      const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || 'https://api.tradeeon.com';
+      logger.debug('Fetching dashboard data from:', apiUrl);
+      
       const data = await dashboardApi.getSummary();
+      logger.debug('Dashboard data received:', { 
+        hasData: !!data, 
+        accountTypes: data?.account?.account_types,
+        assetsCount: data?.assets?.length 
+      });
       setSummary(data);
     } catch (err: any) {
-      logger.error('Failed to fetch dashboard data:', err);
+      logger.error('Failed to fetch dashboard data:', {
+        error: err,
+        message: err?.message,
+        name: err?.name,
+        stack: err?.stack
+      });
       // Use sanitized error message
       const errorMessage = sanitizeErrorMessage(err);
       setError(errorMessage);
