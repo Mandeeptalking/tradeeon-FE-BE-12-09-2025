@@ -315,7 +315,7 @@ const CleanCharts: React.FC = () => {
       setChartData(formattedData);
       seriesRef.current?.setData(formattedData);
     } catch (err) {
-      console.error('Failed to load historical data:', err);
+      logger.error('Failed to load historical data:', err);
     }
   };
 
@@ -327,14 +327,14 @@ const CleanCharts: React.FC = () => {
       return;
     }
 
-    console.log(`🔄 Connecting to Binance WebSocket for ${symbol} ${interval}...`);
+    logger.debug(`🔄 Connecting to Binance WebSocket for ${symbol} ${interval}...`);
     
     // Connect to Binance WebSocket directly for live updates
     const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_${interval}`);
     wsRef.current = ws;
 
     ws.onopen = () => {
-      console.log('✅ WebSocket connected to Binance');
+      logger.debug('✅ WebSocket connected to Binance');
     };
 
     ws.onmessage = (event) => {
@@ -384,19 +384,19 @@ const CleanCharts: React.FC = () => {
         });
         
         if (k.x) {
-          console.log(`📈 Final candle: ${k.c} at ${new Date(k.t).toLocaleTimeString()}`);
+          logger.debug(`📈 Final candle: ${k.c} at ${new Date(k.t).toLocaleTimeString()}`);
         }
       } catch (error) {
-        console.error('❌ Error processing WebSocket message:', error);
+        logger.error('❌ Error processing WebSocket message:', error);
       }
     };
 
     ws.onerror = (error) => {
-      console.error('❌ WebSocket error:', error);
+      logger.error('❌ WebSocket error:', error);
     };
 
     ws.onclose = (event) => {
-      console.log(`🔌 WebSocket closed: ${event.code} - ${event.reason}`);
+      logger.debug(`🔌 WebSocket closed: ${event.code} - ${event.reason}`);
     };
   };
 
@@ -789,13 +789,13 @@ const CleanCharts: React.FC = () => {
         oversoldColor: oversoldColorElement.value
       };
       
-      console.log('Settings updates:', updates);
+        logger.debug('Settings updates:', updates);
       
       updateIndicatorSettings(selectedIndicator.id, updates);
       setShowSettingsModal(false);
       alert('Settings updated successfully!');
     } else {
-      console.error('Some form elements not found');
+        logger.error('Some form elements not found');
       alert('Error: Some form elements not found');
     }
   };

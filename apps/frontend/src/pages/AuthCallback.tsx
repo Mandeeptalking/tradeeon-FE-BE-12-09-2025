@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { logger } from '../utils/logger';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const AuthCallback = () => {
 
         // Check for errors first
         if (error) {
-          console.error('Auth callback error:', error, errorDescription);
+          logger.error('Auth callback error:', error, errorDescription);
           setStatus('error');
           
           // Provide more specific error messages
@@ -44,7 +45,7 @@ const AuthCallback = () => {
           const isEmailVerified = session.user.email_confirmed_at !== null && session.user.email_confirmed_at !== undefined;
           
           if (isEmailVerified) {
-            console.log('✅ Email verified successfully');
+            logger.debug('✅ Email verified successfully');
             setStatus('success');
             setMessage('Email verified successfully! Redirecting to login...');
             
@@ -78,7 +79,7 @@ const AuthCallback = () => {
           }
         } else if (accessToken) {
           // We have an access token but no session - try to get session again
-          console.log('Access token found, waiting for session...');
+          logger.debug('Access token found, waiting for session...');
           await new Promise(resolve => setTimeout(resolve, 1000));
           const { data: { session: retrySession } } = await supabase.auth.getSession();
           if (retrySession?.user) {
@@ -107,7 +108,7 @@ const AuthCallback = () => {
           // Don't redirect automatically - let user see the error
         }
       } catch (err: any) {
-        console.error('Error handling auth callback:', err);
+        logger.error('Error handling auth callback:', err);
         setStatus('error');
         setMessage(err.message || 'An error occurred during email verification');
         

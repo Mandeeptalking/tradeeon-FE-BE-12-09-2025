@@ -3,7 +3,8 @@ import { useEffect } from 'react';
 const DebugConsole = () => {
   useEffect(() => {
     console.log('🚀 DebugConsole mounted');
-    console.log('📍 Current URL:', window.location.href);
+    const { logger } = await import('../utils/logger');
+    logger.debug('📍 Current URL:', window.location.href);
     console.log('🔧 User Agent:', navigator.userAgent);
     console.log('📱 Screen:', `${window.screen.width}x${window.screen.height}`);
     

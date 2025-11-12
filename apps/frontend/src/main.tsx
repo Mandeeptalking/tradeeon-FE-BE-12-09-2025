@@ -6,7 +6,8 @@ import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
 
 // Debug: Check if environment variables are loaded
-console.log('🔍 Vite Environment Check:', {
+// Debug logging removed for security - use logger utility if needed
+// logger.debug('🔍 Vite Environment Check:', {
   VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
   VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'MISSING',
   MODE: import.meta.env.MODE,
@@ -16,11 +17,13 @@ console.log('🔍 Vite Environment Check:', {
 
 // Add error handler for unhandled errors
 window.addEventListener('error', (event) => {
-  console.error('Global error:', event.error);
+  const { logger } = await import('./utils/logger');
+  logger.error('Global error:', event.error);
 });
 
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
+  const { logger } = await import('./utils/logger');
+  logger.error('Unhandled promise rejection:', event.reason);
 });
 
 const rootElement = document.getElementById('root');

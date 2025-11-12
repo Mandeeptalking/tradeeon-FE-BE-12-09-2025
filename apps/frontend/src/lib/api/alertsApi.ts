@@ -132,7 +132,8 @@ export async function createAlert(payload: AlertCreate): Promise<AlertRow> {
   if (!response.ok) {
     const errorText = await response.text()
     if (import.meta.env.DEV) {
-      console.error('Error response:', errorText)
+      const { logger } = await import('../../utils/logger');
+      logger.error('Error response:', errorText)
     }
     throw new Error(`Failed to create alert: ${response.statusText} - ${errorText}`)
   }

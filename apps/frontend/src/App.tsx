@@ -28,7 +28,8 @@ function App() {
   const location = useLocation()
 
   // Debug logging
-  console.log('📱 App render:', { 
+  // Debug logging removed for security - use logger utility if needed
+  // logger.debug('📱 App render:', { 
     isAuthenticated, 
     userId: user?.id, 
     authInitialized,

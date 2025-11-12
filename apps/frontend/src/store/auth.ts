@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { logger } from '../utils/logger'
 
 interface User {
   id: string
@@ -34,7 +35,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   
   setUser: (user: User | null) => {
-    console.log('👤 Auth store: setUser called', { userId: user?.id, email: user?.email, isAuthenticated: !!user });
+    logger.debug('👤 Auth store: setUser called', { userId: user?.id, email: user?.email, isAuthenticated: !!user });
     set({ user, isAuthenticated: !!user })
   },
   
@@ -48,7 +49,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         await supabase.auth.signOut()
       }
     } catch (error) {
-      console.error('Error signing out:', error)
+      logger.error('Error signing out:', error)
     } finally {
       set({ user: null, isAuthenticated: false })
     }

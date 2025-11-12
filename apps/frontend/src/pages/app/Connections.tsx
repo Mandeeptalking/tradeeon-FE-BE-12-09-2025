@@ -117,7 +117,8 @@ const ConnectionsPage = () => {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
-      console.error('Failed to copy IP:', error);
+      const { logger } = await import('../../utils/logger');
+      logger.error('Failed to copy IP:', error);
     }
   };
 

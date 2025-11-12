@@ -4,7 +4,8 @@ import Hero from '../components/Hero'
 
 const Home = () => {
   useEffect(() => {
-    console.log('Home component mounted');
+    const { logger } = await import('../utils/logger');
+    logger.debug('Home component mounted');
   }, []);
 
   return (

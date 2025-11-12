@@ -10,7 +10,8 @@ export function useAlertMarkers(symbol: string, timeframe: string) {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
       if (!supabaseUrl || !supabaseKey || !supabaseUrl.startsWith('http')) {
-        console.warn('Supabase not properly configured, skipping alert markers');
+        const { logger } = await import('../utils/logger');
+        logger.warn('Supabase not properly configured, skipping alert markers');
         return;
       }
       try {
@@ -34,7 +35,8 @@ export function useAlertMarkers(symbol: string, timeframe: string) {
           );
         }
       } catch (err) {
-        console.warn('Failed to load existing alert markers:', err);
+        const { logger } = await import('../utils/logger');
+        logger.warn('Failed to load existing alert markers:', err);
       }
     }
 
@@ -63,7 +65,8 @@ export function useAlertMarkers(symbol: string, timeframe: string) {
           })
           .subscribe();
       } catch (err) {
-        console.warn('Failed to subscribe to alert triggers:', err);
+        const { logger } = await import('../utils/logger');
+        logger.warn('Failed to subscribe to alert triggers:', err);
       }
     }
 

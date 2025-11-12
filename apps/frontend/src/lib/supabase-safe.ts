@@ -11,9 +11,10 @@ import { supabase } from './supabase';
  */
 export function getSupabaseClient() {
   if (!supabase) {
-    console.error('❌ Supabase client is null!');
-    console.error('   This usually means environment variables are not loaded.');
-    console.error('   Check: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
+    const { logger } = await import('../utils/logger');
+    logger.error('❌ Supabase client is null!');
+    logger.error('   This usually means environment variables are not loaded.');
+    logger.error('   Check: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
     return null;
   }
   return supabase;

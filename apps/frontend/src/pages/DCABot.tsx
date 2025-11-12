@@ -583,7 +583,7 @@ export default function DCABot() {
       useLiveData: true // Always use live market data for both test and live modes
     };
 
-    console.log('Bot config:', botConfig);
+    logger.debug('Bot config:', botConfig);
     
     try {
       // Send to backend API
@@ -602,7 +602,7 @@ export default function DCABot() {
       }
       
       const result = await response.json();
-      console.log('Bot created:', result);
+      logger.debug('Bot created:', result);
       
       const createdBotId = result.bot?.bot_id || result.bot_id;
       setBotId(createdBotId);
@@ -633,7 +633,7 @@ export default function DCABot() {
           if (startResponse.ok) {
             const startResult = await startResponse.json();
             toast.success(`✅ Bot started in ${isTestMode ? 'test mode' : 'live mode'} with live market data! Bot ID: ${createdBotId}`);
-            console.log('Bot started:', startResult);
+            logger.debug('Bot started:', startResult);
             
             // Start polling for status
             setStatusPolling(true);
@@ -648,13 +648,13 @@ export default function DCABot() {
           }
         } catch (startError: any) {
           toast.warning(`Bot created but failed to start: ${startError.message}`);
-          console.error('Error starting bot:', startError);
+          logger.error('Error starting bot:', startError);
         }
       } else {
         toast.success('DCA Bot created successfully with Phase 1 features!');
       }
     } catch (error: any) {
-      console.error('Error creating bot:', error);
+      logger.error('Error creating bot:', error);
       toast.error(`Failed to create bot: ${error.message}`);
     }
   };
@@ -678,7 +678,7 @@ export default function DCABot() {
         }
       }
     } catch (error) {
-      console.error('Error fetching bot status:', error);
+      logger.error('Error fetching bot status:', error);
     }
   }, []);
   
@@ -778,7 +778,7 @@ export default function DCABot() {
 
   // Debug: Log component render
   useEffect(() => {
-    console.log('DCABot component mounted');
+    logger.debug('DCABot component mounted');
   }, []);
   
   return (

@@ -1,11 +1,9 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { logger } from '../utils/logger';
 
 // Get and trim environment variables
 const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
 const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
-
-// Debug logging (only in development)
-import { logger } from '../utils/logger';
 
 logger.debug('🔍 Supabase Config:', {
   hasUrl: !!supabaseUrl,
