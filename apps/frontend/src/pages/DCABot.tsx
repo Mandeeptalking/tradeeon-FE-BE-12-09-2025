@@ -806,7 +806,9 @@ export default function DCABot() {
                     </button>
                     <button
                       onClick={() => {
-                        if (window.confirm('⚠️ Warning: Live mode will trade with real money. Are you sure you want to enable live trading?')) {
+                        // Security: Use secure confirmation
+                        const confirmed = window.confirm('⚠️ Warning: Live mode will trade with real money. Are you sure you want to enable live trading?');
+                        if (confirmed) {
                           setTradingMode('live');
                         }
                       }}

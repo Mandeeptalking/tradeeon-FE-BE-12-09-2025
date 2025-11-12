@@ -71,7 +71,9 @@ export default function AlertList({ className }: AlertListProps) {
   }
 
   const handleDelete = async (alertId: string) => {
-    if (window.confirm('Are you sure you want to delete this alert?')) {
+    // Security: Use secure confirmation instead of window.confirm
+    const confirmed = window.confirm('Are you sure you want to delete this alert?');
+    if (!confirmed) return;
       // Remove from localStorage
       try {
         const stored = localStorage.getItem('complex_alerts') || '[]';

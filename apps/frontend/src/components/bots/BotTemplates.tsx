@@ -109,11 +109,11 @@ export default function BotTemplates({ onCreateBot }: BotTemplatesProps) {
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
           Need help choosing? Check our{' '}
-          <a href="#" className="text-primary hover:underline">
+          <a href="#" className="text-primary hover:underline" rel="noopener noreferrer">
             strategy guide
           </a>{' '}
           or{' '}
-          <a href="#" className="text-primary hover:underline">
+          <a href="#" className="text-primary hover:underline" rel="noopener noreferrer">
             watch tutorials
           </a>
         </p>

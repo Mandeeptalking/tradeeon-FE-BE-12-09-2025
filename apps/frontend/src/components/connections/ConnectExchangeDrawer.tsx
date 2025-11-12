@@ -468,7 +468,7 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
                   )}
                   <div>
                     <span className="text-sm text-gray-600">API Key: </span>
-                    <span className="font-mono text-sm">{apiKey.substring(0, 8)}...</span>
+                    <span className="font-mono text-sm">••••••••</span>
                   </div>
                   <div>
                     <span className="text-sm text-gray-600">Status: </span>
