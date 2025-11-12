@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Settings, TrendingUp, TrendingDown, ChevronDown, ChevronUp, Check, X, Info, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import Tooltip from '../components/Tooltip';
+import { logger } from '../utils/logger';
 
 const AVAILABLE_EXCHANGES = ['Binance', 'Coinbase', 'Kraken'];
 
@@ -28,7 +29,7 @@ const fetchBinancePairs = async (): Promise<string[]> => {
       .filter((s: any) => s.status === 'TRADING')
       .map((s: any) => s.symbol);
   } catch (error) {
-    console.error('Failed to fetch Binance pairs:', error);
+    logger.error('Failed to fetch Binance pairs:', error);
     return ['BTCUSDT', 'ETHUSDT', 'BNBUSDT']; // Fallback
   }
 };

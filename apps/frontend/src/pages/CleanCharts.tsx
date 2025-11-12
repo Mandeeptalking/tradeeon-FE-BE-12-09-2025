@@ -11,6 +11,7 @@ import AlertBuilder from '../components/alerts/AlertBuilder';
 import AlertList from '../components/alerts/AlertList';
 import TriggerHistoryPanel from '../components/alerts/TriggerHistoryPanel';
 import { useAlertMarkers } from '../hooks/useAlertMarkers';
+import { logger } from '../utils/logger';
 
 // Extend CandlestickData to include volume
 interface CandlestickData extends LWCandlestickData {

@@ -7,6 +7,8 @@ import {
   ConnectionGuidance,
 } from '../../types/connections';
 import { authenticatedFetch } from './auth';
+import { logger } from '../../utils/logger';
+import { withRateLimit } from '../../utils/rateLimiter';
 
 // Security: Enforce HTTPS in production
 function getApiBaseUrl(): string {

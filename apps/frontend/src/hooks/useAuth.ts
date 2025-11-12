@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '../store/auth'
 import { supabase } from '../lib/supabase'
+import { logger } from '../utils/logger'
 
 export const useAuth = () => {
   const { setUser, logout } = useAuthStore()
