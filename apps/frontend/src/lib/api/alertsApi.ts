@@ -1,4 +1,6 @@
 import { supabase } from '../supabase'
+import { logger } from '../../utils/logger';
+import { withRateLimit } from '../../utils/rateLimiter';
 
 // Security: Enforce HTTPS in production
 function getApiBaseUrl(): string {
@@ -114,110 +116,146 @@ async function getAuthToken(): Promise<string> {
 
 // API client functions
 export async function createAlert(payload: AlertCreate): Promise<AlertRow> {
-  const token = await getAuthToken()
-  
-  if (!token) {
-    throw new Error('Authentication required. Please sign in.')
-  }
-  
-  const response = await fetch(`${API_BASE_URL}/alerts`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+  // Rate limit: 3 requests per 5 seconds (write operation)
+  return withRateLimit(
+    'alerts-create',
+    async () => {
+      const token = await getAuthToken()
+      
+      if (!token) {
+        throw new Error('Authentication required. Please sign in.')
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/alerts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      })
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        if (import.meta.env.DEV) {
+          logger.warn('Error response:', errorText)
+        }
+        throw new Error(`Failed to create alert: ${response.statusText} - ${errorText}`)
+      }
+      
+      const result = await response.json()
+      return result
     },
-    body: JSON.stringify(payload)
-  })
-  
-  if (!response.ok) {
-    const errorText = await response.text()
-    if (import.meta.env.DEV) {
-      // Use console.warn in dev mode for error logging (logger is only for user-facing logs)
-      console.warn('Error response:', errorText)
-    }
-    throw new Error(`Failed to create alert: ${response.statusText} - ${errorText}`)
-  }
-  
-  const result = await response.json()
-  return result
+    { maxRequests: 3, windowMs: 5000 }
+  );
 }
 
 export async function listAlerts(): Promise<AlertRow[]> {
-  const token = await getAuthToken()
-  const response = await fetch(`${API_BASE_URL}/alerts`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  })
-  
-  if (!response.ok) {
-    throw new Error(`Failed to fetch alerts: ${response.statusText}`)
-  }
-  
-  return response.json()
+  return withRateLimit(
+    'alerts-list',
+    async () => {
+      const token = await getAuthToken()
+      const response = await fetch(`${API_BASE_URL}/alerts`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch alerts: ${response.statusText}`)
+      }
+      
+      return response.json()
+    },
+    { maxRequests: 5, windowMs: 5000 }
+  );
 }
 
 export async function updateAlert(alertId: string, payload: AlertUpdate): Promise<AlertRow> {
-  const token = await getAuthToken()
-  const response = await fetch(`${API_BASE_URL}/alerts/${alertId}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+  return withRateLimit(
+    `alerts-update-${alertId}`,
+    async () => {
+      const token = await getAuthToken()
+      const response = await fetch(`${API_BASE_URL}/alerts/${alertId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to update alert: ${response.statusText}`)
+      }
+      
+      return response.json()
     },
-    body: JSON.stringify(payload)
-  })
-  
-  if (!response.ok) {
-    throw new Error(`Failed to update alert: ${response.statusText}`)
-  }
-  
-  return response.json()
+    { maxRequests: 3, windowMs: 5000 }
+  );
 }
 
 export async function deleteAlert(alertId: string): Promise<void> {
-  const token = await getAuthToken()
-  const response = await fetch(`${API_BASE_URL}/alerts/${alertId}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  })
-  
-  if (!response.ok) {
-    throw new Error(`Failed to delete alert: ${response.statusText}`)
-  }
+  return withRateLimit(
+    `alerts-delete-${alertId}`,
+    async () => {
+      const token = await getAuthToken()
+      const response = await fetch(`${API_BASE_URL}/alerts/${alertId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to delete alert: ${response.statusText}`)
+      }
+    },
+    { maxRequests: 3, windowMs: 5000 }
+  );
 }
 
 export async function getAlertLogs(alertId: string, limit = 50, offset = 0): Promise<AlertLogRow[]> {
-  const token = await getAuthToken()
-  const response = await fetch(`${API_BASE_URL}/alerts/${alertId}/logs?limit=${limit}&offset=${offset}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  })
-  
-  if (!response.ok) {
-    throw new Error(`Failed to fetch alert logs: ${response.statusText}`)
-  }
-  
-  return response.json()
+  return withRateLimit(
+    `alerts-logs-${alertId}`,
+    async () => {
+      const token = await getAuthToken()
+      const response = await fetch(`${API_BASE_URL}/alerts/${alertId}/logs?limit=${limit}&offset=${offset}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch alert logs: ${response.statusText}`)
+      }
+      
+      return response.json()
+    },
+    { maxRequests: 5, windowMs: 5000 }
+  );
 }
 
 export async function simulateAlert(alertId: string): Promise<any> {
-  const token = await getAuthToken()
-  const response = await fetch(`${API_BASE_URL}/alerts/${alertId}/simulate`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  })
-  
-  if (!response.ok) {
-    throw new Error(`Failed to simulate alert: ${response.statusText}`)
-  }
-  
-  return response.json()
+  return withRateLimit(
+    `alerts-simulate-${alertId}`,
+    async () => {
+      const token = await getAuthToken()
+      const response = await fetch(`${API_BASE_URL}/alerts/${alertId}/simulate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to simulate alert: ${response.statusText}`)
+      }
+      
+      return response.json()
+    },
+    { maxRequests: 3, windowMs: 5000 }
+  );
 }
 
 

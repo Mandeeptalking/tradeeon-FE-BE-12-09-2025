@@ -1,5 +1,6 @@
 import { authenticatedFetch } from './auth';
 import { sanitizeErrorMessage } from '../../utils/errorHandler';
+import { withRateLimit } from '../../utils/rateLimiter';
 
 // Security: Enforce HTTPS in production, allow HTTP only in development
 function getApiBaseUrl(): string {
@@ -128,68 +129,99 @@ export interface ActiveTradesResponse {
 
 export const dashboardApi = {
   async getSummary(): Promise<DashboardSummary> {
-    try {
-      const response = await authenticatedFetch(`${API_BASE_URL}/dashboard/summary`);
-      
-      if (!response.ok) {
-        let errorMessage = 'Failed to fetch dashboard summary';
+    // Rate limit: 5 requests per 5 seconds
+    return withRateLimit(
+      'dashboard-summary',
+      async () => {
         try {
-          const errorData = await response.json();
-          errorMessage = errorData.detail || errorData.message || errorMessage;
-        } catch {
-          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          const response = await authenticatedFetch(`${API_BASE_URL}/dashboard/summary`);
+          
+          if (!response.ok) {
+            let errorMessage = 'Failed to fetch dashboard summary';
+            try {
+              const errorData = await response.json();
+              errorMessage = errorData.detail || errorData.message || errorMessage;
+            } catch {
+              errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
+          }
+          
+          return await response.json();
+        } catch (error: any) {
+          // Handle network errors (backend down, CORS, etc.)
+          if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            throw new Error('Unable to connect to backend. Please check if the server is running.');
+          }
+          // Sanitize error before throwing
+          const sanitizedError = new Error(sanitizeErrorMessage(error));
+          throw sanitizedError;
         }
-        throw new Error(errorMessage);
-      }
-      
-      return await response.json();
-    } catch (error: any) {
-      // Handle network errors (backend down, CORS, etc.)
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        throw new Error('Unable to connect to backend. Please check if the server is running.');
-      }
-      // Sanitize error before throwing
-      const sanitizedError = new Error(sanitizeErrorMessage(error));
-      throw sanitizedError;
-    }
+      },
+      { maxRequests: 5, windowMs: 5000 }
+    );
   },
 
   async getAccountInfo(): Promise<AccountInfo> {
-    const response = await authenticatedFetch(`${API_BASE_URL}/dashboard/account`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch account info');
-    }
-    return await response.json();
+    return withRateLimit(
+      'dashboard-account',
+      async () => {
+        const response = await authenticatedFetch(`${API_BASE_URL}/dashboard/account`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch account info');
+        }
+        return await response.json();
+      },
+      { maxRequests: 5, windowMs: 5000 }
+    );
   },
 
   async getBalance(asset?: string): Promise<BalanceResponse> {
-    const url = asset 
-      ? `${API_BASE_URL}/dashboard/balance?asset=${asset}`
-      : `${API_BASE_URL}/dashboard/balance`;
-    const response = await authenticatedFetch(url);
-    if (!response.ok) {
-      throw new Error('Failed to fetch balance');
-    }
-    return await response.json();
+    return withRateLimit(
+      `dashboard-balance-${asset || 'all'}`,
+      async () => {
+        const url = asset 
+          ? `${API_BASE_URL}/dashboard/balance?asset=${asset}`
+          : `${API_BASE_URL}/dashboard/balance`;
+        const response = await authenticatedFetch(url);
+        if (!response.ok) {
+          throw new Error('Failed to fetch balance');
+        }
+        return await response.json();
+      },
+      { maxRequests: 5, windowMs: 5000 }
+    );
   },
 
   async getUSDTBalance(): Promise<USDTBalanceResponse> {
-    const response = await authenticatedFetch(`${API_BASE_URL}/dashboard/usdt-balance`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch USDT balance');
-    }
-    return await response.json();
+    return withRateLimit(
+      'dashboard-usdt-balance',
+      async () => {
+        const response = await authenticatedFetch(`${API_BASE_URL}/dashboard/usdt-balance`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch USDT balance');
+        }
+        return await response.json();
+      },
+      { maxRequests: 5, windowMs: 5000 }
+    );
   },
 
   async getActiveTrades(symbol?: string): Promise<ActiveTradesResponse> {
-    const url = symbol
-      ? `${API_BASE_URL}/dashboard/active-trades?symbol=${symbol}`
-      : `${API_BASE_URL}/dashboard/active-trades`;
-    const response = await authenticatedFetch(url);
-    if (!response.ok) {
-      throw new Error('Failed to fetch active trades');
-    }
-    return await response.json();
+    return withRateLimit(
+      `dashboard-active-trades-${symbol || 'all'}`,
+      async () => {
+        const url = symbol
+          ? `${API_BASE_URL}/dashboard/active-trades?symbol=${symbol}`
+          : `${API_BASE_URL}/dashboard/active-trades`;
+        const response = await authenticatedFetch(url);
+        if (!response.ok) {
+          throw new Error('Failed to fetch active trades');
+        }
+        return await response.json();
+      },
+      { maxRequests: 5, windowMs: 5000 }
+    );
   },
 };
 

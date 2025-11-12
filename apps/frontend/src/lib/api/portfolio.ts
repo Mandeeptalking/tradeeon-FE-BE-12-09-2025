@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { withRateLimit } from '../../utils/rateLimiter';
 
 // Types
 export interface Overview {
@@ -41,59 +42,83 @@ export interface PortfolioFilters {
 // API functions
 const portfolioApi = {
   async getOverview(filters: PortfolioFilters): Promise<Overview> {
-    const params = new URLSearchParams({
-      from: filters.from,
-      to: filters.to,
-      exchange: filters.exchange,
-    });
-    
-    const response = await fetch(`/api/portfolio/overview?${params}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch portfolio overview');
-    }
-    return response.json();
+    return withRateLimit(
+      'portfolio-overview',
+      async () => {
+        const params = new URLSearchParams({
+          from: filters.from,
+          to: filters.to,
+          exchange: filters.exchange,
+        });
+        
+        const response = await fetch(`/api/portfolio/overview?${params}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch portfolio overview');
+        }
+        return response.json();
+      },
+      { maxRequests: 5, windowMs: 5000 }
+    );
   },
 
   async getEquityCurve(filters: PortfolioFilters): Promise<EquityPoint[]> {
-    const params = new URLSearchParams({
-      from: filters.from,
-      to: filters.to,
-      exchange: filters.exchange,
-    });
-    
-    const response = await fetch(`/api/portfolio/equity_curve?${params}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch equity curve');
-    }
-    return response.json();
+    return withRateLimit(
+      'portfolio-equity-curve',
+      async () => {
+        const params = new URLSearchParams({
+          from: filters.from,
+          to: filters.to,
+          exchange: filters.exchange,
+        });
+        
+        const response = await fetch(`/api/portfolio/equity_curve?${params}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch equity curve');
+        }
+        return response.json();
+      },
+      { maxRequests: 5, windowMs: 5000 }
+    );
   },
 
   async getAllocation(filters: PortfolioFilters): Promise<AllocationSlice[]> {
-    const params = new URLSearchParams({
-      from: filters.from,
-      to: filters.to,
-      exchange: filters.exchange,
-      by: filters.by || 'symbol',
-    });
-    
-    const response = await fetch(`/api/portfolio/allocation?${params}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch allocation');
-    }
-    return response.json();
+    return withRateLimit(
+      'portfolio-allocation',
+      async () => {
+        const params = new URLSearchParams({
+          from: filters.from,
+          to: filters.to,
+          exchange: filters.exchange,
+          by: filters.by || 'symbol',
+        });
+        
+        const response = await fetch(`/api/portfolio/allocation?${params}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch allocation');
+        }
+        return response.json();
+      },
+      { maxRequests: 5, windowMs: 5000 }
+    );
   },
 
   async getHoldings(filters: PortfolioFilters): Promise<Holding[]> {
-    const params = new URLSearchParams({
-      as_of: filters.as_of || filters.to,
-      exchange: filters.exchange,
-    });
-    
-    const response = await fetch(`/api/portfolio/holdings?${params}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch holdings');
-    }
-    return response.json();
+    return withRateLimit(
+      'portfolio-holdings',
+      async () => {
+        const params = new URLSearchParams({
+          as_of: filters.as_of || filters.to,
+          exchange: filters.exchange,
+        });
+        
+        const response = await fetch(`/api/portfolio/holdings?${params}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch holdings');
+        }
+        return response.json();
+      },
+      { maxRequests: 5, windowMs: 5000 }
+    );
   },
 };
 

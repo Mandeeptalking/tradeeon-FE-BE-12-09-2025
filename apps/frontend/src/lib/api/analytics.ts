@@ -58,82 +58,108 @@ function getApiBaseUrl(): string {
   return apiUrl || 'http://localhost:8000';
 }
 
+import { withRateLimit } from '../../utils/rateLimiter';
+
 const API_BASE_URL = getApiBaseUrl();
 
 /**
  * Fetch all available symbols from Binance
  */
 export async function fetchAllSymbols(): Promise<string[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/symbols`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch symbols');
-    }
-    const data = await response.json();
-    return data.symbols?.map((s: any) => s.symbol) || [];
-  } catch (error) {
-    console.error('Error fetching symbols:', error);
-    return [];
-  }
+  return withRateLimit(
+    'analytics-symbols',
+    async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/symbols`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch symbols');
+        }
+        const data = await response.json();
+        return data.symbols?.map((s: any) => s.symbol) || [];
+      } catch (error) {
+        console.error('Error fetching symbols:', error);
+        return [];
+      }
+    },
+    { maxRequests: 10, windowMs: 10000 }
+  );
 }
 
 /**
  * Validate if a symbol exists
  */
 export async function validateSymbol(symbol: string): Promise<boolean> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/ticker/price?symbol=${symbol.toUpperCase()}`);
-    return response.ok;
-  } catch (error) {
-    return false;
-  }
+  return withRateLimit(
+    `analytics-validate-${symbol}`,
+    async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/ticker/price?symbol=${symbol.toUpperCase()}`);
+        return response.ok;
+      } catch (error) {
+        return false;
+      }
+    },
+    { maxRequests: 10, windowMs: 10000 }
+  );
 }
 
 /**
  * Fetch rolling correlation between two symbols
  */
 export async function fetchCorrelation(params: AnalyticsParams): Promise<CorrelationResponse> {
-  const searchParams = new URLSearchParams({
-    symbolA: params.symbolA,
-    symbolB: params.symbolB,
-    interval: params.interval || '1h',
-    window: (params.window || 100).toString(),
-    limit: (params.limit || 500).toString(),
-    ...(params.cache && { cache: 'true' })
-  });
+  return withRateLimit(
+    `analytics-correlation-${params.symbolA}-${params.symbolB}`,
+    async () => {
+      const searchParams = new URLSearchParams({
+        symbolA: params.symbolA,
+        symbolB: params.symbolB,
+        interval: params.interval || '1h',
+        window: (params.window || 100).toString(),
+        limit: (params.limit || 500).toString(),
+        ...(params.cache && { cache: 'true' })
+      });
 
-  const response = await fetch(`${API_BASE_URL}/analytics/correlation?${searchParams}`);
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || `HTTP ${response.status}: Failed to fetch correlation data`);
-  }
+      const response = await fetch(`${API_BASE_URL}/analytics/correlation?${searchParams}`);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || `HTTP ${response.status}: Failed to fetch correlation data`);
+      }
 
-  return response.json();
+      return response.json();
+    },
+    { maxRequests: 10, windowMs: 10000 }
+  );
 }
 
 /**
  * Fetch spread z-score between two symbols
  */
 export async function fetchSpreadZScore(params: SpreadZScoreParams): Promise<SpreadZScoreResponse> {
-  const searchParams = new URLSearchParams({
-    symbolA: params.symbolA,
-    symbolB: params.symbolB,
-    interval: params.interval || '1h',
-    window: (params.window || 100).toString(),
-    method: params.method || 'ols',
-    limit: (params.limit || 500).toString(),
-    ...(params.cache && { cache: 'true' })
-  });
+  return withRateLimit(
+    `analytics-zscore-${params.symbolA}-${params.symbolB}`,
+    async () => {
+      const searchParams = new URLSearchParams({
+        symbolA: params.symbolA,
+        symbolB: params.symbolB,
+        interval: params.interval || '1h',
+        window: (params.window || 100).toString(),
+        method: params.method || 'ols',
+        limit: (params.limit || 500).toString(),
+        ...(params.cache && { cache: 'true' })
+      });
 
-  const response = await fetch(`${API_BASE_URL}/analytics/spread-zscore?${searchParams}`);
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || `HTTP ${response.status}: Failed to fetch z-score data`);
-  }
+      const response = await fetch(`${API_BASE_URL}/analytics/spread-zscore?${searchParams}`);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || `HTTP ${response.status}: Failed to fetch z-score data`);
+      }
 
-  return response.json();
+      return response.json();
+    },
+    { maxRequests: 10, windowMs: 10000 }
+  );
 }
 
 /**

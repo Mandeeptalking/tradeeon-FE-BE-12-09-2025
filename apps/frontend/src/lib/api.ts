@@ -1,3 +1,5 @@
+import { withRateLimit } from '../utils/rateLimiter';
+
 // Security: Enforce HTTPS in production
 function getApiBaseUrl(): string {
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -114,7 +116,11 @@ class ApiClient {
 
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: number }> {
-    return this.request('/health');
+    return withRateLimit(
+      'api-health',
+      () => this.request('/health'),
+      { maxRequests: 10, windowMs: 5000 }
+    );
   }
 
   // Get all available symbols
@@ -124,7 +130,11 @@ class ApiClient {
     count: number;
     timestamp: number;
   }> {
-    return this.request('/api/symbols');
+    return withRateLimit(
+      'api-symbols',
+      () => this.request('/api/symbols'),
+      { maxRequests: 20, windowMs: 5000 }
+    );
   }
 
   // Get 24hr ticker data
@@ -133,8 +143,14 @@ class ApiClient {
     tickers: TickerData[];
     timestamp: number;
   }> {
-    const endpoint = symbol ? `/api/ticker/24hr?symbol=${symbol}` : '/api/ticker/24hr';
-    return this.request(endpoint);
+    return withRateLimit(
+      `api-ticker-24hr-${symbol || 'all'}`,
+      () => {
+        const endpoint = symbol ? `/api/ticker/24hr?symbol=${symbol}` : '/api/ticker/24hr';
+        return this.request(endpoint);
+      },
+      { maxRequests: 20, windowMs: 5000 }
+    );
   }
 
   // Get current price
@@ -143,8 +159,14 @@ class ApiClient {
     data: any;
     timestamp: number;
   }> {
-    const endpoint = symbol ? `/api/ticker/price?symbol=${symbol}` : '/api/ticker/price';
-    return this.request(endpoint);
+    return withRateLimit(
+      `api-ticker-price-${symbol || 'all'}`,
+      () => {
+        const endpoint = symbol ? `/api/ticker/price?symbol=${symbol}` : '/api/ticker/price';
+        return this.request(endpoint);
+      },
+      { maxRequests: 20, windowMs: 5000 }
+    );
   }
 
   // Get kline/candlestick data
@@ -159,8 +181,14 @@ class ApiClient {
     klines: KlineData[];
     timestamp: number;
   }> {
-    const endpoint = `/api/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
-    return this.request(endpoint);
+    return withRateLimit(
+      `api-klines-${symbol}-${interval}`,
+      () => {
+        const endpoint = `/api/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
+        return this.request(endpoint);
+      },
+      { maxRequests: 20, windowMs: 5000 }
+    );
   }
 
   // Get order book
@@ -177,8 +205,14 @@ class ApiClient {
     };
     timestamp: number;
   }> {
-    const endpoint = `/api/depth?symbol=${symbol}&limit=${limit}`;
-    return this.request(endpoint);
+    return withRateLimit(
+      `api-orderbook-${symbol}`,
+      () => {
+        const endpoint = `/api/depth?symbol=${symbol}&limit=${limit}`;
+        return this.request(endpoint);
+      },
+      { maxRequests: 20, windowMs: 5000 }
+    );
   }
 
   // Get recent trades
@@ -191,8 +225,14 @@ class ApiClient {
     trades: TradeData[];
     timestamp: number;
   }> {
-    const endpoint = `/api/trades?symbol=${symbol}&limit=${limit}`;
-    return this.request(endpoint);
+    return withRateLimit(
+      `api-trades-${symbol}`,
+      () => {
+        const endpoint = `/api/trades?symbol=${symbol}&limit=${limit}`;
+        return this.request(endpoint);
+      },
+      { maxRequests: 20, windowMs: 5000 }
+    );
   }
 
   // Get aggregate trades
@@ -205,8 +245,14 @@ class ApiClient {
     trades: TradeData[];
     timestamp: number;
   }> {
-    const endpoint = `/api/aggTrades?symbol=${symbol}&limit=${limit}`;
-    return this.request(endpoint);
+    return withRateLimit(
+      `api-aggtrades-${symbol}`,
+      () => {
+        const endpoint = `/api/aggTrades?symbol=${symbol}&limit=${limit}`;
+        return this.request(endpoint);
+      },
+      { maxRequests: 20, windowMs: 5000 }
+    );
   }
 
   // Get market overview (frontend specific)
@@ -215,7 +261,11 @@ class ApiClient {
     data: MarketData[];
     timestamp: number;
   }> {
-    return this.request('/api/market/overview');
+    return withRateLimit(
+      'api-market-overview',
+      () => this.request('/api/market/overview'),
+      { maxRequests: 10, windowMs: 5000 }
+    );
   }
 
 }
