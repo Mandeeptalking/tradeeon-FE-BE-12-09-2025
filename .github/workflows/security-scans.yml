@@ -1,0 +1,207 @@
+name: Security Scans
+
+on:
+  schedule:
+    # Run weekly on Mondays at 2 AM UTC
+    - cron: '0 2 * * 1'
+  workflow_dispatch: # Allow manual runs
+  push:
+    branches: [main]
+    paths:
+      - 'apps/frontend/**'
+      - 'apps/api/**'
+      - '.github/workflows/security-scans.yml'
+
+jobs:
+  ssl-labs-scan:
+    name: SSL Labs Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run SSL Labs API Scan
+        id: ssl_scan
+        run: |
+          echo "Starting SSL Labs scan for www.tradeeon.com..."
+          
+          # Start scan and get scan ID
+          SCAN_RESPONSE=$(curl -s "https://api.ssllabs.com/api/v3/analyze?host=www.tradeeon.com&startNew=on&all=done&publish=off")
+          SCAN_ID=$(echo $SCAN_RESPONSE | jq -r '.endpoints[0].ipAddress // empty')
+          
+          if [ -z "$SCAN_ID" ]; then
+            echo "Failed to start scan"
+            exit 1
+          fi
+          
+          echo "Scan started. Waiting for results..."
+          
+          # Wait for scan to complete (max 5 minutes)
+          MAX_WAIT=300
+          ELAPSED=0
+          SLEEP_INTERVAL=10
+          
+          while [ $ELAPSED -lt $MAX_WAIT ]; do
+            sleep $SLEEP_INTERVAL
+            ELAPSED=$((ELAPSED + SLEEP_INTERVAL))
+            
+            STATUS_RESPONSE=$(curl -s "https://api.ssllabs.com/api/v3/analyze?host=www.tradeeon.com")
+            STATUS=$(echo $STATUS_RESPONSE | jq -r '.status // "ERROR"')
+            GRADE=$(echo $STATUS_RESPONSE | jq -r '.endpoints[0].grade // "N/A"')
+            
+            echo "Status: $STATUS, Grade: $GRADE (elapsed: ${ELAPSED}s)"
+            
+            if [ "$STATUS" = "READY" ]; then
+              echo "Scan completed!"
+              echo "grade=$GRADE" >> $GITHUB_OUTPUT
+              
+              # Save full report
+              echo "$STATUS_RESPONSE" > ssl-labs-report.json
+              
+              # Extract key metrics
+              echo "$STATUS_RESPONSE" | jq '.' > ssl-labs-report-formatted.json
+              
+              break
+            fi
+          done
+          
+          if [ "$STATUS" != "READY" ]; then
+            echo "Scan timed out or failed"
+            exit 1
+          fi
+
+      - name: Upload SSL Labs Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssl-labs-report
+          path: |
+            ssl-labs-report.json
+            ssl-labs-report-formatted.json
+          retention-days: 90
+
+      - name: Check Grade
+        run: |
+          GRADE="${{ steps.ssl_scan.outputs.grade }}"
+          echo "SSL Labs Grade: $GRADE"
+          
+          if [ "$GRADE" != "A" ] && [ "$GRADE" != "A+" ]; then
+            echo "⚠️ SSL Labs grade is $GRADE (expected A or A+)"
+            exit 1
+          else
+            echo "✅ SSL Labs grade is $GRADE"
+          fi
+
+  security-headers-scan:
+    name: Security Headers Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Security Headers Scan
+        run: |
+          echo "Scanning security headers for www.tradeeon.com..."
+          
+          # Get headers
+          HEADERS=$(curl -sI "https://www.tradeeon.com")
+          
+          # Check for required headers
+          MISSING_HEADERS=()
+          
+          if ! echo "$HEADERS" | grep -qi "strict-transport-security"; then
+            MISSING_HEADERS+=("Strict-Transport-Security")
+          fi
+          
+          if ! echo "$HEADERS" | grep -qi "content-security-policy"; then
+            MISSING_HEADERS+=("Content-Security-Policy")
+          fi
+          
+          if ! echo "$HEADERS" | grep -qi "x-content-type-options"; then
+            MISSING_HEADERS+=("X-Content-Type-Options")
+          fi
+          
+          if ! echo "$HEADERS" | grep -qi "x-frame-options"; then
+            MISSING_HEADERS+=("X-Frame-Options")
+          fi
+          
+          if ! echo "$HEADERS" | grep -qi "referrer-policy"; then
+            MISSING_HEADERS+=("Referrer-Policy")
+          fi
+          
+          # Save headers report
+          echo "$HEADERS" > security-headers-report.txt
+          
+          # Use securityheaders.com API if available, or parse manually
+          echo "=== Security Headers Report ===" > security-headers-summary.txt
+          echo "Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> security-headers-summary.txt
+          echo "" >> security-headers-summary.txt
+          echo "$HEADERS" >> security-headers-summary.txt
+          
+          if [ ${#MISSING_HEADERS[@]} -gt 0 ]; then
+            echo "❌ Missing headers: ${MISSING_HEADERS[*]}" >> security-headers-summary.txt
+            echo "❌ Missing headers: ${MISSING_HEADERS[*]}"
+            exit 1
+          else
+            echo "✅ All required security headers present" >> security-headers-summary.txt
+            echo "✅ All required security headers present"
+          fi
+
+      - name: Upload Security Headers Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-headers-report
+          path: |
+            security-headers-report.txt
+            security-headers-summary.txt
+          retention-days: 90
+
+  security-summary:
+    name: Security Scan Summary
+    runs-on: ubuntu-latest
+    needs: [ssl-labs-scan, security-headers-scan]
+    if: always()
+    steps:
+      - name: Download SSL Labs Report
+        uses: actions/download-artifact@v4
+        with:
+          name: ssl-labs-report
+          path: ssl-labs/
+
+      - name: Download Security Headers Report
+        uses: actions/download-artifact@v4
+        with:
+          name: security-headers-report
+          path: headers/
+
+      - name: Create Summary
+        run: |
+          echo "# Security Scan Summary" > security-scan-summary.md
+          echo "Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> security-scan-summary.md
+          echo "" >> security-scan-summary.md
+          
+          echo "## SSL Labs Test" >> security-scan-summary.md
+          if [ -f ssl-labs/ssl-labs-report-formatted.json ]; then
+            GRADE=$(jq -r '.endpoints[0].grade // "N/A"' ssl-labs/ssl-labs-report-formatted.json)
+            echo "- **Grade:** $GRADE" >> security-scan-summary.md
+            echo "- **Report:** See artifacts" >> security-scan-summary.md
+          else
+            echo "- **Status:** Report not available" >> security-scan-summary.md
+          fi
+          
+          echo "" >> security-scan-summary.md
+          echo "## Security Headers" >> security-scan-summary.md
+          if [ -f headers/security-headers-summary.txt ]; then
+            cat headers/security-headers-summary.txt >> security-scan-summary.md
+          else
+            echo "- **Status:** Report not available" >> security-scan-summary.md
+          fi
+          
+          cat security-scan-summary.md
+
+      - name: Upload Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-summary
+          path: security-scan-summary.md
+          retention-days: 90
+

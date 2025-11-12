@@ -20,6 +20,7 @@ import Activity from './pages/Activity'
 import Settings from './pages/Settings'
 import CleanCharts from './pages/CleanCharts'
 import DCABot from './pages/DCABot'
+import Security from './pages/Security'
 import ErrorBoundary from './components/ErrorBoundary'
 
 function App() {
@@ -85,6 +86,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/clean-charts" element={<CleanCharts />} />
+        <Route path="/security" element={<Security />} />
       
         {/* Protected routes */}
         <Route path="/app" element={
