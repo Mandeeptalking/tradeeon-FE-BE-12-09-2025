@@ -14,6 +14,13 @@ const Dashboard = () => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Check if API URL is configured
+      const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE;
+      if (!apiUrl && import.meta.env.PROD) {
+        throw new Error('API URL is not configured. Please check your environment variables.');
+      }
+      
       const data = await dashboardApi.getSummary();
       setSummary(data);
     } catch (err: any) {
