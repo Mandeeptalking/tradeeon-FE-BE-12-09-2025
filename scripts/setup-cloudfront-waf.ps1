@@ -235,11 +235,11 @@ Write-Host "  - Web ACL ID: $webACLId" -ForegroundColor White
 Write-Host "  - Web ACL ARN: $webACLArn" -ForegroundColor White
 Write-Host "  - Distribution ID: $DistributionId" -ForegroundColor White
 Write-Host "`nAWS Managed Rules Enabled:" -ForegroundColor Cyan
-Write-Host "  ✓ Common Rule Set (OWASP Top 10)" -ForegroundColor White
-Write-Host "  ✓ Known Bad Inputs" -ForegroundColor White
-Write-Host "  ✓ Linux Rule Set" -ForegroundColor White
-Write-Host "  ✓ SQL Injection Protection" -ForegroundColor White
-Write-Host "  ✓ Rate Limiting (2000 requests/IP)" -ForegroundColor White
+Write-Host "  [OK] Common Rule Set (OWASP Top 10)" -ForegroundColor White
+Write-Host "  [OK] Known Bad Inputs" -ForegroundColor White
+Write-Host "  [OK] Linux Rule Set" -ForegroundColor White
+Write-Host "  [OK] SQL Injection Protection" -ForegroundColor White
+Write-Host "  [OK] Rate Limiting (2000 requests per IP)" -ForegroundColor White
 Write-Host "`nVerify WAF is active:" -ForegroundColor Cyan
 Write-Host "  aws cloudfront get-distribution --id $DistributionId --query 'Distribution.DistributionConfig.DefaultCacheBehavior.WebACLId' --output text" -ForegroundColor Yellow
 Write-Host "`nView WAF metrics:" -ForegroundColor Cyan
