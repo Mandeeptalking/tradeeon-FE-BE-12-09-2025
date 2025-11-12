@@ -25,7 +25,17 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    logger.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Safely log error - don't let logger errors crash the error boundary
+    try {
+      logger.error('ErrorBoundary caught an error:', error, errorInfo);
+    } catch (e) {
+      // Fallback to console if logger fails
+      try {
+        console.error('ErrorBoundary caught an error:', error, errorInfo);
+      } catch (consoleError) {
+        // Even console might not be available - silently fail
+      }
+    }
   }
 
   render() {
@@ -43,6 +53,14 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className="text-sm text-red-700 dark:text-red-400 mb-4">
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
+            {this.state.error?.stack && (
+              <details className="text-xs text-red-600 dark:text-red-500 mt-2 max-h-40 overflow-auto">
+                <summary className="cursor-pointer">Error details</summary>
+                <pre className="mt-2 whitespace-pre-wrap break-words">
+                  {this.state.error.stack}
+                </pre>
+              </details>
+            )}
             <button
               onClick={() => {
                 this.setState({ hasError: false, error: null });
