@@ -34,6 +34,30 @@ export async function getAuthToken(): Promise<string | null> {
 }
 
 /**
+ * Check if backend supports CSRF protection
+ * Cached in sessionStorage to avoid repeated checks
+ */
+function backendSupportsCsrf(): boolean {
+  const cacheKey = 'backend_csrf_support';
+  const cached = sessionStorage.getItem(cacheKey);
+  
+  if (cached !== null) {
+    return cached === 'true';
+  }
+  
+  // Default to true (assume backend supports it)
+  // Will be updated after first request attempt
+  return true;
+}
+
+/**
+ * Cache backend CSRF support status
+ */
+function setBackendCsrfSupport(supports: boolean): void {
+  sessionStorage.setItem('backend_csrf_support', supports ? 'true' : 'false');
+}
+
+/**
  * Get or create CSRF token for this session
  * CSRF tokens are stored in sessionStorage and regenerated on page load
  */
@@ -90,15 +114,20 @@ function validateOrigin(url: string): boolean {
 /**
  * Create fetch options with authentication headers and CSRF protection
  * Automatically includes JWT token and CSRF token if available
+ * Gracefully degrades if backend doesn't support CSRF headers
  */
-export async function createAuthHeaders(): Promise<HeadersInit> {
+export async function createAuthHeaders(includeCsrf: boolean = true): Promise<HeadersInit> {
   const token = await getAuthToken();
-  const csrfToken = getCsrfToken();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    'X-CSRF-Token': csrfToken, // CSRF token for all requests
-    'Origin': window.location.origin, // Origin header for CSRF protection
   };
+  
+  // Only include CSRF headers if backend supports them
+  if (includeCsrf && backendSupportsCsrf()) {
+    const csrfToken = getCsrfToken();
+    headers['X-CSRF-Token'] = csrfToken;
+    headers['Origin'] = window.location.origin;
+  }
   
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -110,6 +139,7 @@ export async function createAuthHeaders(): Promise<HeadersInit> {
 /**
  * Wrapper for fetch that automatically includes auth token and CSRF protection
  * Validates origin and includes CSRF token in headers
+ * Gracefully degrades if backend doesn't support CSRF (won't break backend)
  */
 export async function authenticatedFetch(
   url: string,
@@ -121,24 +151,72 @@ export async function authenticatedFetch(
     throw new Error('Invalid request origin. This may be a CSRF attack.');
   }
   
-  const headers = await createAuthHeaders();
+  // Try with CSRF headers first (if backend supports it)
+  const includeCsrf = backendSupportsCsrf();
+  let headers = await createAuthHeaders(includeCsrf);
   
   // Merge with existing headers (user headers take precedence)
-  const mergedHeaders = {
+  let mergedHeaders = {
     ...headers,
     ...(options.headers || {}),
   };
   
-  // Ensure Origin header is set (for CSRF protection)
-  if (!mergedHeaders['Origin']) {
+  // Ensure Origin header is set (for CSRF protection) if backend supports it
+  if (includeCsrf && !mergedHeaders['Origin']) {
     mergedHeaders['Origin'] = window.location.origin;
   }
   
-  return fetch(url, {
-    ...options,
-    headers: mergedHeaders,
-    credentials: 'include', // Include cookies for SameSite protection
-  });
+  try {
+    // Attempt request with CSRF headers
+    const response = await fetch(url, {
+      ...options,
+      headers: mergedHeaders,
+      credentials: 'include', // Include cookies for SameSite protection
+    });
+    
+    // If request succeeds, backend supports CSRF
+    if (includeCsrf) {
+      setBackendCsrfSupport(true);
+    }
+    
+    return response;
+  } catch (error: any) {
+    // Check if it's a CORS preflight failure (backend doesn't support CSRF headers)
+    const isCorsError = error?.message?.includes('CORS') || 
+                       error?.message?.includes('Failed to fetch') ||
+                       error?.name === 'TypeError';
+    
+    // If backend doesn't support CSRF and we tried to use it, retry without CSRF headers
+    if (includeCsrf && isCorsError) {
+      logger.warn('Backend may not support CSRF headers, retrying without CSRF protection', {
+        url,
+        error: error?.message
+      });
+      
+      // Cache that backend doesn't support CSRF
+      setBackendCsrfSupport(false);
+      
+      // Retry without CSRF headers
+      headers = await createAuthHeaders(false);
+      mergedHeaders = {
+        ...headers,
+        ...(options.headers || {}),
+      };
+      
+      // Remove CSRF-related headers
+      delete mergedHeaders['X-CSRF-Token'];
+      // Keep Origin header but don't require it for CSRF
+      
+      return fetch(url, {
+        ...options,
+        headers: mergedHeaders,
+        credentials: 'include',
+      });
+    }
+    
+    // Re-throw if it's not a CORS error or if we already tried without CSRF
+    throw error;
+  }
 }
 
 
