@@ -11,6 +11,7 @@ import {
 import { connectionsApi } from '../../lib/api/connections';
 import type { Connection, ConnectionGuidance } from '../../types/connections';
 import ConnectExchangeDrawer from '../../components/connections/ConnectExchangeDrawer';
+import { logger } from '../../utils/logger';
 
 type StatusStyle = {
   label: string;
@@ -110,17 +111,7 @@ const ConnectionsPage = () => {
     [guidance],
   );
 
-  const handleCopyIp = async (ip?: string) => {
-    if (!ip) return;
-    try {
-      await navigator.clipboard.writeText(ip);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    } catch (error) {
-      const { logger } = await import('../../utils/logger');
-      logger.error('Failed to copy IP:', error);
-    }
-  };
+import { logger } from '../../utils/logger';
 
   const handleConnected = (connection: Connection) => {
     setConnections((prev) => {

@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
+import { logger } from '../utils/logger';
 
 const DebugConsole = () => {
   useEffect(() => {
-    console.log('🚀 DebugConsole mounted');
-    const { logger } = await import('../utils/logger');
+    logger.debug('🚀 DebugConsole mounted');
     logger.debug('📍 Current URL:', window.location.href);
-    console.log('🔧 User Agent:', navigator.userAgent);
-    console.log('📱 Screen:', `${window.screen.width}x${window.screen.height}`);
+    logger.debug('🔧 User Agent:', navigator.userAgent);
+    logger.debug('📱 Screen:', `${window.screen.width}x${window.screen.height}`);
     
     // Test if we can access localStorage
     try {
@@ -25,9 +25,6 @@ const DebugConsole = () => {
       .catch(error => {
         logger.debug('⚠️ Fetch API: Error (expected):', error.message);
       });
-    };
-    loadLogger();
-      
   }, []);
 
   return (

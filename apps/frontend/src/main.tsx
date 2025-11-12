@@ -3,26 +3,25 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import ErrorBoundary from './components/ErrorBoundary'
+import { logger } from './utils/logger'
 import './index.css'
 
 // Debug: Check if environment variables are loaded
 // Debug logging removed for security - use logger utility if needed
 // logger.debug('🔍 Vite Environment Check:', {
-  VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
-  VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'MISSING',
-  MODE: import.meta.env.MODE,
-  DEV: import.meta.env.DEV,
-  PROD: import.meta.env.PROD
-});
+//   VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+//   VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'MISSING',
+//   MODE: import.meta.env.MODE,
+//   DEV: import.meta.env.DEV,
+//   PROD: import.meta.env.PROD
+// });
 
 // Add error handler for unhandled errors
 window.addEventListener('error', (event) => {
-  const { logger } = await import('./utils/logger');
   logger.error('Global error:', event.error);
 });
 
 window.addEventListener('unhandledrejection', (event) => {
-  const { logger } = await import('./utils/logger');
   logger.error('Unhandled promise rejection:', event.reason);
 });
 

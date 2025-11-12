@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import Hero from '../components/Hero'
+import { logger } from '../utils/logger'
 
 const Home = () => {
   useEffect(() => {
-    const { logger } = await import('../utils/logger');
     logger.debug('Home component mounted');
   }, []);
 

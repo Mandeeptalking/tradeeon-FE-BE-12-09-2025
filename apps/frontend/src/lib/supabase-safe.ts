@@ -4,6 +4,7 @@
  */
 
 import { supabase } from './supabase';
+import { logger } from '../utils/logger';
 
 /**
  * Safely get supabase client
@@ -11,7 +12,6 @@ import { supabase } from './supabase';
  */
 export function getSupabaseClient() {
   if (!supabase) {
-    const { logger } = await import('../utils/logger');
     logger.error('❌ Supabase client is null!');
     logger.error('   This usually means environment variables are not loaded.');
     logger.error('   Check: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
