@@ -177,6 +177,9 @@ export const connectionsApi = {
       // This allows the UI to properly handle and display the error
       throw error;
     }
+      },
+      { limit: 5, interval: 10000 } // Allow 5 requests every 10 seconds
+    );
   },
 
   async upsertConnection(body: UpsertConnectionBody): Promise<Connection> {

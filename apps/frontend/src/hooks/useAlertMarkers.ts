@@ -1,6 +1,7 @@
 import * as React from "react";
 import { addMarker, clearMarkers } from "../lib/chart/markers";
 import { supabase } from "../lib/supabase";
+import { logger } from "../utils/logger";
 
 export function useAlertMarkers(symbol: string, timeframe: string) {
   React.useEffect(() => {
@@ -10,7 +11,6 @@ export function useAlertMarkers(symbol: string, timeframe: string) {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
       if (!supabaseUrl || !supabaseKey || !supabaseUrl.startsWith('http')) {
-        const { logger } = await import('../utils/logger');
         logger.warn('Supabase not properly configured, skipping alert markers');
         return;
       }
@@ -35,7 +35,6 @@ export function useAlertMarkers(symbol: string, timeframe: string) {
           );
         }
       } catch (err) {
-        const { logger } = await import('../utils/logger');
         logger.warn('Failed to load existing alert markers:', err);
       }
     }
@@ -65,7 +64,6 @@ export function useAlertMarkers(symbol: string, timeframe: string) {
           })
           .subscribe();
       } catch (err) {
-        const { logger } = await import('../utils/logger');
         logger.warn('Failed to subscribe to alert triggers:', err);
       }
     }

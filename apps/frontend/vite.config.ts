@@ -7,7 +7,10 @@ const removeConsolePlugin = () => {
   return {
     name: 'remove-console',
     transform(code: string, id: string) {
-      if (process.env.NODE_ENV === 'production' && id.endsWith('.ts') || id.endsWith('.tsx') || id.endsWith('.js') || id.endsWith('.jsx')) {
+      // Only transform source files, not node_modules
+      if (process.env.NODE_ENV === 'production' && 
+          !id.includes('node_modules') && 
+          (id.endsWith('.ts') || id.endsWith('.tsx') || id.endsWith('.js') || id.endsWith('.jsx'))) {
         return {
           code: code.replace(/console\.(log|debug|info|warn|error|trace|table|group|groupEnd|time|timeEnd)/g, '// console.$1'),
           map: null

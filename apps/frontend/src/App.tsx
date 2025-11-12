@@ -27,14 +27,13 @@ function App() {
   const authInitialized = useAuth() // Initialize auth session management
   const location = useLocation()
 
-  // Debug logging
   // Debug logging removed for security - use logger utility if needed
   // logger.debug('📱 App render:', { 
-    isAuthenticated, 
-    userId: user?.id, 
-    authInitialized,
-    path: location.pathname 
-  });
+  //   isAuthenticated, 
+  //   userId: user?.id, 
+  //   authInitialized,
+  //   path: location.pathname 
+  // });
 
   // Check for auth callback errors in hash fragment (when redirected to root)
   useEffect(() => {
