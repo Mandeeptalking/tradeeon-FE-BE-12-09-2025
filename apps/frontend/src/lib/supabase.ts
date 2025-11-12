@@ -5,16 +5,19 @@ import { logger } from '../utils/logger';
 const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
 const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
-logger.debug('🔍 Supabase Config:', {
-  hasUrl: !!supabaseUrl,
-  urlLength: supabaseUrl.length,
-  urlValue: supabaseUrl || 'MISSING',
-  hasKey: !!supabaseAnonKey,
-  keyLength: supabaseAnonKey.length,
-  keyPreview: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING',
-  rawEnvUrl: import.meta.env.VITE_SUPABASE_URL,
-  rawEnvKey: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'MISSING'
-});
+// Debug logging - only in development
+if (import.meta.env?.DEV) {
+  logger.debug('🔍 Supabase Config:', {
+    hasUrl: !!supabaseUrl,
+    urlLength: supabaseUrl.length,
+    urlValue: supabaseUrl || 'MISSING',
+    hasKey: !!supabaseAnonKey,
+    keyLength: supabaseAnonKey.length,
+    keyPreview: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING',
+    rawEnvUrl: import.meta.env.VITE_SUPABASE_URL,
+    rawEnvKey: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'MISSING'
+  });
+}
 
 // Create a dummy client that will fail gracefully if env vars are missing
 // This ensures supabase is NEVER null
@@ -24,7 +27,7 @@ const createDummyClient = (): SupabaseClient => {
     return createClient('https://dummy.supabase.co', 'dummy-key-that-will-fail-on-use');
   } catch (error) {
     // If even dummy client creation fails, create a minimal object with auth stub
-    console.error('Failed to create even dummy client:', error);
+    logger.error('Failed to create even dummy client:', error);
     // Return a minimal client object that won't crash
     return createClient('https://placeholder.supabase.co', 'placeholder-key');
   }
