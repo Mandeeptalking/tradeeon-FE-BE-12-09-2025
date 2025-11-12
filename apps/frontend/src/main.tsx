@@ -18,11 +18,29 @@ import './index.css'
 
 // Add error handler for unhandled errors
 window.addEventListener('error', (event) => {
-  logger.error('Global error:', event.error);
+  try {
+    logger.error('Global error:', event.error);
+  } catch (e) {
+    // Fallback to console if logger fails
+    try {
+      console.error('Global error:', event.error);
+    } catch (consoleError) {
+      // Silently fail if console is not available
+    }
+  }
 });
 
 window.addEventListener('unhandledrejection', (event) => {
-  logger.error('Unhandled promise rejection:', event.reason);
+  try {
+    logger.error('Unhandled promise rejection:', event.reason);
+  } catch (e) {
+    // Fallback to console if logger fails
+    try {
+      console.error('Unhandled promise rejection:', event.reason);
+    } catch (consoleError) {
+      // Silently fail if console is not available
+    }
+  }
 });
 
 const rootElement = document.getElementById('root');
