@@ -65,7 +65,7 @@ const AppShell = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-900 overflow-hidden">
       {/* Sidebar */}
       <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300`}>
         {/* Header */}
