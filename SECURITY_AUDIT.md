@@ -1,6 +1,6 @@
 # Security Audit Report - Tradeeon Frontend
 **Date:** 2025-01-12  
-**Rating:** 8.5/10 (Updated after HSTS and server headers fix)
+**Rating:** 8.7/10 (Updated after HSTS, server headers, and comprehensive rate limiting)
 
 ## Executive Summary
 
@@ -114,16 +114,18 @@ The frontend application has **good security foundations** with proper input val
 
 ### 🟡 **HIGH PRIORITY** (Should Fix Soon)
 
-#### 6. **Rate Limiting Coverage** 🟡
+#### 6. **Rate Limiting Coverage** ✅ FIXED
 **Issue:** Rate limiting only applied to connections API  
 **Risk:** DoS attacks on other endpoints  
-**Recommendation:** Apply rate limiting to:
-- Authentication endpoints
-- Dashboard data fetching
-- Market data endpoints
-- All write operations
+**Fix:** ✅ Applied rate limiting to all API endpoints:
+- Dashboard endpoints: 5 requests per 5 seconds
+- Analytics endpoints: 10 requests per 10 seconds
+- Market data endpoints: 20 requests per 5 seconds
+- Alert endpoints: 3-5 requests per 5 seconds (stricter for writes)
+- Portfolio endpoints: 5 requests per 5 seconds
+- Connections: 2 requests per 5 seconds (already had it)
 
-**Priority:** MEDIUM
+**Status:** ✅ **FIXED** - Comprehensive rate limiting now covers all endpoints
 
 #### 7. **CSP Nonces** 🟡
 **Issue:** CSP uses `unsafe-inline` and `unsafe-eval`  
@@ -207,11 +209,11 @@ The frontend application has **good security foundations** with proper input val
 | HTTPS/TLS | 9/10 | 15% | 1.35 |
 | Security Headers | 9/10 | 10% | 0.90 |
 | Error Handling | 9/10 | 10% | 0.90 |
-| Rate Limiting | 6/10 | 5% | 0.30 |
+| Rate Limiting | 9/10 | 5% | 0.45 |
 | CSRF Protection | 5/10 | 5% | 0.25 |
 | Dependency Security | 6/10 | 3% | 0.18 |
 | Logging Security | 9/10 | 2% | 0.18 |
-| **TOTAL** | **8.5/10** | **100%** | **8.48** |
+| **TOTAL** | **8.7/10** | **100%** | **8.63** |
 
 ---
 
@@ -221,7 +223,7 @@ The frontend application has **good security foundations** with proper input val
 2. ✅ **Fix alert()** → ✅ **COMPLETED** - Removed, using UI state
 3. ✅ **Add HSTS header** → ✅ **COMPLETED** - Configured on CloudFront
 4. ✅ **Add server-side security headers** → ✅ **COMPLETED** - Response Headers Policy created
-5. 🟡 **Expand rate limiting** → Apply to all endpoints (30 min)
+5. ✅ **Expand rate limiting** → ✅ **COMPLETED** - Applied to all API endpoints
 6. 🟡 **Add CSRF protection** → Implement tokens or Origin checking (1-2 hours)
 7. 🟡 **Audit output encoding** → Ensure all user content is encoded (1 hour)
 8. 🟢 **Dependency audit** → Run `npm audit` and fix vulnerabilities (30 min)
@@ -278,7 +280,7 @@ To reach **9/10**, implement:
 
 ## 📝 Notes
 
-- **Current Rating: 8.5/10** - Excellent security foundation, minor improvements remaining (Updated after HSTS and server headers)
+- **Current Rating: 8.7/10** - Excellent security foundation, minor improvements remaining (Updated after HSTS, server headers, and comprehensive rate limiting)
 - **Target Rating: 9/10** - Achievable with focused effort on critical issues
 - **Production Ready:** ⚠️ **Almost** - Fix critical issues before production launch
 - **Compliance:** May need additional measures for GDPR, PCI-DSS (if handling payments)
