@@ -196,7 +196,8 @@ async def get_dashboard_summary(user: AuthedUser = Depends(get_current_user)):
             # Fetch SPOT account info
             account_info = await client.get_account_info()
             balances = await client.get_balance()
-            open_orders = await client.get_open_orders()
+            # Get open orders from both SPOT and Futures
+            open_orders = await client.get_all_open_orders()
             
             # Check for Futures account - try multiple methods
             account_types = ["SPOT"]

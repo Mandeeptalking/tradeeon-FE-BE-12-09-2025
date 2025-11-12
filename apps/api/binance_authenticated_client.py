@@ -448,12 +448,57 @@ class BinanceAuthenticatedClient:
         return await self._make_authenticated_request('POST', '/api/v3/order', params)
     
     async def get_open_orders(self, symbol: Optional[str] = None) -> List[Dict]:
-        """Get all open orders, optionally filtered by symbol"""
+        """Get all open orders from SPOT, optionally filtered by symbol"""
         params = {}
         if symbol:
             params['symbol'] = symbol.upper()
         
         return await self._make_authenticated_request('GET', '/api/v3/openOrders', params)
+    
+    async def get_futures_open_orders(self, symbol: Optional[str] = None) -> List[Dict]:
+        """Get all open orders from Futures, optionally filtered by symbol"""
+        original_base_url = self.base_url
+        self.base_url = self.futures_base_url
+        try:
+            params = {}
+            if symbol:
+                params['symbol'] = symbol.upper()
+            
+            return await self._make_authenticated_request('GET', '/fapi/v1/openOrders', params)
+        except Exception as e:
+            error_str = str(e)
+            if "404" in error_str or "Not Found" in error_str:
+                # Futures not enabled - return empty list
+                return []
+            raise
+        finally:
+            self.base_url = original_base_url
+    
+    async def get_all_open_orders(self, symbol: Optional[str] = None) -> List[Dict]:
+        """Get all open orders from both SPOT and Futures"""
+        all_orders = []
+        
+        # Get SPOT orders
+        try:
+            spot_orders = await self.get_open_orders(symbol)
+            # Mark orders as SPOT
+            for order in spot_orders:
+                order['account_type'] = 'SPOT'
+            all_orders.extend(spot_orders)
+        except Exception as e:
+            logger.warning(f"Failed to fetch SPOT orders: {e}")
+        
+        # Get Futures orders
+        try:
+            futures_orders = await self.get_futures_open_orders(symbol)
+            # Mark orders as FUTURES
+            for order in futures_orders:
+                order['account_type'] = 'FUTURES'
+            all_orders.extend(futures_orders)
+        except Exception as e:
+            logger.debug(f"Failed to fetch Futures orders (may not be enabled): {e}")
+        
+        return all_orders
     
     async def cancel_order(self, symbol: str, order_id: int) -> Dict:
         """Cancel an order"""
