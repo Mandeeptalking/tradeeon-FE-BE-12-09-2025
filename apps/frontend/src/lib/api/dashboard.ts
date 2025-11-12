@@ -15,9 +15,8 @@ function getApiBaseUrl(): string {
         hasViteApiUrl: !!import.meta.env.VITE_API_URL,
         hasViteApiBase: !!import.meta.env.VITE_API_BASE 
       });
-      // Don't throw immediately - allow the request to fail gracefully
-      // This allows the UI to show a proper error message
-      return apiUrl || 'https://api.tradeeon.com'; // Fallback to expected production URL
+      // Return fallback URL instead of throwing
+      return apiUrl || 'https://api.tradeeon.com';
     }
     return apiUrl;
   }
@@ -26,14 +25,7 @@ function getApiBaseUrl(): string {
   return apiUrl || 'http://localhost:8000';
 }
 
-// Lazy initialization - only get API URL when needed
-let API_BASE_URL: string | null = null;
-function getApiBaseUrlLazy(): string {
-  if (!API_BASE_URL) {
-    API_BASE_URL = getApiBaseUrl();
-  }
-  return API_BASE_URL;
-}
+const API_BASE_URL = getApiBaseUrl();
 
 export interface DashboardSummary {
   success: boolean;
@@ -148,8 +140,7 @@ export const dashboardApi = {
       'dashboard-summary',
       async () => {
         try {
-          const apiUrl = getApiBaseUrlLazy();
-          const response = await authenticatedFetch(`${apiUrl}/dashboard/summary`);
+          const response = await authenticatedFetch(`${API_BASE_URL}/dashboard/summary`);
           
           if (!response.ok) {
             let errorMessage = 'Failed to fetch dashboard summary';
@@ -181,8 +172,7 @@ export const dashboardApi = {
     return withRateLimit(
       'dashboard-account',
       async () => {
-        const apiUrl = getApiBaseUrlLazy();
-        const response = await authenticatedFetch(`${apiUrl}/dashboard/account`);
+        const response = await authenticatedFetch(`${API_BASE_URL}/dashboard/account`);
         if (!response.ok) {
           throw new Error('Failed to fetch account info');
         }
@@ -196,10 +186,9 @@ export const dashboardApi = {
     return withRateLimit(
       `dashboard-balance-${asset || 'all'}`,
       async () => {
-        const apiUrl = getApiBaseUrlLazy();
         const url = asset 
-          ? `${apiUrl}/dashboard/balance?asset=${asset}`
-          : `${apiUrl}/dashboard/balance`;
+          ? `${API_BASE_URL}/dashboard/balance?asset=${asset}`
+          : `${API_BASE_URL}/dashboard/balance`;
         const response = await authenticatedFetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch balance');
@@ -214,8 +203,7 @@ export const dashboardApi = {
     return withRateLimit(
       'dashboard-usdt-balance',
       async () => {
-        const apiUrl = getApiBaseUrlLazy();
-        const response = await authenticatedFetch(`${apiUrl}/dashboard/usdt-balance`);
+        const response = await authenticatedFetch(`${API_BASE_URL}/dashboard/usdt-balance`);
         if (!response.ok) {
           throw new Error('Failed to fetch USDT balance');
         }
@@ -229,10 +217,9 @@ export const dashboardApi = {
     return withRateLimit(
       `dashboard-active-trades-${symbol || 'all'}`,
       async () => {
-        const apiUrl = getApiBaseUrlLazy();
         const url = symbol
-          ? `${apiUrl}/dashboard/active-trades?symbol=${symbol}`
-          : `${apiUrl}/dashboard/active-trades`;
+          ? `${API_BASE_URL}/dashboard/active-trades?symbol=${symbol}`
+          : `${API_BASE_URL}/dashboard/active-trades`;
         const response = await authenticatedFetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch active trades');
