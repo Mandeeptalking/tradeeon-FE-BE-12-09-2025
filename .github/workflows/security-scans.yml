@@ -20,21 +20,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Run SSL Labs API Scan
         id: ssl_scan
+        continue-on-error: true
         run: |
           echo "Starting SSL Labs scan for www.tradeeon.com..."
           
-          # Start scan and get scan ID
+          # Start scan
           SCAN_RESPONSE=$(curl -s "https://api.ssllabs.com/api/v3/analyze?host=www.tradeeon.com&startNew=on&all=done&publish=off")
-          SCAN_ID=$(echo $SCAN_RESPONSE | jq -r '.endpoints[0].ipAddress // empty')
           
-          if [ -z "$SCAN_ID" ]; then
-            echo "Failed to start scan"
-            exit 1
+          # Check if scan started successfully
+          STATUS=$(echo $SCAN_RESPONSE | jq -r '.status // "ERROR"')
+          
+          if [ "$STATUS" = "ERROR" ]; then
+            echo "Failed to start scan: $SCAN_RESPONSE"
+            echo "scan_success=false" >> $GITHUB_OUTPUT
+            exit 0
           fi
           
-          echo "Scan started. Waiting for results..."
+          echo "Scan started. Status: $STATUS. Waiting for results..."
           
           # Wait for scan to complete (max 5 minutes)
           MAX_WAIT=300
@@ -54,6 +61,7 @@ jobs:
             if [ "$STATUS" = "READY" ]; then
               echo "Scan completed!"
               echo "grade=$GRADE" >> $GITHUB_OUTPUT
+              echo "scan_success=true" >> $GITHUB_OUTPUT
               
               # Save full report
               echo "$STATUS_RESPONSE" > ssl-labs-report.json
@@ -63,14 +71,26 @@ jobs:
               
               break
             fi
+            
+            if [ "$STATUS" = "ERROR" ]; then
+              echo "Scan failed with error"
+              echo "scan_success=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
           done
           
           if [ "$STATUS" != "READY" ]; then
-            echo "Scan timed out or failed"
-            exit 1
+            echo "Scan timed out after ${MAX_WAIT}s"
+            echo "scan_success=false" >> $GITHUB_OUTPUT
+            # Save partial report if available
+            if [ -n "$STATUS_RESPONSE" ]; then
+              echo "$STATUS_RESPONSE" > ssl-labs-report.json
+              echo "$STATUS_RESPONSE" | jq '.' > ssl-labs-report-formatted.json
+            fi
           fi
 
       - name: Upload SSL Labs Report
+        if: steps.ssl_scan.outputs.scan_success == 'true' || (steps.ssl_scan.outcome == 'success' && hashFiles('ssl-labs-report.json') != '')
         uses: actions/upload-artifact@v4
         with:
           name: ssl-labs-report
@@ -78,8 +98,10 @@ jobs:
             ssl-labs-report.json
             ssl-labs-report-formatted.json
           retention-days: 90
+          if-no-files-found: ignore
 
       - name: Check Grade
+        if: steps.ssl_scan.outputs.scan_success == 'true'
         run: |
           GRADE="${{ steps.ssl_scan.outputs.grade }}"
           echo "SSL Labs Grade: $GRADE"
@@ -163,15 +185,20 @@ jobs:
     steps:
       - name: Download SSL Labs Report
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: ssl-labs-report
           path: ssl-labs/
 
       - name: Download Security Headers Report
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: security-headers-report
           path: headers/
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Create Summary
         run: |
@@ -181,11 +208,17 @@ jobs:
           
           echo "## SSL Labs Test" >> security-scan-summary.md
           if [ -f ssl-labs/ssl-labs-report-formatted.json ]; then
-            GRADE=$(jq -r '.endpoints[0].grade // "N/A"' ssl-labs/ssl-labs-report-formatted.json)
-            echo "- **Grade:** $GRADE" >> security-scan-summary.md
-            echo "- **Report:** See artifacts" >> security-scan-summary.md
+            GRADE=$(jq -r '.endpoints[0].grade // "N/A"' ssl-labs/ssl-labs-report-formatted.json 2>/dev/null || echo "N/A")
+            if [ "$GRADE" != "N/A" ] && [ "$GRADE" != "null" ]; then
+              echo "- **Grade:** $GRADE" >> security-scan-summary.md
+              echo "- **Report:** See artifacts" >> security-scan-summary.md
+            else
+              echo "- **Status:** Scan completed but grade not available" >> security-scan-summary.md
+              echo "- **Report:** See artifacts" >> security-scan-summary.md
+            fi
           else
-            echo "- **Status:** Report not available" >> security-scan-summary.md
+            echo "- **Status:** Report not available (scan may have failed or timed out)" >> security-scan-summary.md
+            echo "- **Note:** SSL Labs scans can take several minutes. Check the ssl-labs-scan job logs for details." >> security-scan-summary.md
           fi
           
           echo "" >> security-scan-summary.md
