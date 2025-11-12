@@ -37,7 +37,7 @@ app.add_middleware(
     allow_origins=allowed_origins,  # Can be multiple origins: "http://localhost:5173,https://your-app.netlify.app"
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-CSRF-Token", "Origin", "Accept", "Accept-Language"],
     expose_headers=["X-Request-ID"],
 )
 
