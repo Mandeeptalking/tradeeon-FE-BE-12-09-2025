@@ -163,8 +163,21 @@ const Dashboard = () => {
               <span className="text-xs text-white/60 uppercase tracking-wide">Account Status</span>
             </div>
             <div className="space-y-1">
-              <p className="text-lg font-semibold text-white capitalize">{summary.account.account_type}</p>
-              <div className="flex items-center gap-2 text-xs">
+              <div className="flex items-center gap-2 flex-wrap">
+                {summary.account.account_types?.map((type) => (
+                  <span
+                    key={type}
+                    className="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded text-xs font-medium capitalize"
+                  >
+                    {type}
+                  </span>
+                )) || (
+                  <span className="text-lg font-semibold text-white capitalize">
+                    {summary.account.account_type}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 text-xs mt-2">
                 {summary.account.can_trade && (
                   <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded">Trading</span>
                 )}

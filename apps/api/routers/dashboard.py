@@ -193,10 +193,22 @@ async def get_dashboard_summary(user: AuthedUser = Depends(get_current_user)):
         api_secret = decrypt_value(connection["api_secret_encrypted"])
         
         async with BinanceAuthenticatedClient(api_key, api_secret) as client:
-            # Fetch all data in parallel
+            # Fetch SPOT account info
             account_info = await client.get_account_info()
             balances = await client.get_balance()
             open_orders = await client.get_open_orders()
+            
+            # Check for Futures account
+            account_types = ["SPOT"]
+            futures_info = None
+            try:
+                futures_info = await client.get_futures_account_info()
+                account_types.append("FUTURES")
+                logger.info("Futures account detected")
+            except Exception as e:
+                error_str = str(e)
+                if "404" not in error_str and "Not Found" not in error_str and "not enabled" not in error_str.lower():
+                    logger.warning(f"Error checking Futures account: {e}")
             
             # Get USDT balance
             usdt_balance = {"free": 0.0, "locked": 0.0, "total": 0.0}
@@ -238,7 +250,8 @@ async def get_dashboard_summary(user: AuthedUser = Depends(get_current_user)):
                     "can_trade": account_info.get("canTrade", False),
                     "can_withdraw": account_info.get("canWithdraw", False),
                     "can_deposit": account_info.get("canDeposit", False),
-                    "account_type": account_info.get("accountType", "SPOT")
+                    "account_type": account_types[0],  # Primary account type (for backward compatibility)
+                    "account_types": account_types  # List of all available account types
                 },
                 "usdt_balance": usdt_balance,
                 "assets": assets,

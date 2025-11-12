@@ -8,7 +8,8 @@ export interface DashboardSummary {
     can_trade: boolean;
     can_withdraw: boolean;
     can_deposit: boolean;
-    account_type: string;
+    account_type: string;  // Primary account type (for backward compatibility)
+    account_types: string[];  // List of all available account types (SPOT, FUTURES)
   };
   usdt_balance: {
     free: number;
