@@ -45,9 +45,9 @@ const ForgotPassword = () => {
           </div>
         </form>
         
-        <div className="mt-6 p-4 bg-yellow-50 rounded-md">
-          <p className="text-sm text-yellow-800">
-            <strong>Note:</strong> This is a demo application. Password reset functionality is not implemented.
+        <div className="mt-6 p-4 bg-blue-50 rounded-md">
+          <p className="text-sm text-blue-800">
+            <strong>Password Reset:</strong> Enter your email address and we'll send you instructions to reset your password.
           </p>
         </div>
       </div>

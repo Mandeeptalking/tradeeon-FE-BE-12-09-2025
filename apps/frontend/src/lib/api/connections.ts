@@ -26,7 +26,7 @@ function getApiBaseUrl(): string {
 
 const API_BASE_URL = getApiBaseUrl();
 
-// Mock data for demo purposes
+// Mock data for development/testing (not used in production)
 const mockConnections: Connection[] = [
   {
     id: '1',
