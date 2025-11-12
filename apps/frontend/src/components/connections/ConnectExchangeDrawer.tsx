@@ -161,14 +161,13 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
       // Redirect to dashboard after successful connection
       navigate('/app');
     } catch (error: any) {
-      console.error('Failed to save connection:', error);
+      logger.error('Failed to save connection:', error);
       // Extract error message from API response
-      const errorMessage = error?.response?.data?.detail || 
+      const errorMessage = sanitizeErrorMessage(error?.response?.data?.detail || 
                          error?.message || 
-                         'Failed to save connection. Please check your credentials and try again.';
+                         'Failed to save connection. Please check your credentials and try again.');
       setSaveError(errorMessage);
-      // Show alert for user visibility
-      alert(`Failed to save connection: ${errorMessage}`);
+      // Error is displayed in UI via setSaveError, no need for alert
     } finally {
       setIsSaving(false);
     }
