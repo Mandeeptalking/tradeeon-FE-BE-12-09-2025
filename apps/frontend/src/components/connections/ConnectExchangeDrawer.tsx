@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { X, Eye, EyeOff, TestTube, CheckCircle, XCircle, Loader2, AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react';
+import { X, Eye, EyeOff, TestTube, CheckCircle, XCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Exchange, UpsertConnectionBody, TestConnectionBody, Connection } from '../../types/connections';
 import { connectionsApi } from '../../lib/api/connections';
 import { logger } from '../../utils/logger';
 import { sanitizeInput, validateApiKey, validateApiSecret } from '../../utils/validation';
-import { sanitizeErrorMessage } from '../../utils/errorHandler';
 import { getConnectionErrorMessage } from '../../utils/connectionErrors';
 import ConnectionSuccess from './ConnectionSuccess';
 import ApiKeyLocationGuide from './ApiKeyLocationGuide';
@@ -18,7 +16,6 @@ interface ConnectExchangeDrawerProps {
 }
 
 const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection }: ConnectExchangeDrawerProps) => {
-  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [exchange, setExchange] = useState<Exchange>('BINANCE');
   const [apiKey, setApiKey] = useState('');
@@ -33,8 +30,6 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [retryAttempt, setRetryAttempt] = useState(0);
-  const [isRetrying, setIsRetrying] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [savedConnection, setSavedConnection] = useState<Connection | null>(null);
 
@@ -118,8 +113,6 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
   const handleTestConnection = async () => {
     setIsTesting(true);
     setTestResult(null);
-    setRetryAttempt(0);
-    setIsRetrying(false);
     
     try {
       const testBody: TestConnectionBody = {
@@ -143,15 +136,12 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
       });
     } finally {
       setIsTesting(false);
-      setIsRetrying(false);
     }
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     setSaveError(null);
-    setRetryAttempt(0);
-    setIsRetrying(false);
     
     try {
       const connectionBody: UpsertConnectionBody = {
@@ -178,7 +168,6 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
       setSaveError(errorMessage);
     } finally {
       setIsSaving(false);
-      setIsRetrying(false);
     }
   };
 
