@@ -316,7 +316,8 @@ async def get_dashboard_summary(user: AuthedUser = Depends(get_current_user)):
                     "total_assets": len(assets),
                     "total_active_trades": len(active_trades),
                     "total_futures_positions": len(futures_positions_list),
-                    "total_balance_usdt": usdt_balance["total"]
+                    "total_balance_usdt": usdt_balance["total"],
+                    "total_portfolio_value_usdt": total_portfolio_value
                 }
             }
     except HTTPException:
