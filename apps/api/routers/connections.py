@@ -356,9 +356,63 @@ async def rotate_keys(connection_id: str, body: RotateBody, user: AuthedUser = D
         logger.error(f"Error rotating keys: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to rotate keys: {str(e)}")
 
+@router.patch("/{connection_id}/pause")
+async def pause_connection(connection_id: str, user: AuthedUser = Depends(get_current_user)):
+    """Pause a connection (set is_active to False)"""
+    try:
+        if not supabase:
+            raise DatabaseError("Database service is not available")
+        
+        # Verify connection belongs to user
+        result = supabase.table("exchange_keys").select("*").eq("id", connection_id).eq("user_id", user.user_id).execute()
+        
+        if not result.data:
+            raise NotFoundError("Connection", connection_id)
+        
+        # Pause connection (set is_active to False)
+        supabase.table("exchange_keys").update({
+            "is_active": False,
+            "updated_at": datetime.now().isoformat()
+        }).eq("id", connection_id).execute()
+        
+        return {"message": "Connection paused successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error pausing connection: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to pause connection: {str(e)}")
+
+@router.patch("/{connection_id}/resume")
+async def resume_connection(connection_id: str, user: AuthedUser = Depends(get_current_user)):
+    """Resume a connection (set is_active to True)"""
+    try:
+        if not supabase:
+            raise DatabaseError("Database service is not available")
+        
+        # Verify connection belongs to user
+        result = supabase.table("exchange_keys").select("*").eq("id", connection_id).eq("user_id", user.user_id).execute()
+        
+        if not result.data:
+            raise NotFoundError("Connection", connection_id)
+        
+        # Resume connection (set is_active to True)
+        supabase.table("exchange_keys").update({
+            "is_active": True,
+            "updated_at": datetime.now().isoformat()
+        }).eq("id", connection_id).execute()
+        
+        return {"message": "Connection resumed successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error resuming connection: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to resume connection: {str(e)}")
+
 @router.delete("/{connection_id}")
 async def revoke_connection(connection_id: str, user: AuthedUser = Depends(get_current_user)):
-    """Revoke a connection"""
+    """Delete a connection permanently (soft delete by setting is_active to False)"""
     try:
         if not supabase:
             raise DatabaseError("Database service is not available")
@@ -375,13 +429,13 @@ async def revoke_connection(connection_id: str, user: AuthedUser = Depends(get_c
             "updated_at": datetime.now().isoformat()
         }).eq("id", connection_id).execute()
         
-        return {"message": "Connection revoked successfully"}
+        return {"message": "Connection deleted successfully"}
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error revoking connection: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to revoke connection: {str(e)}")
+        logger.error(f"Error deleting connection: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete connection: {str(e)}")
 
 @router.get("/audit")
 async def get_audit_events(user: AuthedUser = Depends(get_current_user)):

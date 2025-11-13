@@ -271,19 +271,54 @@ export const connectionsApi = {
     }
   },
 
-  async revokeConnection(id: string): Promise<void> {
+  async pauseConnection(id: string): Promise<void> {
+    try {
+      const response = await authenticatedFetch(`${API_BASE_URL}/connections/${id}/pause`, {
+        method: 'PATCH',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Failed to pause connection');
+      }
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  async resumeConnection(id: string): Promise<void> {
+    try {
+      const response = await authenticatedFetch(`${API_BASE_URL}/connections/${id}/resume`, {
+        method: 'PATCH',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Failed to resume connection');
+      }
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  async deleteConnection(id: string): Promise<void> {
     try {
       const response = await authenticatedFetch(`${API_BASE_URL}/connections/${id}`, {
         method: 'DELETE',
       });
       
       if (!response.ok) {
-        throw new Error('Failed to revoke connection');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Failed to delete connection');
       }
-    } catch (error) {
-      // Using mock response (development fallback)
-      // In real app, this would update the connection status
+    } catch (error: any) {
+      throw error;
     }
+  },
+
+  // Legacy alias for backward compatibility
+  async revokeConnection(id: string): Promise<void> {
+    return this.deleteConnection(id);
   },
 
   async getAuditEvents(): Promise<AuditEvent[]> {

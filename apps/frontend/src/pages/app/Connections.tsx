@@ -7,6 +7,10 @@ import {
   RefreshCcw,
   Sparkles,
   Link as LinkIcon,
+  Pause,
+  Play,
+  Trash2,
+  MoreVertical,
 } from 'lucide-react';
 import { connectionsApi } from '../../lib/api/connections';
 import type { Connection, ConnectionGuidance } from '../../types/connections';
@@ -86,6 +90,9 @@ const ConnectionsPage = () => {
   const [editingConnection, setEditingConnection] = useState<Connection | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [loadingConnections, setLoadingConnections] = useState(true);
+  const [showMenuFor, setShowMenuFor] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pausingId, setPausingId] = useState<string | null>(null);
 
   useEffect(() => {
     refreshConnections();
@@ -146,12 +153,61 @@ const ConnectionsPage = () => {
     setEditingConnection(null);
   };
 
+  const handlePauseConnection = async (connectionId: string) => {
+    try {
+      setPausingId(connectionId);
+      await connectionsApi.pauseConnection(connectionId);
+      await refreshConnections();
+      setShowMenuFor(null);
+    } catch (error: any) {
+      logger.error('Failed to pause connection:', error);
+      alert(`Failed to pause connection: ${error.message || 'Unknown error'}`);
+    } finally {
+      setPausingId(null);
+    }
+  };
+
+  const handleResumeConnection = async (connectionId: string) => {
+    try {
+      setPausingId(connectionId);
+      await connectionsApi.resumeConnection(connectionId);
+      await refreshConnections();
+      setShowMenuFor(null);
+    } catch (error: any) {
+      logger.error('Failed to resume connection:', error);
+      alert(`Failed to resume connection: ${error.message || 'Unknown error'}`);
+    } finally {
+      setPausingId(null);
+    }
+  };
+
+  const handleDeleteConnection = async (connectionId: string) => {
+    if (!confirm('Are you sure you want to delete this connection? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setDeletingId(connectionId);
+      await connectionsApi.deleteConnection(connectionId);
+      await refreshConnections();
+      setShowMenuFor(null);
+    } catch (error: any) {
+      logger.error('Failed to delete connection:', error);
+      alert(`Failed to delete connection: ${error.message || 'Unknown error'}`);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const ConnectionCard = ({ connection }: { connection: Connection }) => {
     const metadata = exchangeMeta[connection.exchange] || {
       name: connection.exchange,
       badge: '🔗',
     };
     const status = statusStyles[connection.status];
+    const isPaused = connection.status === 'not_connected';
+    const isMenuOpen = showMenuFor === connection.id;
+    const isProcessing = deletingId === connection.id || pausingId === connection.id;
 
     return (
       <div className="group relative flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur transition hover:border-white/20 hover:bg-white/[0.06]">
@@ -171,13 +227,99 @@ const ConnectionsPage = () => {
             <span className={`${status.iconColor}`}>●</span>
             <span>{status.label}</span>
           </div>
-          <button
-            onClick={() => handleEditConnection(connection)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 text-sm font-medium text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg"
-            title="Edit connection"
-          >
-            Edit
-          </button>
+          
+          {/* Actions Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowMenuFor(isMenuOpen ? null : connection.id)}
+              disabled={isProcessing}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-white/10 rounded-lg disabled:opacity-50"
+              title="More options"
+            >
+              <MoreVertical className="h-4 w-4 text-white/60" />
+            </button>
+            
+            {isMenuOpen && (
+              <>
+                {/* Backdrop to close menu */}
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowMenuFor(null)}
+                />
+                {/* Menu */}
+                <div className="absolute right-0 top-10 z-20 min-w-[180px] rounded-lg border border-white/10 bg-slate-800 shadow-xl py-1">
+                  <button
+                    onClick={() => {
+                      handleEditConnection(connection);
+                      setShowMenuFor(null);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition-colors"
+                  >
+                    <span>✏️</span>
+                    <span>Edit</span>
+                  </button>
+                  
+                  {isPaused ? (
+                    <button
+                      onClick={() => handleResumeConnection(connection.id)}
+                      disabled={isProcessing}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50"
+                    >
+                      {pausingId === connection.id ? (
+                        <>
+                          <RefreshCcw className="h-4 w-4 animate-spin" />
+                          <span>Resuming...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4" />
+                          <span>Resume</span>
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handlePauseConnection(connection.id)}
+                      disabled={isProcessing}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50"
+                    >
+                      {pausingId === connection.id ? (
+                        <>
+                          <RefreshCcw className="h-4 w-4 animate-spin" />
+                          <span>Pausing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Pause className="h-4 w-4" />
+                          <span>Pause</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                  
+                  <div className="my-1 h-px bg-white/10" />
+                  
+                  <button
+                    onClick={() => handleDeleteConnection(connection.id)}
+                    disabled={isProcessing}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                  >
+                    {deletingId === connection.id ? (
+                      <>
+                        <RefreshCcw className="h-4 w-4 animate-spin" />
+                        <span>Deleting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4" />
+                        <span>Delete</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     );
