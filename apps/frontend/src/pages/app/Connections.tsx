@@ -232,6 +232,7 @@ const ConnectionsPage = () => {
           {/* Actions Menu */}
           <div className="relative">
             <button
+              data-menu-button={connection.id}
               onClick={(e) => {
                 e.stopPropagation();
                 setShowMenuFor(isMenuOpen ? null : connection.id);
@@ -243,18 +244,35 @@ const ConnectionsPage = () => {
               <MoreVertical className="h-4 w-4 text-white/60 hover:text-white/80" />
             </button>
             
-            {isMenuOpen && (
-              <>
-                {/* Backdrop to close menu */}
-                <div
-                  className="fixed inset-0 z-[100]"
-                  onClick={() => setShowMenuFor(null)}
-                />
-                {/* Menu - Simple absolute positioning */}
-                <div 
-                  className="absolute right-0 top-full mt-2 z-[101] min-w-[180px] rounded-lg border border-white/10 bg-slate-800 shadow-2xl py-1 overflow-hidden"
-                  onClick={(e) => e.stopPropagation()}
-                >
+            {isMenuOpen && (() => {
+              // Get position from button or calculate fallback
+              const button = document.querySelector(`[data-menu-button="${connection.id}"]`) as HTMLElement;
+              let menuPosition = { top: 0, right: 0 };
+              
+              if (button) {
+                const rect = button.getBoundingClientRect();
+                menuPosition = {
+                  top: rect.bottom + 8,
+                  right: window.innerWidth - rect.right,
+                };
+              }
+              
+              return (
+                <>
+                  {/* Backdrop to close menu */}
+                  <div
+                    className="fixed inset-0 z-[9998]"
+                    onClick={() => setShowMenuFor(null)}
+                  />
+                  {/* Menu - Fixed positioning to appear above all cards */}
+                  <div 
+                    className="fixed z-[9999] min-w-[180px] rounded-lg border border-white/10 bg-slate-800 shadow-2xl py-1 overflow-hidden"
+                    style={{
+                      top: `${menuPosition.top}px`,
+                      right: `${menuPosition.right}px`,
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                   <button
                     onClick={() => {
                       handleEditConnection(connection);
@@ -323,9 +341,10 @@ const ConnectionsPage = () => {
                       </>
                     )}
                   </button>
-                </div>
-              </>
-            )}
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>
