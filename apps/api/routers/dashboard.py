@@ -352,6 +352,7 @@ async def get_dashboard_summary(user: AuthedUser = Depends(get_current_user)):
                     "account_types": account_types  # List of all available account types
                 },
                 "usdt_balance": usdt_balance,
+                "usdt_balance_by_account": usdt_balances_by_account,  # USDT balance by account type
                 "assets": assets,
                 "active_trades": active_trades,  # Open orders
                 "futures_positions": futures_positions_list,  # Active Futures positions
