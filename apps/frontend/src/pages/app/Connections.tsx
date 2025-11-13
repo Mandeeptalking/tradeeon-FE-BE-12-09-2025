@@ -213,11 +213,16 @@ const ConnectionsPage = () => {
 
     useEffect(() => {
       if (isMenuOpen && menuButtonRef.current) {
-        const rect = menuButtonRef.current.getBoundingClientRect();
-        setMenuPosition({
-          top: rect.bottom + 8,
-          right: window.innerWidth - rect.right,
-        });
+        // Use setTimeout to ensure DOM is updated
+        setTimeout(() => {
+          if (menuButtonRef.current) {
+            const rect = menuButtonRef.current.getBoundingClientRect();
+            setMenuPosition({
+              top: rect.bottom + 8,
+              right: window.innerWidth - rect.right,
+            });
+          }
+        }, 0);
       } else {
         setMenuPosition(null);
       }
@@ -257,7 +262,7 @@ const ConnectionsPage = () => {
               <MoreVertical className="h-4 w-4 text-white/60 hover:text-white/80" />
             </button>
             
-            {isMenuOpen && menuPosition && (
+            {isMenuOpen && (
               <>
                 {/* Backdrop to close menu */}
                 <div
@@ -267,9 +272,13 @@ const ConnectionsPage = () => {
                 {/* Menu - Fixed positioning to appear above all cards */}
                 <div 
                   className="fixed z-[9999] min-w-[180px] rounded-lg border border-white/10 bg-slate-800 shadow-xl py-1 overflow-hidden"
-                  style={{
+                  style={menuPosition ? {
                     top: `${menuPosition.top}px`,
                     right: `${menuPosition.right}px`,
+                  } : {
+                    // Fallback position if menuPosition not calculated yet
+                    top: '50%',
+                    right: '20px',
                   }}
                 >
                   <button
