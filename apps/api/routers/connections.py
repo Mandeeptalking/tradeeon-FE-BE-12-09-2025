@@ -530,6 +530,15 @@ async def resume_connection(connection_id: str, user: AuthedUser = Depends(get_c
             "updated_at": datetime.now().isoformat()
         }).eq("id", connection_id).execute()
         
+        # Log audit event
+        _log_audit_event(
+            connection_id=connection_id,
+            user_id=user.user_id,
+            action="resumed",
+            details="Connection resumed",
+            metadata={"exchange": result.data[0].get("exchange")}
+        )
+        
         return {"message": "Connection resumed successfully"}
         
     except HTTPException:
@@ -561,6 +570,15 @@ async def revoke_connection(connection_id: str, user: AuthedUser = Depends(get_c
         if not result.data:
             logger.warning(f"Connection {connection_id} not found for user {user.user_id}")
             raise HTTPException(status_code=404, detail=f"Connection with id '{connection_id}' not found")
+        
+        # Log audit event before deletion
+        _log_audit_event(
+            connection_id=connection_id,
+            user_id=user.user_id,
+            action="revoked",
+            details="Connection deleted",
+            metadata={"exchange": result.data[0].get("exchange")}
+        )
         
         # Deactivate connection (soft delete)
         supabase.table("exchange_keys").update({
