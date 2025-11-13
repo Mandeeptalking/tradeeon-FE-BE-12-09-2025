@@ -10,7 +10,6 @@ import {
   Pause,
   Play,
   Trash2,
-  MoreVertical,
   Edit,
 } from 'lucide-react';
 import { connectionsApi } from '../../lib/api/connections';
@@ -91,7 +90,6 @@ const ConnectionsPage = () => {
   const [editingConnection, setEditingConnection] = useState<Connection | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [loadingConnections, setLoadingConnections] = useState(true);
-  const [showMenuFor, setShowMenuFor] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pausingId, setPausingId] = useState<string | null>(null);
 
@@ -159,7 +157,6 @@ const ConnectionsPage = () => {
       setPausingId(connectionId);
       await connectionsApi.pauseConnection(connectionId);
       await refreshConnections();
-      setShowMenuFor(null);
     } catch (error: any) {
       logger.error('Failed to pause connection:', error);
       alert(`Failed to pause connection: ${error.message || 'Unknown error'}`);
@@ -173,7 +170,6 @@ const ConnectionsPage = () => {
       setPausingId(connectionId);
       await connectionsApi.resumeConnection(connectionId);
       await refreshConnections();
-      setShowMenuFor(null);
     } catch (error: any) {
       logger.error('Failed to resume connection:', error);
       alert(`Failed to resume connection: ${error.message || 'Unknown error'}`);
@@ -191,7 +187,6 @@ const ConnectionsPage = () => {
       setDeletingId(connectionId);
       await connectionsApi.deleteConnection(connectionId);
       await refreshConnections();
-      setShowMenuFor(null);
     } catch (error: any) {
       logger.error('Failed to delete connection:', error);
       alert(`Failed to delete connection: ${error.message || 'Unknown error'}`);
@@ -207,145 +202,95 @@ const ConnectionsPage = () => {
     };
     const status = statusStyles[connection.status];
     const isPaused = connection.status === 'not_connected';
-    const isMenuOpen = showMenuFor === connection.id;
     const isProcessing = deletingId === connection.id || pausingId === connection.id;
 
     return (
-      <div className="group relative flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur transition hover:border-white/20 hover:bg-white/[0.06]">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-2xl flex-shrink-0">
-            {metadata.badge}
+      <div className="group relative flex flex-col rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur transition hover:border-white/20 hover:bg-white/[0.06]">
+        {/* Card Header */}
+        <div className="flex items-center justify-between px-5 py-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-2xl flex-shrink-0">
+              {metadata.badge}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-base font-semibold text-white">{metadata.name}</span>
+              {connection.nickname && (
+                <span className="text-sm text-white/60 truncate">{connection.nickname}</span>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-base font-semibold text-white">{metadata.name}</span>
-            {connection.nickname && (
-              <span className="text-sm text-white/60 truncate">{connection.nickname}</span>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
           <div className={`flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${status.pill}`}>
             <span className={`${status.iconColor}`}>●</span>
             <span>{status.label}</span>
           </div>
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="px-5 pb-4 pt-0 flex items-center gap-2 border-t border-white/5">
+          <button
+            onClick={() => handleEditConnection(connection)}
+            disabled={isProcessing}
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <Edit className="h-4 w-4" />
+            <span>Edit</span>
+          </button>
           
-          {/* Actions Menu */}
-          <div className="relative">
+          {isPaused ? (
             <button
-              data-menu-button={connection.id}
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMenuFor(isMenuOpen ? null : connection.id);
-              }}
+              onClick={() => handleResumeConnection(connection.id)}
               disabled={isProcessing}
-              className="p-2 hover:bg-white/10 rounded-lg disabled:opacity-50 transition-colors"
-              title="More options"
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-colors disabled:opacity-50"
             >
-              <MoreVertical className="h-4 w-4 text-white/60 hover:text-white/80" />
-            </button>
-            
-            {isMenuOpen && (() => {
-              // Get position from button or calculate fallback
-              const button = document.querySelector(`[data-menu-button="${connection.id}"]`) as HTMLElement;
-              let menuPosition = { top: 0, right: 0 };
-              
-              if (button) {
-                const rect = button.getBoundingClientRect();
-                menuPosition = {
-                  top: rect.bottom + 8,
-                  right: window.innerWidth - rect.right,
-                };
-              }
-              
-              return (
+              {pausingId === connection.id ? (
                 <>
-                  {/* Backdrop to close menu */}
-                  <div
-                    className="fixed inset-0 z-[9998]"
-                    onClick={() => setShowMenuFor(null)}
-                  />
-                  {/* Menu - Fixed positioning to appear above all cards */}
-                  <div 
-                    className="fixed z-[9999] min-w-[180px] rounded-lg border border-white/10 bg-slate-800 shadow-2xl py-1 overflow-hidden"
-                    style={{
-                      top: `${menuPosition.top}px`,
-                      right: `${menuPosition.right}px`,
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                  <button
-                    onClick={() => {
-                      handleEditConnection(connection);
-                      setShowMenuFor(null);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition-colors text-left"
-                  >
-                    <Edit className="h-4 w-4" />
-                    <span>Edit</span>
-                  </button>
-                  
-                  {isPaused ? (
-                    <button
-                      onClick={() => handleResumeConnection(connection.id)}
-                      disabled={isProcessing}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50 text-left"
-                    >
-                      {pausingId === connection.id ? (
-                        <>
-                          <RefreshCcw className="h-4 w-4 animate-spin" />
-                          <span>Resuming...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-4 w-4" />
-                          <span>Resume</span>
-                        </>
-                      )}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handlePauseConnection(connection.id)}
-                      disabled={isProcessing}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50 text-left"
-                    >
-                      {pausingId === connection.id ? (
-                        <>
-                          <RefreshCcw className="h-4 w-4 animate-spin" />
-                          <span>Pausing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Pause className="h-4 w-4" />
-                          <span>Pause</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-                  
-                  <div className="my-1 h-px bg-white/10" />
-                  
-                  <button
-                    onClick={() => handleDeleteConnection(connection.id)}
-                    disabled={isProcessing}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50 text-left"
-                  >
-                    {deletingId === connection.id ? (
-                      <>
-                        <RefreshCcw className="h-4 w-4 animate-spin" />
-                        <span>Deleting...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="h-4 w-4" />
-                        <span>Delete</span>
-                      </>
-                    )}
-                  </button>
-                  </div>
+                  <RefreshCcw className="h-4 w-4 animate-spin" />
+                  <span>Resuming...</span>
                 </>
-              );
-            })()}
-          </div>
+              ) : (
+                <>
+                  <Play className="h-4 w-4" />
+                  <span>Resume</span>
+                </>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={() => handlePauseConnection(connection.id)}
+              disabled={isProcessing}
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {pausingId === connection.id ? (
+                <>
+                  <RefreshCcw className="h-4 w-4 animate-spin" />
+                  <span>Pausing...</span>
+                </>
+              ) : (
+                <>
+                  <Pause className="h-4 w-4" />
+                  <span>Pause</span>
+                </>
+              )}
+            </button>
+          )}
+          
+          <button
+            onClick={() => handleDeleteConnection(connection.id)}
+            disabled={isProcessing}
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {deletingId === connection.id ? (
+              <>
+                <RefreshCcw className="h-4 w-4 animate-spin" />
+                <span>Deleting...</span>
+              </>
+            ) : (
+              <>
+                <Trash2 className="h-4 w-4" />
+                <span>Delete</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
     );
