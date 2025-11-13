@@ -5,13 +5,16 @@ import { logger } from '../utils/logger';
 import { sanitizeErrorMessage } from '../utils/errorHandler';
 import { AnimatedCounter } from '../components/dashboard/AnimatedCounter';
 import { StatCard } from '../components/dashboard/StatCard';
+import { AssetCard } from '../components/dashboard/AssetCard';
 import { motion } from 'framer-motion';
+import { Search } from 'lucide-react';
 
 // Dashboard component - displays Binance account info, assets, and active trades
 const Dashboard = () => {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [assetSearch, setAssetSearch] = useState('');
 
   const fetchDashboardData = async () => {
     try {
@@ -274,47 +277,62 @@ const Dashboard = () => {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Assets List */}
+          {/* Assets List - Modern Design */}
           <div className="lg:col-span-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            {/* Header with Search */}
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-white">Your Assets</h2>
-              <span className="text-sm text-white/60">{summary.assets.length} assets</span>
-            </div>
-            {summary.assets.length === 0 ? (
-              <div className="text-center py-12">
-                <Wallet className="h-12 w-12 text-white/20 mx-auto mb-4" />
-                <p className="text-white/60">No assets found</p>
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">Your Assets</h2>
+                <p className="text-sm text-white/60">
+                  {summary.assets.length} {summary.assets.length === 1 ? 'asset' : 'assets'}
+                </p>
               </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/40" />
+                <input
+                  type="text"
+                  placeholder="Search assets..."
+                  value={assetSearch}
+                  onChange={(e) => setAssetSearch(e.target.value)}
+                  className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 text-sm focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all w-48"
+                />
+              </div>
+            </div>
+
+            {summary.assets.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-16"
+              >
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+                  <Wallet className="h-10 w-10 text-white/20" />
+                </div>
+                <p className="text-white/60 text-lg">No assets found</p>
+                <p className="text-white/40 text-sm mt-2">Connect an exchange to see your assets</p>
+              </motion.div>
             ) : (
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {summary.assets.map((asset) => (
-                  <div
-                    key={asset.asset}
-                    className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
-                        <span className="text-lg font-bold text-white">{asset.asset[0]}</span>
-                      </div>
-                      <div>
-                        <p className="font-semibold text-white">{asset.asset}</p>
-                        <p className="text-sm text-white/60">
-                          Total: {formatNumber(asset.total, asset.asset === 'USDT' ? 2 : 8)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-white">
-                        {formatNumber(asset.free, asset.asset === 'USDT' ? 2 : 8)}
-                      </p>
-                      {asset.locked > 0 && (
-                        <p className="text-xs text-white/60">
-                          Locked: {formatNumber(asset.locked, asset.asset === 'USDT' ? 2 : 8)}
-                        </p>
-                      )}
-                    </div>
+              <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                {summary.assets
+                  .filter((asset) =>
+                    asset.asset.toLowerCase().includes(assetSearch.toLowerCase())
+                  )
+                  .map((asset, index) => (
+                    <AssetCard
+                      key={asset.asset}
+                      asset={asset}
+                      formatNumber={formatNumber}
+                      formatCurrency={formatCurrency}
+                      index={index}
+                    />
+                  ))}
+                {summary.assets.filter((asset) =>
+                  asset.asset.toLowerCase().includes(assetSearch.toLowerCase())
+                ).length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-white/60">No assets match your search</p>
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>
