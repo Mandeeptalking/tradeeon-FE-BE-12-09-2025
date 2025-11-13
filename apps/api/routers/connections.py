@@ -349,6 +349,27 @@ async def test_connection(body: TestBody, user: AuthedUser = Depends(get_current
             async with BinanceAuthenticatedClient(body.api_key, body.api_secret) as client:
                 result = await client.test_connection()
                 logger.info(f"Connection test result: ok={result.get('ok')}, code={result.get('code')}")
+                
+                # Log audit event for successful test
+                try:
+                    # Find connection ID
+                    conn_result = supabase.table("exchange_keys").select("id").eq("user_id", user.user_id).eq("exchange", body.exchange.lower()).execute()
+                    if conn_result.data:
+                        connection_id = conn_result.data[0]["id"]
+                        _log_audit_event(
+                            connection_id=connection_id,
+                            user_id=user.user_id,
+                            action="tested",
+                            details=f"Connection test successful",
+                            metadata={
+                                "exchange": body.exchange,
+                                "latency_ms": result.get("latency_ms"),
+                                "account_types": result.get("account_types", [])
+                            }
+                        )
+                except Exception as e:
+                    logger.warning(f"Failed to log test audit event: {e}")
+                
                 return result
         except Exception as e:
             # Catch any unexpected errors from the client
