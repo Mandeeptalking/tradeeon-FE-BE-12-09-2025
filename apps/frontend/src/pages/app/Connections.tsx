@@ -210,7 +210,7 @@ const ConnectionsPage = () => {
     const isProcessing = deletingId === connection.id || pausingId === connection.id;
 
     return (
-      <div className="group relative flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur transition hover:border-white/20 hover:bg-white/[0.06]">
+      <div className="group relative flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur transition hover:border-white/20 hover:bg-white/[0.06] overflow-visible">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-2xl flex-shrink-0">
             {metadata.badge}
@@ -229,25 +229,25 @@ const ConnectionsPage = () => {
           </div>
           
           {/* Actions Menu */}
-          <div className="relative">
+          <div className="relative z-50">
             <button
               onClick={() => setShowMenuFor(isMenuOpen ? null : connection.id)}
               disabled={isProcessing}
-              className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-white/10 rounded-lg disabled:opacity-50"
+              className="p-2 hover:bg-white/10 rounded-lg disabled:opacity-50 transition-colors"
               title="More options"
             >
-              <MoreVertical className="h-4 w-4 text-white/60" />
+              <MoreVertical className="h-4 w-4 text-white/60 hover:text-white/80" />
             </button>
             
             {isMenuOpen && (
               <>
                 {/* Backdrop to close menu */}
                 <div
-                  className="fixed inset-0 z-10"
+                  className="fixed inset-0 z-40"
                   onClick={() => setShowMenuFor(null)}
                 />
                 {/* Menu */}
-                <div className="absolute right-0 top-10 z-20 min-w-[180px] rounded-lg border border-white/10 bg-slate-800 shadow-xl py-1">
+                <div className="absolute right-0 top-full mt-2 z-50 min-w-[180px] rounded-lg border border-white/10 bg-slate-800 shadow-xl py-1 overflow-hidden">
                   <button
                     onClick={() => {
                       handleEditConnection(connection);
