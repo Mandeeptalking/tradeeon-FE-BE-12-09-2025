@@ -148,8 +148,8 @@ export const AssetSummaryModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden bg-gray-900 border-gray-700 text-white">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden bg-gray-900 border-gray-700 text-white p-0">
+        <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
             <span>Asset Portfolio</span>
             <span className="text-lg text-white/60 font-normal">
@@ -158,7 +158,7 @@ export const AssetSummaryModal = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col lg:flex-row gap-6 overflow-hidden">
+        <div className="flex flex-col lg:flex-row gap-6 overflow-hidden px-6 pb-6">
           {/* Left Side - Pie Chart */}
           <div className="flex-shrink-0 lg:w-1/3 flex flex-col items-center justify-center p-6 bg-white/5 rounded-xl border border-white/10">
             <h3 className="text-lg font-semibold text-white mb-4">Asset Distribution</h3>
