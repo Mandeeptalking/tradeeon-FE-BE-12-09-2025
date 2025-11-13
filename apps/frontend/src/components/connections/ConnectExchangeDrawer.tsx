@@ -8,6 +8,7 @@ import { sanitizeInput, validateApiKey, validateApiSecret } from '../../utils/va
 import { sanitizeErrorMessage } from '../../utils/errorHandler';
 import { getConnectionErrorMessage } from '../../utils/connectionErrors';
 import ConnectionSuccess from './ConnectionSuccess';
+import ApiKeyLocationGuide from './ApiKeyLocationGuide';
 
 interface ConnectExchangeDrawerProps {
   isOpen: boolean;
@@ -335,6 +336,9 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
                     <span className="font-medium">{selectedExchange?.label}</span>
                   </div>
                 </div>
+
+                {/* API Key Location Guide */}
+                <ApiKeyLocationGuide exchange={exchange} />
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">

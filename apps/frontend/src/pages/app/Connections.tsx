@@ -16,6 +16,7 @@ import { connectionsApi } from '../../lib/api/connections';
 import type { Connection, ConnectionGuidance } from '../../types/connections';
 import ConnectExchangeDrawer from '../../components/connections/ConnectExchangeDrawer';
 import PreConnectionChecklist from '../../components/connections/PreConnectionChecklist';
+import EmptyState from '../../components/EmptyState';
 import { logger } from '../../utils/logger';
 
 type StatusStyle = {
@@ -466,23 +467,19 @@ const ConnectionsPage = () => {
               </div>
             </div>
           ) : connections.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-white/10 bg-white/[0.02] px-8 py-16 text-center text-white/60">
-              <LinkIcon className="h-8 w-8 text-white/40" />
-              <div className="space-y-2">
-                <p className="text-lg font-semibold text-white">No exchanges linked yet</p>
-                <p className="text-sm text-white/60">
-                  When you connect Binance, it will appear here with its live connection status.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleConnectExchange}
-                className="inline-flex items-center gap-2 rounded-full bg-blue-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:bg-blue-600"
-              >
-                <Plug className="h-4 w-4" />
-                Connect Binance
-              </button>
-            </div>
+            <EmptyState
+              icon={LinkIcon}
+              title="No exchanges linked yet"
+              description="Connect your first exchange to start tracking your portfolio and trades. Your connection will appear here with its live status."
+              actionLabel="Connect Exchange"
+              onAction={handleConnectExchange}
+              tips={[
+                'Start with Binance - it\'s the most popular exchange',
+                'Make sure you have your API keys ready',
+                'Whitelist our IP address before connecting',
+                'You can connect multiple exchanges later',
+              ]}
+            />
           ) : (
             <div className="grid gap-4 md:grid-cols-2 overflow-visible">
               {connections.map((connection) => (
