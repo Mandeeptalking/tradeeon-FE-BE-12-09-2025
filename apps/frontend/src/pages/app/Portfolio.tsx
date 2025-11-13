@@ -1,228 +1,373 @@
-import { useState, useEffect } from 'react';
-import { Search, Filter } from 'lucide-react';
-import { usePortfolioOverview, useEquityCurve, useAllocation, useHoldings } from '../../lib/api/portfolio';
-import DateRangePicker from '../../components/inputs/DateRangePicker';
-import KpiStrip from '../../components/portfolio/KpiStrip';
-import EquityArea from '../../components/portfolio/EquityArea';
-import AllocationDonut from '../../components/portfolio/AllocationDonut';
-import HoldingsTable from '../../components/portfolio/HoldingsTable';
+import { useEffect, useState } from 'react';
+import { dashboardApi, type DashboardSummary, type AccountInfo } from '../../lib/api/dashboard';
+import { useAuthStore } from '../../store/auth';
+import { Wallet, TrendingUp, Activity, DollarSign, RefreshCw, AlertCircle, User, Shield, CheckCircle } from 'lucide-react';
+import { logger } from '../../utils/logger';
+import { sanitizeErrorMessage } from '../../utils/errorHandler';
+import { motion } from 'framer-motion';
+import { AssetCard } from '../../components/dashboard/AssetCard';
 
 const Portfolio = () => {
-  const [selectedRange, setSelectedRange] = useState<'1D' | '1W' | '1M' | '3M' | 'YTD' | '1Y' | 'All' | 'Custom'>('1M');
-  const [customRange, setCustomRange] = useState({ from: '', to: '' });
-  const [selectedExchange, setSelectedExchange] = useState('ALL');
-  const [searchTerm, setSearchTerm] = useState('');
+  const { user } = useAuthStore();
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [accountInfo, setAccountInfo] = useState<AccountInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Calculate date range
-  const getDateRange = () => {
-    const now = new Date();
-    const to = now.toISOString().split('T')[0];
-    
-    switch (selectedRange) {
-      case '1D':
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-        return { from: yesterday.toISOString().split('T')[0], to };
-      case '1W':
-        const weekAgo = new Date(now);
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        return { from: weekAgo.toISOString().split('T')[0], to };
-      case '1M':
-        const monthAgo = new Date(now);
-        monthAgo.setMonth(monthAgo.getMonth() - 1);
-        return { from: monthAgo.toISOString().split('T')[0], to };
-      case '3M':
-        const threeMonthsAgo = new Date(now);
-        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-        return { from: threeMonthsAgo.toISOString().split('T')[0], to };
-      case 'YTD':
-        const yearStart = new Date(now.getFullYear(), 0, 1);
-        return { from: yearStart.toISOString().split('T')[0], to };
-      case '1Y':
-        const yearAgo = new Date(now);
-        yearAgo.setFullYear(yearAgo.getFullYear() - 1);
-        return { from: yearAgo.toISOString().split('T')[0], to };
-      case 'Custom':
-        return customRange.from && customRange.to ? customRange : { from: to, to };
-      case 'All':
-        const allTime = new Date('2020-01-01');
-        return { from: allTime.toISOString().split('T')[0], to };
-      default:
-        return { from: to, to };
+  const fetchPortfolioData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch dashboard summary (includes assets, account info)
+      const dashboardData = await dashboardApi.getSummary();
+      setSummary(dashboardData);
+      
+      // Fetch detailed account info
+      try {
+        const account = await dashboardApi.getAccountInfo();
+        setAccountInfo(account);
+      } catch (err) {
+        logger.warn('Failed to fetch detailed account info:', err);
+        // Continue without detailed account info
+      }
+    } catch (err: any) {
+      logger.error('Failed to fetch portfolio data:', err);
+      const errorMessage = sanitizeErrorMessage(err);
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const dateRange = getDateRange();
-  const filters = {
-    from: dateRange.from,
-    to: dateRange.to,
-    exchange: selectedExchange,
-    as_of: dateRange.to,
-  };
-
-  // Fetch data
-  const { data: overview, isLoading: overviewLoading } = usePortfolioOverview(filters);
-  const { data: equityCurve, isLoading: equityLoading } = useEquityCurve(filters);
-  const { data: allocation, isLoading: allocationLoading } = useAllocation(filters);
-  const { data: holdings, isLoading: holdingsLoading } = useHoldings(filters);
-
-  // Initialize custom range
   useEffect(() => {
-    if (selectedRange === 'Custom' && !customRange.from) {
-      const now = new Date();
-      const monthAgo = new Date(now);
-      monthAgo.setMonth(monthAgo.getMonth() - 1);
-      setCustomRange({
-        from: monthAgo.toISOString().split('T')[0],
-        to: now.toISOString().split('T')[0],
-      });
-    }
-  }, [selectedRange, customRange.from]);
+    fetchPortfolioData();
+  }, []);
 
-  const handleCustomRangeChange = (from: string, to: string) => {
-    setCustomRange({ from, to });
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
   };
 
-  const handleExportCSV = () => {
-    if (!holdings) return;
-    
-    const csvContent = [
-      ['Symbol', 'Exchange', 'Quantity', 'Average Price', 'Last Price', 'Day P&L', 'Total P&L', 'Weight %'].join(','),
-      ...holdings.map(holding => [
-        holding.symbol,
-        holding.exchange,
-        holding.qty.toFixed(4),
-        holding.avg.toFixed(2),
-        holding.ltp.toFixed(2),
-        holding.pnl_day.toFixed(2),
-        holding.pnl_total.toFixed(2),
-        (holding.weight * 100).toFixed(1)
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `portfolio-${dateRange.from}-to-${dateRange.to}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+  const formatNumber = (value: number, decimals: number = 8) => {
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: decimals,
+    }).format(value);
   };
 
-  const rangeOptions = ['1D', '1W', '1M', '3M', 'YTD', '1Y', 'All', 'Custom'];
-  const exchangeOptions = [
-    { value: 'ALL', label: 'All Exchanges' },
-    { value: 'BINANCE', label: 'Binance' },
-    { value: 'COINBASE', label: 'Coinbase Pro' },
-    { value: 'KRAKEN', label: 'Kraken' },
-    { value: 'ZERODHA', label: 'Zerodha' },
-  ];
+  const formatPercentage = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'percent',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value / 100);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-full relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="h-12 w-12 text-blue-400 animate-spin mx-auto mb-4" />
+          <p className="text-white/70">Loading portfolio...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-full relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-gray-800/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8 text-center">
+          <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-2">Unable to Load Portfolio</h2>
+          <p className="text-gray-400 mb-4">{error}</p>
+          <button
+            onClick={fetchPortfolioData}
+            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!summary) {
+    return (
+      <div className="min-h-full relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white/70">No data available</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Portfolio</h1>
-          <p className="text-gray-600">
-            Your holdings, performance, and allocation. Clean and focused.
-          </p>
-        </div>
+    <div className="min-h-full relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      {/* Animated background */}
+      <div className="absolute inset-0">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-6">
-            {/* Range Filters */}
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-gray-700">Range:</span>
-              <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                {rangeOptions.map((range) => (
-                  <button
-                    key={range}
-                    onClick={() => setSelectedRange(range as any)}
-                    className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                      selectedRange === range
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    {range}
-                  </button>
-                ))}
+      {/* Content */}
+      <div className="relative z-10 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-center justify-between mb-8"
+          >
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+                Portfolio
+              </h1>
+              <p className="text-white/60 text-lg">Account overview and holdings</p>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={fetchPortfolioData}
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg border border-blue-500/20 transition-all backdrop-blur-sm"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </motion.button>
+          </motion.div>
+
+          {/* Account Information Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 mb-6"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-blue-500/10 rounded-lg">
+                <User className="h-6 w-6 text-blue-400" />
               </div>
-              {selectedRange === 'Custom' && (
-                <DateRangePicker
-                  from={customRange.from}
-                  to={customRange.to}
-                  onChange={handleCustomRangeChange}
-                />
+              <h2 className="text-2xl font-bold text-white">Account Information</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Account Name/Email */}
+              <div className="space-y-2">
+                <p className="text-sm text-white/60">Account Name</p>
+                <p className="text-lg font-semibold text-white">{user?.name || 'User'}</p>
+                <p className="text-sm text-white/50">{user?.email || 'No email'}</p>
+              </div>
+
+              {/* Account Type */}
+              <div className="space-y-2">
+                <p className="text-sm text-white/60">Account Type</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {summary.account.account_types?.map((type) => (
+                    <span
+                      key={type}
+                      className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg text-sm font-medium capitalize"
+                    >
+                      {type}
+                    </span>
+                  )) || (
+                    <span className="text-lg font-semibold text-white capitalize">
+                      {summary.account.account_type}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Account Permissions */}
+              <div className="space-y-2">
+                <p className="text-sm text-white/60">Permissions</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {summary.account.can_trade && (
+                    <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-medium flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      Trading
+                    </span>
+                  )}
+                  {summary.account.can_deposit && (
+                    <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-medium flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      Deposit
+                    </span>
+                  )}
+                  {summary.account.can_withdraw && (
+                    <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs font-medium flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      Withdraw
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Commission Rates */}
+              {accountInfo && (
+                <>
+                  <div className="space-y-2">
+                    <p className="text-sm text-white/60">Maker Commission</p>
+                    <p className="text-lg font-semibold text-white">
+                      {formatPercentage(accountInfo.account.maker_commission)}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-white/60">Taker Commission</p>
+                    <p className="text-lg font-semibold text-white">
+                      {formatPercentage(accountInfo.account.taker_commission)}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-white/60">Account Status</p>
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-green-400" />
+                      <span className="text-sm font-medium text-green-400">Active & Secure</span>
+                    </div>
+                  </div>
+                </>
               )}
             </div>
+          </motion.div>
 
-            {/* Exchange Filter */}
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-500" />
-              <select
-                value={selectedExchange}
-                onChange={(e) => setSelectedExchange(e.target.value)}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {exchangeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Portfolio Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            {/* Total Balance */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-all"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-green-500/10 rounded-lg">
+                  <DollarSign className="h-6 w-6 text-green-400" />
+                </div>
+                <span className="text-xs text-white/60 uppercase tracking-wide">Total Balance</span>
+              </div>
+              <p className="text-3xl font-bold text-white mb-1">
+                {formatCurrency(summary.usdt_balance.total)}
+              </p>
+              <div className="flex items-center gap-4 text-sm">
+                <span className="text-white/60">
+                  Free: <span className="text-white">{formatCurrency(summary.usdt_balance.free)}</span>
+                </span>
+                {summary.usdt_balance.locked > 0 && (
+                  <span className="text-white/60">
+                    Locked: <span className="text-white">{formatCurrency(summary.usdt_balance.locked)}</span>
+                  </span>
+                )}
+              </div>
+            </motion.div>
 
-            {/* Search */}
-            <div className="flex items-center space-x-2">
-              <Search className="h-4 w-4 text-gray-500" />
-              <input
-                type="text"
-                placeholder="Search symbols..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
-              />
-            </div>
+            {/* Total Assets */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-all"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-blue-500/10 rounded-lg">
+                  <Wallet className="h-6 w-6 text-blue-400" />
+                </div>
+                <span className="text-xs text-white/60 uppercase tracking-wide">Total Assets</span>
+              </div>
+              <p className="text-3xl font-bold text-white">{summary.stats.total_assets}</p>
+              <p className="text-sm text-white/60 mt-1">Different cryptocurrencies</p>
+            </motion.div>
+
+            {/* Active Trades */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-all"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-purple-500/10 rounded-lg">
+                  <Activity className="h-6 w-6 text-purple-400" />
+                </div>
+                <span className="text-xs text-white/60 uppercase tracking-wide">Active Trades</span>
+              </div>
+              <p className="text-3xl font-bold text-white">
+                {summary.stats.total_active_trades + (summary.stats.total_futures_positions || 0)}
+              </p>
+              <p className="text-sm text-white/60 mt-1">
+                {summary.stats.total_active_trades > 0 && (summary.stats.total_futures_positions || 0) > 0
+                  ? `${summary.stats.total_active_trades} orders, ${summary.stats.total_futures_positions || 0} positions`
+                  : 'Open orders & positions'}
+              </p>
+            </motion.div>
+
+            {/* Portfolio Value */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-all"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-emerald-500/10 rounded-lg">
+                  <TrendingUp className="h-6 w-6 text-emerald-400" />
+                </div>
+                <span className="text-xs text-white/60 uppercase tracking-wide">Portfolio Value</span>
+              </div>
+              <p className="text-3xl font-bold text-white">
+                {formatCurrency(summary.stats.total_balance_usdt)}
+              </p>
+              <p className="text-sm text-white/60 mt-1">Total in USDT</p>
+            </motion.div>
           </div>
+
+          {/* Holdings Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">Holdings</h2>
+                <p className="text-sm text-white/60">
+                  {summary.assets.length} {summary.assets.length === 1 ? 'asset' : 'assets'} in your portfolio
+                </p>
+              </div>
+            </div>
+
+            {summary.assets.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+                  <Wallet className="h-10 w-10 text-white/20" />
+                </div>
+                <p className="text-white/60 text-lg">No holdings found</p>
+                <p className="text-white/40 text-sm mt-2">Connect an exchange to see your holdings</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                {summary.assets.map((asset, index) => (
+                  <AssetCard
+                    key={asset.asset}
+                    asset={asset}
+                    formatNumber={formatNumber}
+                    formatCurrency={formatCurrency}
+                    index={index}
+                  />
+                ))}
+              </div>
+            )}
+          </motion.div>
         </div>
-
-        {/* KPI Strip */}
-        {overview && (
-          <KpiStrip
-            equity={overview.equity}
-            pnlDay={overview.pnl_day}
-            pnlTotal={overview.pnl_total}
-            winRate={overview.win_rate}
-            isLoading={overviewLoading}
-          />
-        )}
-
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <EquityArea
-            data={equityCurve || []}
-            isLoading={equityLoading}
-          />
-          <AllocationDonut
-            data={allocation || []}
-            isLoading={allocationLoading}
-          />
-        </div>
-
-        {/* Holdings Table */}
-        <HoldingsTable
-          data={holdings || []}
-          isLoading={holdingsLoading}
-          onExport={handleExportCSV}
-        />
       </div>
     </div>
   );
 };
 
 export default Portfolio;
-
-
