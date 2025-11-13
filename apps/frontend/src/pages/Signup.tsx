@@ -14,7 +14,8 @@ import {
   Bot,
   ArrowLeft,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -40,9 +41,16 @@ const Signup = () => {
   const [success, setSuccess] = useState(false);
   const [emailVerificationNeeded, setEmailVerificationNeeded] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<ReturnType<typeof checkPasswordStrength> | null>(null);
+  const [isResending, setIsResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const formRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { setUser } = useAuthStore();
+
+  // Rate limiting constants
+  const RESEND_LIMIT = 3; // Max 3 resends per hour
+  const RESEND_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
+  const STORAGE_KEY = 'verificationResends';
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -66,6 +74,156 @@ const Signup = () => {
       return () => form.removeEventListener('mousemove', handleMouseMove);
     }
   }, []);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
+
+  // Rate limiting utility functions
+  const getRecentAttempts = (): number[] => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return [];
+      
+      const attempts = JSON.parse(stored) as number[];
+      const now = Date.now();
+      
+      // Filter attempts in last hour
+      return attempts.filter(timestamp => now - timestamp < RESEND_WINDOW);
+    } catch (error) {
+      logger.error('Error reading resend attempts:', error);
+      return [];
+    }
+  };
+
+  const recordAttempt = (): void => {
+    try {
+      const attempts = getRecentAttempts();
+      attempts.push(Date.now());
+      
+      // Keep only attempts from last hour
+      const now = Date.now();
+      const filtered = attempts.filter(timestamp => now - timestamp < RESEND_WINDOW);
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    } catch (error) {
+      logger.error('Error recording resend attempt:', error);
+    }
+  };
+
+  const checkResendCooldown = (): void => {
+    const attempts = getRecentAttempts();
+    
+    if (attempts.length >= RESEND_LIMIT) {
+      // Calculate time until oldest attempt expires
+      const oldestAttempt = Math.min(...attempts);
+      const waitTime = RESEND_WINDOW - (Date.now() - oldestAttempt);
+      const secondsRemaining = Math.ceil(waitTime / 1000);
+      
+      if (secondsRemaining > 0) {
+        setResendCooldown(secondsRemaining);
+      }
+    }
+  };
+
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${secs}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${secs}s`;
+    } else {
+      return `${secs}s`;
+    }
+  };
+
+  const handleResendVerification = async () => {
+    // Check rate limit
+    const attempts = getRecentAttempts();
+    
+    if (attempts.length >= RESEND_LIMIT) {
+      checkResendCooldown();
+      setError(`You have reached the maximum resend limit (${RESEND_LIMIT} per hour). Please wait before trying again.`);
+      return;
+    }
+
+    setIsResending(true);
+    setError(null);
+
+    try {
+      // Check if supabase is properly configured
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+      if (!supabaseUrl || !supabaseKey || !supabaseUrl.startsWith('http')) {
+        throw new Error('Authentication service is not configured.');
+      }
+
+      if (!supabase || !supabase.auth) {
+        throw new Error('Authentication service is not available.');
+      }
+
+      // Get redirect URL
+      const productionUrl = import.meta.env.VITE_PRODUCTION_URL || 'https://www.tradeeon.com';
+      const redirectUrl = window.location.hostname === 'localhost' 
+        ? `${window.location.origin}/auth/callback`
+        : `${productionUrl}/auth/callback`;
+
+      // Resend verification email
+      const { error: resendError } = await supabase.auth.resend({
+        type: 'signup',
+        email: formData.email,
+        options: {
+          emailRedirectTo: redirectUrl
+        }
+      });
+
+      if (resendError) {
+        logger.error('Resend verification error:', resendError);
+        throw resendError;
+      }
+
+      // Record attempt
+      recordAttempt();
+      
+      // Start countdown timer (1 hour)
+      setResendCooldown(3600);
+      
+      // Show success message
+      setSuccess(true);
+      setError(null);
+      
+      logger.info('Verification email resent successfully');
+    } catch (err: any) {
+      logger.error('Failed to resend verification email:', err);
+      setError(err.message || 'Failed to resend verification email. Please try again.');
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  // Check and update cooldown when email verification is needed
+  useEffect(() => {
+    if (emailVerificationNeeded) {
+      checkResendCooldown();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emailVerificationNeeded]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -388,6 +546,46 @@ const Signup = () => {
                       <p className="text-blue-300/80 text-xs mt-2">
                         Once verified, you can sign in to access your account.
                       </p>
+                      
+                      {/* Resend Verification Email Button */}
+                      <div className="mt-4 pt-4 border-t border-blue-500/20">
+                        <button
+                          type="button"
+                          onClick={handleResendVerification}
+                          disabled={isResending || resendCooldown > 0}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500/20"
+                        >
+                          {isResending ? (
+                            <>
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                              <span>Sending...</span>
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="h-4 w-4" />
+                              <span>Resend Verification Email</span>
+                            </>
+                          )}
+                        </button>
+                        
+                        {/* Countdown Timer */}
+                        {resendCooldown > 0 && (
+                          <p className="text-xs text-blue-300/80 mt-2 text-center flex items-center justify-center gap-1">
+                            <span>⏱️</span>
+                            <span>Next resend available in:</span>
+                            <span className="font-mono font-semibold text-blue-200">
+                              {formatTime(resendCooldown)}
+                            </span>
+                          </p>
+                        )}
+                        
+                        {/* Rate Limit Info */}
+                        {getRecentAttempts().length > 0 && resendCooldown === 0 && (
+                          <p className="text-xs text-blue-300/60 mt-2 text-center">
+                            {getRecentAttempts().length} of {RESEND_LIMIT} resends used this hour
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
