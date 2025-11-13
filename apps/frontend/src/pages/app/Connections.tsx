@@ -208,31 +208,9 @@ const ConnectionsPage = () => {
     const isPaused = connection.status === 'not_connected';
     const isMenuOpen = showMenuFor === connection.id;
     const isProcessing = deletingId === connection.id || pausingId === connection.id;
-    const menuButtonRef = useRef<HTMLButtonElement>(null);
-    const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
-
-    useEffect(() => {
-      if (isMenuOpen && menuButtonRef.current) {
-        // Use setTimeout to ensure DOM is updated
-        setTimeout(() => {
-          if (menuButtonRef.current) {
-            const rect = menuButtonRef.current.getBoundingClientRect();
-            setMenuPosition({
-              top: rect.bottom + 8,
-              right: window.innerWidth - rect.right,
-            });
-          }
-        }, 0);
-      } else {
-        setMenuPosition(null);
-      }
-    }, [isMenuOpen]);
 
     return (
-      <div 
-        data-connection-id={connection.id}
-        className="group relative flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur transition hover:border-white/20 hover:bg-white/[0.06] overflow-visible"
-      >
+      <div className="group relative flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur transition hover:border-white/20 hover:bg-white/[0.06]">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-2xl flex-shrink-0">
             {metadata.badge}
@@ -253,8 +231,10 @@ const ConnectionsPage = () => {
           {/* Actions Menu */}
           <div className="relative">
             <button
-              ref={menuButtonRef}
-              onClick={() => setShowMenuFor(isMenuOpen ? null : connection.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenuFor(isMenuOpen ? null : connection.id);
+              }}
               disabled={isProcessing}
               className="p-2 hover:bg-white/10 rounded-lg disabled:opacity-50 transition-colors"
               title="More options"
@@ -266,29 +246,22 @@ const ConnectionsPage = () => {
               <>
                 {/* Backdrop to close menu */}
                 <div
-                  className="fixed inset-0 z-[9998]"
+                  className="fixed inset-0 z-[100]"
                   onClick={() => setShowMenuFor(null)}
                 />
-                {/* Menu - Fixed positioning to appear above all cards */}
+                {/* Menu - Simple absolute positioning */}
                 <div 
-                  className="fixed z-[9999] min-w-[180px] rounded-lg border border-white/10 bg-slate-800 shadow-xl py-1 overflow-hidden"
-                  style={menuPosition ? {
-                    top: `${menuPosition.top}px`,
-                    right: `${menuPosition.right}px`,
-                  } : {
-                    // Fallback position if menuPosition not calculated yet
-                    top: '50%',
-                    right: '20px',
-                  }}
+                  className="absolute right-0 top-full mt-2 z-[101] min-w-[180px] rounded-lg border border-white/10 bg-slate-800 shadow-2xl py-1 overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <button
                     onClick={() => {
                       handleEditConnection(connection);
                       setShowMenuFor(null);
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition-colors text-left"
                   >
-                    <span>✏️</span>
+                    <Edit className="h-4 w-4" />
                     <span>Edit</span>
                   </button>
                   
@@ -296,7 +269,7 @@ const ConnectionsPage = () => {
                     <button
                       onClick={() => handleResumeConnection(connection.id)}
                       disabled={isProcessing}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50 text-left"
                     >
                       {pausingId === connection.id ? (
                         <>
@@ -314,7 +287,7 @@ const ConnectionsPage = () => {
                     <button
                       onClick={() => handlePauseConnection(connection.id)}
                       disabled={isProcessing}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50 text-left"
                     >
                       {pausingId === connection.id ? (
                         <>
@@ -335,7 +308,7 @@ const ConnectionsPage = () => {
                   <button
                     onClick={() => handleDeleteConnection(connection.id)}
                     disabled={isProcessing}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50 text-left"
                   >
                     {deletingId === connection.id ? (
                       <>
