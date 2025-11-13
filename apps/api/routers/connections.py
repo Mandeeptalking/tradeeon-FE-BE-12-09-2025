@@ -361,13 +361,13 @@ async def pause_connection(connection_id: str, user: AuthedUser = Depends(get_cu
     """Pause a connection (set is_active to False)"""
     try:
         if not supabase:
-            raise DatabaseError("Database service is not available")
+            raise HTTPException(status_code=503, detail="Database service is not available")
         
         # Verify connection belongs to user
         result = supabase.table("exchange_keys").select("*").eq("id", connection_id).eq("user_id", user.user_id).execute()
         
         if not result.data:
-            raise NotFoundError("Connection", connection_id)
+            raise HTTPException(status_code=404, detail=f"Connection with id '{connection_id}' not found")
         
         # Pause connection (set is_active to False)
         supabase.table("exchange_keys").update({
@@ -388,13 +388,13 @@ async def resume_connection(connection_id: str, user: AuthedUser = Depends(get_c
     """Resume a connection (set is_active to True)"""
     try:
         if not supabase:
-            raise DatabaseError("Database service is not available")
+            raise HTTPException(status_code=503, detail="Database service is not available")
         
         # Verify connection belongs to user
         result = supabase.table("exchange_keys").select("*").eq("id", connection_id).eq("user_id", user.user_id).execute()
         
         if not result.data:
-            raise NotFoundError("Connection", connection_id)
+            raise HTTPException(status_code=404, detail=f"Connection with id '{connection_id}' not found")
         
         # Resume connection (set is_active to True)
         supabase.table("exchange_keys").update({
@@ -415,13 +415,13 @@ async def revoke_connection(connection_id: str, user: AuthedUser = Depends(get_c
     """Delete a connection permanently (soft delete by setting is_active to False)"""
     try:
         if not supabase:
-            raise DatabaseError("Database service is not available")
+            raise HTTPException(status_code=503, detail="Database service is not available")
         
         # Verify connection belongs to user
         result = supabase.table("exchange_keys").select("*").eq("id", connection_id).eq("user_id", user.user_id).execute()
         
         if not result.data:
-            raise NotFoundError("Connection", connection_id)
+            raise HTTPException(status_code=404, detail=f"Connection with id '{connection_id}' not found")
         
         # Deactivate connection (soft delete)
         supabase.table("exchange_keys").update({
