@@ -383,28 +383,88 @@ class BinanceAuthenticatedClient:
         return non_zero_balances
     
     async def get_portfolio_value(self) -> Dict:
-        """Get total portfolio value in USDT"""
+        """Get total portfolio value in USDT by fetching prices for all assets"""
+        import aiohttp
+        
         balances = await self.get_balance()
         
-        # Get current prices for all assets
-        # For now, return balances - can be enhanced to calculate total USDT value
         total_usdt = 0.0
         holdings = []
         
-        for balance in balances:
-            if balance['asset'] == 'USDT':
-                total_usdt += balance['total']
-                holdings.append({
-                    'asset': 'USDT',
-                    'amount': balance['total'],
-                    'value_usdt': balance['total']
-                })
-            # TODO: Fetch prices for other assets and calculate USDT value
+        # Get prices for all assets
+        async with aiohttp.ClientSession() as session:
+            # Fetch all ticker prices at once (more efficient)
+            try:
+                async with session.get(f"{self.base_url}/api/v3/ticker/price") as response:
+                    if response.status == 200:
+                        all_prices = await response.json()
+                        # Create a price lookup dictionary: {symbol: price}
+                        price_map = {item['symbol']: float(item['price']) for item in all_prices}
+                    else:
+                        price_map = {}
+            except Exception as e:
+                logger.warning(f"Failed to fetch all prices, will fetch individually: {e}")
+                price_map = {}
+            
+            # Process each balance
+            for balance in balances:
+                asset = balance['asset']
+                amount = balance['total']
+                
+                if amount <= 0:
+                    continue
+                
+                if asset == 'USDT':
+                    # USDT is already in USDT
+                    value_usdt = amount
+                    total_usdt += value_usdt
+                    holdings.append({
+                        'asset': asset,
+                        'amount': amount,
+                        'value_usdt': value_usdt
+                    })
+                else:
+                    # Try to find price for this asset
+                    value_usdt = 0.0
+                    
+                    # Try common USDT pairs first
+                    symbols_to_try = [
+                        f"{asset}USDT",  # Most common
+                        f"{asset}BUSD",  # Alternative stablecoin
+                    ]
+                    
+                    # If price_map is empty, fetch prices individually
+                    if not price_map:
+                        for symbol in symbols_to_try:
+                            try:
+                                async with session.get(f"{self.base_url}/api/v3/ticker/price", params={"symbol": symbol}) as price_response:
+                                    if price_response.status == 200:
+                                        price_data = await price_response.json()
+                                        price = float(price_data['price'])
+                                        value_usdt = amount * price
+                                        break
+                            except Exception:
+                                continue
+                    else:
+                        # Use price_map
+                        for symbol in symbols_to_try:
+                            if symbol in price_map:
+                                price = price_map[symbol]
+                                value_usdt = amount * price
+                                break
+                    
+                    if value_usdt > 0:
+                        total_usdt += value_usdt
+                        holdings.append({
+                            'asset': asset,
+                            'amount': amount,
+                            'value_usdt': value_usdt
+                        })
         
         return {
             'total_value_usdt': total_usdt,
             'holdings': holdings,
-            'asset_count': len(balances)
+            'asset_count': len([b for b in balances if b['total'] > 0])
         }
     
     async def place_order(
