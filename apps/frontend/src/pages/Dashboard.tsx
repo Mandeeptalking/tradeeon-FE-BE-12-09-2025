@@ -6,14 +6,19 @@ import { sanitizeErrorMessage } from '../utils/errorHandler';
 import { AnimatedCounter } from '../components/dashboard/AnimatedCounter';
 import { StatCard } from '../components/dashboard/StatCard';
 import { AssetSummaryModal } from '../components/dashboard/AssetSummaryModal';
+import WelcomeScreen from '../components/onboarding/WelcomeScreen';
+import OnboardingChecklist from '../components/onboarding/OnboardingChecklist';
+import { useAuthStore } from '../store/auth';
 import { motion } from 'framer-motion';
 
 // Dashboard component - displays Binance account info, assets, and active trades
 const Dashboard = () => {
+  const { user } = useAuthStore();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [assetModalOpen, setAssetModalOpen] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
@@ -48,7 +53,13 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+    
+    // Check if user has seen welcome screen
+    const hasSeenWelcome = localStorage.getItem('welcome_screen_seen') === 'true';
+    if (!hasSeenWelcome && user) {
+      setShowWelcome(true);
+    }
+  }, [user]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -106,6 +117,22 @@ const Dashboard = () => {
   }
 
   return (
+    <>
+      {/* Welcome Screen */}
+      <WelcomeScreen
+        isOpen={showWelcome}
+        onClose={() => {
+          setShowWelcome(false);
+          localStorage.setItem('welcome_screen_seen', 'true');
+        }}
+        onStartTour={() => {
+          setShowWelcome(false);
+          localStorage.setItem('welcome_screen_seen', 'true');
+          // TODO: Start interactive tutorial
+        }}
+        userName={user?.name}
+      />
+
     <div className="min-h-full relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Enhanced animated background */}
       <div className="absolute inset-0">
@@ -121,6 +148,9 @@ const Dashboard = () => {
       {/* Content */}
       <div className="relative z-10 p-6">
         <div className="max-w-7xl mx-auto">
+          {/* Onboarding Checklist */}
+          <OnboardingChecklist />
+          
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -424,6 +454,7 @@ const Dashboard = () => {
         />
       )}
     </div>
+    </>
   );
 };
 

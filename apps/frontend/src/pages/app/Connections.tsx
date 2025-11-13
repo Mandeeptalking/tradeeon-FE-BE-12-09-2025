@@ -11,11 +11,13 @@ import {
   Play,
   Trash2,
   Edit,
+  Clock,
 } from 'lucide-react';
 import { connectionsApi } from '../../lib/api/connections';
 import type { Connection, ConnectionGuidance } from '../../types/connections';
 import ConnectExchangeDrawer from '../../components/connections/ConnectExchangeDrawer';
 import PreConnectionChecklist from '../../components/connections/PreConnectionChecklist';
+import ConnectionHealthIndicator from '../../components/connections/ConnectionHealthIndicator';
 import EmptyState from '../../components/EmptyState';
 import { logger } from '../../utils/logger';
 
@@ -95,6 +97,7 @@ const ConnectionsPage = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pausingId, setPausingId] = useState<string | null>(null);
   const [showPreChecklist, setShowPreChecklist] = useState(false);
+  const [historyConnectionId, setHistoryConnectionId] = useState<string | null>(null);
 
   useEffect(() => {
     refreshConnections();
@@ -260,6 +263,24 @@ const ConnectionsPage = () => {
             <span className={`${status.iconColor}`}>●</span>
             <span>{status.label}</span>
           </div>
+        </div>
+        
+        {/* Connection Health Indicator */}
+        {connection.status === 'connected' && (
+          <div className="px-5 pb-3">
+            <ConnectionHealthIndicator connection={connection} onRefresh={refreshConnections} />
+          </div>
+        )}
+        
+        {/* View History Button */}
+        <div className="px-5 pb-2">
+          <button
+            onClick={() => setHistoryConnectionId(connection.id)}
+            className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-white hover:bg-gray-700/30 rounded-lg transition-colors"
+          >
+            <Clock className="h-3.5 w-3.5" />
+            <span>View History</span>
+          </button>
         </div>
         
         {/* Action Buttons */}
@@ -501,6 +522,11 @@ const ConnectionsPage = () => {
         onClose={handleCloseDrawer}
         onConnected={handleConnected}
         initialConnection={editingConnection}
+      />
+      <ConnectionHistory
+        connectionId={historyConnectionId || ''}
+        isOpen={!!historyConnectionId}
+        onClose={() => setHistoryConnectionId(null)}
       />
     </div>
   );
