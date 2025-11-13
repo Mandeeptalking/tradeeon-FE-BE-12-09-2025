@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import { AssetCard } from './AssetCard';
-import { Search, X } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 interface Asset {
   asset: string;
