@@ -20,6 +20,34 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+# Helper function to log audit events
+def _log_audit_event(
+    connection_id: str,
+    user_id: str,
+    action: str,
+    details: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None
+):
+    """Log an audit event for a connection"""
+    try:
+        if not supabase:
+            logger.warning("Supabase not available, skipping audit log")
+            return
+        
+        audit_data = {
+            "connection_id": connection_id,
+            "user_id": user_id,
+            "action": action,
+            "details": details,
+            "metadata": metadata or {}
+        }
+        
+        supabase.table("connection_audit_events").insert(audit_data).execute()
+        logger.debug(f"Audit event logged: {action} for connection {connection_id}")
+    except Exception as e:
+        # Don't fail the main operation if audit logging fails
+        logger.error(f"Failed to log audit event: {e}")
+
 # Types
 Exchange = Literal['BINANCE', 'COINBASE', 'KRAKEN', 'ZERODHA']
 Status = Literal['connected', 'degraded', 'error', 'not_connected']
@@ -256,12 +284,35 @@ async def upsert_connection(body: UpsertBody, user: AuthedUser = Depends(get_cur
             connection_id = existing.data[0]["id"]
             supabase.table("exchange_keys").update(connection_data).eq("id", connection_id).execute()
             result = supabase.table("exchange_keys").select("*").eq("id", connection_id).execute()
-            return _connection_to_dict(result.data[0])
+            connection_dict = _connection_to_dict(result.data[0])
+            
+            # Log audit event
+            _log_audit_event(
+                connection_id=connection_id,
+                user_id=user.user_id,
+                action="updated",
+                details=f"Updated {body.exchange} connection",
+                metadata={"exchange": body.exchange, "has_nickname": bool(body.nickname)}
+            )
+            
+            return connection_dict
         else:
             # Create new
             connection_data["created_at"] = datetime.now().isoformat()
             result = supabase.table("exchange_keys").insert(connection_data).execute()
-            return _connection_to_dict(result.data[0])
+            connection_dict = _connection_to_dict(result.data[0])
+            connection_id = result.data[0]["id"]
+            
+            # Log audit event
+            _log_audit_event(
+                connection_id=connection_id,
+                user_id=user.user_id,
+                action="connected",
+                details=f"Connected {body.exchange} exchange",
+                metadata={"exchange": body.exchange, "has_nickname": bool(body.nickname)}
+            )
+            
+            return connection_dict
             
     except HTTPException:
         raise
@@ -303,6 +354,22 @@ async def test_connection(body: TestBody, user: AuthedUser = Depends(get_current
             # Catch any unexpected errors from the client
             error_msg = str(e)
             logger.error(f"Unexpected error during connection test: {error_msg}", exc_info=True)
+            
+            # Log audit event for failed test
+            try:
+                conn_result = supabase.table("exchange_keys").select("id").eq("user_id", user.user_id).eq("exchange", body.exchange.lower()).execute()
+                if conn_result.data:
+                    connection_id = conn_result.data[0]["id"]
+                    _log_audit_event(
+                        connection_id=connection_id,
+                        user_id=user.user_id,
+                        action="error",
+                        details=f"Connection test failed: {error_msg}",
+                        metadata={"exchange": body.exchange, "error": error_msg[:200]}
+                    )
+            except Exception as audit_err:
+                logger.warning(f"Failed to log error audit event: {audit_err}")
+            
             return {
                 "ok": False,
                 "code": "connection_error",
@@ -346,6 +413,15 @@ async def rotate_keys(connection_id: str, body: RotateBody, user: AuthedUser = D
         
         supabase.table("exchange_keys").update(update_data).eq("id", connection_id).execute()
         
+        # Log audit event
+        _log_audit_event(
+            connection_id=connection_id,
+            user_id=user.user_id,
+            action="rotated",
+            details="API keys rotated",
+            metadata={"exchange": result.data[0].get("exchange")}
+        )
+        
         # Return updated connection
         result = supabase.table("exchange_keys").select("*").eq("id", connection_id).execute()
         return _connection_to_dict(result.data[0])
@@ -385,6 +461,15 @@ async def pause_connection(connection_id: str, user: AuthedUser = Depends(get_cu
             "is_active": False,
             "updated_at": datetime.now().isoformat()
         }).eq("id", connection_id).execute()
+        
+        # Log audit event
+        _log_audit_event(
+            connection_id=connection_id,
+            user_id=user.user_id,
+            action="paused",
+            details="Connection paused",
+            metadata={"exchange": result.data[0].get("exchange")}
+        )
         
         return {"message": "Connection paused successfully"}
         
@@ -474,9 +559,34 @@ async def revoke_connection(connection_id: str, user: AuthedUser = Depends(get_c
 async def get_audit_events(user: AuthedUser = Depends(get_current_user)):
     """Get audit events for user's connections"""
     try:
-        # TODO: Implement audit log table
-        # For now, return empty list
-        return []
+        if not supabase:
+            logger.warning("Supabase not available, returning empty audit events")
+            return []
+        
+        # Get all audit events for user's connections
+        result = supabase.table("connection_audit_events")\
+            .select("*")\
+            .eq("user_id", user.user_id)\
+            .order("created_at", desc=True)\
+            .limit(1000)\
+            .execute()
+        
+        if not result.data:
+            return []
+        
+        # Format events to match frontend expectations
+        events = []
+        for row in result.data:
+            events.append({
+                "id": row.get("id"),
+                "connection_id": row.get("connection_id"),
+                "action": row.get("action"),
+                "timestamp": row.get("created_at"),
+                "details": row.get("details")
+            })
+        
+        return events
+        
     except Exception as e:
         logger.error(f"Error getting audit events: {e}")
         return []
