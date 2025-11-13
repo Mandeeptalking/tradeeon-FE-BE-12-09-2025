@@ -246,8 +246,9 @@ const ConnectionsPage = () => {
           </div>
           
           {/* Actions Menu */}
-          <div className="relative z-50">
+          <div className="relative">
             <button
+              ref={menuButtonRef}
               onClick={() => setShowMenuFor(isMenuOpen ? null : connection.id)}
               disabled={isProcessing}
               className="p-2 hover:bg-white/10 rounded-lg disabled:opacity-50 transition-colors"
@@ -256,15 +257,21 @@ const ConnectionsPage = () => {
               <MoreVertical className="h-4 w-4 text-white/60 hover:text-white/80" />
             </button>
             
-            {isMenuOpen && (
+            {isMenuOpen && menuPosition && (
               <>
                 {/* Backdrop to close menu */}
                 <div
-                  className="fixed inset-0 z-40"
+                  className="fixed inset-0 z-[9998]"
                   onClick={() => setShowMenuFor(null)}
                 />
-                {/* Menu */}
-                <div className="absolute right-0 top-full mt-2 z-50 min-w-[180px] rounded-lg border border-white/10 bg-slate-800 shadow-xl py-1 overflow-hidden">
+                {/* Menu - Fixed positioning to appear above all cards */}
+                <div 
+                  className="fixed z-[9999] min-w-[180px] rounded-lg border border-white/10 bg-slate-800 shadow-xl py-1 overflow-hidden"
+                  style={{
+                    top: `${menuPosition.top}px`,
+                    right: `${menuPosition.right}px`,
+                  }}
+                >
                   <button
                     onClick={() => {
                       handleEditConnection(connection);
