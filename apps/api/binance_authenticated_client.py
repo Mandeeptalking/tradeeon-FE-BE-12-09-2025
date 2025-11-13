@@ -31,9 +31,11 @@ class BinanceAuthenticatedClient:
         if testnet:
             self.base_url = "https://testnet.binance.vision"
             self.futures_base_url = "https://testnet.binancefuture.com"
+            self.margin_base_url = "https://testnet.binance.vision"  # Margin uses same base
         else:
             self.base_url = "https://api.binance.com"
             self.futures_base_url = "https://fapi.binance.com"  # USDT-M Futures
+            self.margin_base_url = "https://api.binance.com"  # Margin/Funding uses same base
         self.session: Optional[aiohttp.ClientSession] = None
     
     async def __aenter__(self):
@@ -354,13 +356,13 @@ class BinanceAuthenticatedClient:
     
     async def get_balance(self, asset: Optional[str] = None) -> List[Dict]:
         """
-        Get account balance
+        Get SPOT account balance
         
         Args:
             asset: Optional asset symbol (e.g., 'USDT', 'BTC'). If None, returns all balances.
         
         Returns:
-            List of balance dicts with 'asset', 'free', 'locked'
+            List of balance dicts with 'asset', 'free', 'locked', 'total', 'account_type'
         """
         account_info = await self.get_account_info()
         balances = account_info.get('balances', [])
@@ -371,7 +373,8 @@ class BinanceAuthenticatedClient:
                 'asset': b['asset'],
                 'free': float(b['free']),
                 'locked': float(b['locked']),
-                'total': float(b['free']) + float(b['locked'])
+                'total': float(b['free']) + float(b['locked']),
+                'account_type': 'SPOT'
             }
             for b in balances
             if float(b['free']) > 0 or float(b['locked']) > 0
@@ -382,11 +385,160 @@ class BinanceAuthenticatedClient:
         
         return non_zero_balances
     
+    async def get_futures_balance(self, asset: Optional[str] = None) -> List[Dict]:
+        """
+        Get USDT-M Futures account balance
+        
+        Args:
+            asset: Optional asset symbol (e.g., 'USDT', 'BTC'). If None, returns all balances.
+        
+        Returns:
+            List of balance dicts with 'asset', 'free', 'locked', 'total', 'account_type'
+        """
+        original_base_url = self.base_url
+        self.base_url = self.futures_base_url
+        
+        try:
+            # Use /fapi/v2/balance endpoint for Futures balance
+            params = {'timestamp': int(time.time() * 1000)}
+            params['signature'] = self._generate_signature(params)
+            
+            headers = {'X-MBX-APIKEY': self.api_key}
+            url = f"{self.base_url}/fapi/v2/balance"
+            
+            async with self.session.get(url, params=params, headers=headers) as response:
+                if response.status == 200:
+                    futures_balances = await response.json()
+                    # Format balances
+                    formatted_balances = [
+                        {
+                            'asset': b['asset'],
+                            'free': float(b.get('availableBalance', 0)),
+                            'locked': float(b.get('balance', 0)) - float(b.get('availableBalance', 0)),
+                            'total': float(b.get('balance', 0)),
+                            'account_type': 'FUTURES'
+                        }
+                        for b in futures_balances
+                        if float(b.get('balance', 0)) > 0
+                    ]
+                    
+                    if asset:
+                        formatted_balances = [b for b in formatted_balances if b['asset'] == asset.upper()]
+                    
+                    return formatted_balances
+                elif response.status == 404:
+                    # Futures not enabled
+                    return []
+                else:
+                    error_text = await response.text()
+                    raise Exception(f"Futures balance API error {response.status}: {error_text}")
+        except Exception as e:
+            error_str = str(e)
+            if "404" in error_str or "Not Found" in error_str or "not enabled" in error_str.lower():
+                # Futures not enabled - return empty list
+                return []
+            raise
+        finally:
+            self.base_url = original_base_url
+    
+    async def get_funding_balance(self, asset: Optional[str] = None) -> List[Dict]:
+        """
+        Get Funding/Margin account balance (Cross Margin)
+        
+        Args:
+            asset: Optional asset symbol (e.g., 'USDT', 'BTC'). If None, returns all balances.
+        
+        Returns:
+            List of balance dicts with 'asset', 'free', 'locked', 'total', 'account_type'
+        """
+        original_base_url = self.base_url
+        
+        try:
+            # Use /sapi/v1/margin/account endpoint for Cross Margin balance
+            params = {'timestamp': int(time.time() * 1000)}
+            params['signature'] = self._generate_signature(params)
+            
+            headers = {'X-MBX-APIKEY': self.api_key}
+            url = f"{self.margin_base_url}/sapi/v1/margin/account"
+            
+            async with self.session.get(url, params=params, headers=headers) as response:
+                if response.status == 200:
+                    margin_account = await response.json()
+                    user_assets = margin_account.get('userAssets', [])
+                    
+                    # Format balances
+                    formatted_balances = [
+                        {
+                            'asset': b['asset'],
+                            'free': float(b.get('free', 0)),
+                            'locked': float(b.get('locked', 0)),
+                            'total': float(b.get('free', 0)) + float(b.get('locked', 0)),
+                            'account_type': 'FUNDING'
+                        }
+                        for b in user_assets
+                        if float(b.get('free', 0)) > 0 or float(b.get('locked', 0)) > 0
+                    ]
+                    
+                    if asset:
+                        formatted_balances = [b for b in formatted_balances if b['asset'] == asset.upper()]
+                    
+                    return formatted_balances
+                elif response.status == 404:
+                    # Margin/Funding not enabled
+                    return []
+                else:
+                    error_text = await response.text()
+                    raise Exception(f"Funding balance API error {response.status}: {error_text}")
+        except Exception as e:
+            error_str = str(e)
+            if "404" in error_str or "Not Found" in error_str or "not enabled" in error_str.lower():
+                # Margin/Funding not enabled - return empty list
+                return []
+            raise
+        finally:
+            self.base_url = original_base_url
+    
+    async def get_all_balances(self, asset: Optional[str] = None) -> List[Dict]:
+        """
+        Get balances from all account types: SPOT, FUTURES, and FUNDING
+        
+        Args:
+            asset: Optional asset symbol (e.g., 'USDT', 'BTC'). If None, returns all balances.
+        
+        Returns:
+            List of balance dicts with 'asset', 'free', 'locked', 'total', 'account_type'
+        """
+        all_balances = []
+        
+        # Get SPOT balances
+        try:
+            spot_balances = await self.get_balance(asset)
+            all_balances.extend(spot_balances)
+        except Exception as e:
+            logger.warning(f"Failed to fetch SPOT balances: {e}")
+        
+        # Get Futures balances
+        try:
+            futures_balances = await self.get_futures_balance(asset)
+            all_balances.extend(futures_balances)
+        except Exception as e:
+            logger.debug(f"Failed to fetch Futures balances (may not be enabled): {e}")
+        
+        # Get Funding/Margin balances
+        try:
+            funding_balances = await self.get_funding_balance(asset)
+            all_balances.extend(funding_balances)
+        except Exception as e:
+            logger.debug(f"Failed to fetch Funding balances (may not be enabled): {e}")
+        
+        return all_balances
+    
     async def get_portfolio_value(self) -> Dict:
-        """Get total portfolio value in USDT by fetching prices for all assets"""
+        """Get total portfolio value in USDT by fetching prices for all assets from SPOT, FUTURES, and FUNDING"""
         import aiohttp
         
-        balances = await self.get_balance()
+        # Get balances from all account types
+        balances = await self.get_all_balances()
         
         total_usdt = 0.0
         holdings = []

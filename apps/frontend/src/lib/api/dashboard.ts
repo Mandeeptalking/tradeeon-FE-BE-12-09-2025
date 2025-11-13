@@ -41,11 +41,21 @@ export interface DashboardSummary {
     locked: number;
     total: number;
   };
+  usdt_balance_by_account?: {
+    SPOT: { free: number; locked: number; total: number };
+    FUTURES: { free: number; locked: number; total: number };
+    FUNDING: { free: number; locked: number; total: number };
+  };
   assets: Array<{
     asset: string;
     free: number;
     locked: number;
     total: number;
+    by_account?: {
+      SPOT: { free: number; locked: number; total: number };
+      FUTURES: { free: number; locked: number; total: number };
+      FUNDING: { free: number; locked: number; total: number };
+    };
   }>;
   active_trades: Array<{
     order_id: number;

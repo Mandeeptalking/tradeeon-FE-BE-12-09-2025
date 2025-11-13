@@ -249,12 +249,32 @@ const Portfolio = () => {
                 <div className="p-3 bg-green-500/10 rounded-lg">
                   <DollarSign className="h-6 w-6 text-green-400" />
                 </div>
-                <span className="text-xs text-white/60 uppercase tracking-wide">Total Balance</span>
+                <span className="text-xs text-white/60 uppercase tracking-wide">Total Balance (USDT)</span>
               </div>
               <p className="text-3xl font-bold text-white mb-1">
                 {formatCurrency(summary.usdt_balance.total)}
               </p>
-              <div className="flex items-center gap-4 text-sm">
+              {summary.usdt_balance_by_account && (
+                <div className="space-y-1 text-xs mt-2">
+                  <div className="flex justify-between text-white/60">
+                    <span>Spot:</span>
+                    <span className="text-white">{formatCurrency(summary.usdt_balance_by_account.SPOT.total)}</span>
+                  </div>
+                  {summary.usdt_balance_by_account.FUTURES.total > 0 && (
+                    <div className="flex justify-between text-white/60">
+                      <span>Futures:</span>
+                      <span className="text-white">{formatCurrency(summary.usdt_balance_by_account.FUTURES.total)}</span>
+                    </div>
+                  )}
+                  {summary.usdt_balance_by_account.FUNDING.total > 0 && (
+                    <div className="flex justify-between text-white/60">
+                      <span>Funding:</span>
+                      <span className="text-white">{formatCurrency(summary.usdt_balance_by_account.FUNDING.total)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="flex items-center gap-4 text-sm mt-2">
                 <span className="text-white/60">
                   Free: <span className="text-white">{formatCurrency(summary.usdt_balance.free)}</span>
                 </span>

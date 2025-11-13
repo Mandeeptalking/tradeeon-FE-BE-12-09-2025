@@ -195,7 +195,8 @@ async def get_dashboard_summary(user: AuthedUser = Depends(get_current_user)):
         async with BinanceAuthenticatedClient(api_key, api_secret) as client:
             # Fetch SPOT account info
             account_info = await client.get_account_info()
-            balances = await client.get_balance()
+            # Get balances from all account types (SPOT, FUTURES, FUNDING)
+            balances = await client.get_all_balances()
             # Get open orders from both SPOT and Futures
             open_orders = await client.get_all_open_orders()
             
@@ -232,12 +233,23 @@ async def get_dashboard_summary(user: AuthedUser = Depends(get_current_user)):
                     if "404" not in error_str and "Not Found" not in error_str and "not enabled" not in error_str.lower():
                         logger.warning(f"Error checking Futures account: {e}")
             
-            # Get USDT balance
+            # Aggregate USDT balance from all account types
             usdt_balance = {"free": 0.0, "locked": 0.0, "total": 0.0}
+            usdt_balances_by_account = {"SPOT": {"free": 0.0, "locked": 0.0, "total": 0.0},
+                                       "FUTURES": {"free": 0.0, "locked": 0.0, "total": 0.0},
+                                       "FUNDING": {"free": 0.0, "locked": 0.0, "total": 0.0}}
+            
             for balance in balances:
                 if balance["asset"] == "USDT":
-                    usdt_balance = balance
-                    break
+                    account_type = balance.get("account_type", "SPOT")
+                    if account_type in usdt_balances_by_account:
+                        usdt_balances_by_account[account_type]["free"] += balance["free"]
+                        usdt_balances_by_account[account_type]["locked"] += balance["locked"]
+                        usdt_balances_by_account[account_type]["total"] += balance["total"]
+                    # Also add to total
+                    usdt_balance["free"] += balance["free"]
+                    usdt_balance["locked"] += balance["locked"]
+                    usdt_balance["total"] += balance["total"]
             
             # Calculate total portfolio value in USDT
             total_portfolio_value = usdt_balance["total"]  # Start with USDT balance
