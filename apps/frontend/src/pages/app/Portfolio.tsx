@@ -108,16 +108,16 @@ const Portfolio = () => {
   }
 
   return (
-    <div className="min-h-full relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-full w-full relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Animated background */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       </div>
 
       {/* Content */}
-      <div className="relative z-10 p-6">
+      <div className="relative z-10 p-6 pb-12 w-full">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <motion.div
@@ -351,7 +351,7 @@ const Portfolio = () => {
                 <p className="text-white/40 text-sm mt-2">Connect an exchange to see your holdings</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {summary.assets.map((asset, index) => (
                   <AssetCard
                     key={asset.asset}
