@@ -7,6 +7,7 @@ import { logger } from '../../utils/logger';
 import { sanitizeInput, validateApiKey, validateApiSecret } from '../../utils/validation';
 import { sanitizeErrorMessage } from '../../utils/errorHandler';
 import { getConnectionErrorMessage } from '../../utils/connectionErrors';
+import ConnectionSuccess from './ConnectionSuccess';
 
 interface ConnectExchangeDrawerProps {
   isOpen: boolean;
@@ -33,6 +34,8 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
   const [saveError, setSaveError] = useState<string | null>(null);
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [savedConnection, setSavedConnection] = useState<Connection | null>(null);
 
   const steps = [
     { title: 'Exchange', description: 'Select your exchange' },
@@ -159,11 +162,9 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
       };
       
       const connection = await connectionsApi.upsertConnection(connectionBody);
-      onConnected(connection);
-      onClose();
-      resetForm();
-      // Redirect to dashboard after successful connection
-      navigate('/app');
+      setSavedConnection(connection);
+      setShowSuccess(true);
+      // Don't close immediately - show success celebration first
     } catch (error: any) {
       logger.error('Failed to save connection:', error);
       
@@ -582,6 +583,21 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
           </div>
         </div>
       </div>
+
+      {/* Connection Success Celebration */}
+      <ConnectionSuccess
+        isOpen={showSuccess}
+        onClose={() => {
+          setShowSuccess(false);
+          if (savedConnection) {
+            onConnected(savedConnection);
+          }
+          onClose();
+          resetForm();
+        }}
+        exchange={exchange}
+        connectionName={savedConnection?.nickname}
+      />
     </div>
   );
 };
