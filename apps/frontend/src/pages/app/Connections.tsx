@@ -153,26 +153,42 @@ const ConnectionsPage = () => {
   };
 
   const handlePauseConnection = async (connectionId: string) => {
+    if (!connectionId || typeof connectionId !== 'string') {
+      logger.error('Invalid connection ID:', connectionId);
+      alert('Invalid connection ID. Please refresh the page and try again.');
+      return;
+    }
+    
     try {
       setPausingId(connectionId);
+      logger.debug('Pausing connection:', connectionId);
       await connectionsApi.pauseConnection(connectionId);
       await refreshConnections();
     } catch (error: any) {
       logger.error('Failed to pause connection:', error);
-      alert(`Failed to pause connection: ${error.message || 'Unknown error'}`);
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Unknown error';
+      alert(`Failed to pause connection: ${errorMessage}`);
     } finally {
       setPausingId(null);
     }
   };
 
   const handleResumeConnection = async (connectionId: string) => {
+    if (!connectionId || typeof connectionId !== 'string') {
+      logger.error('Invalid connection ID:', connectionId);
+      alert('Invalid connection ID. Please refresh the page and try again.');
+      return;
+    }
+    
     try {
       setPausingId(connectionId);
+      logger.debug('Resuming connection:', connectionId);
       await connectionsApi.resumeConnection(connectionId);
       await refreshConnections();
     } catch (error: any) {
       logger.error('Failed to resume connection:', error);
-      alert(`Failed to resume connection: ${error.message || 'Unknown error'}`);
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Unknown error';
+      alert(`Failed to resume connection: ${errorMessage}`);
     } finally {
       setPausingId(null);
     }

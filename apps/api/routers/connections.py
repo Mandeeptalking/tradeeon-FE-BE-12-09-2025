@@ -205,8 +205,8 @@ async def list_connections(user: AuthedUser = Depends(get_current_user)):
             # Fallback to empty list if Supabase not available
             return []
         
-        # Fetch connections from Supabase
-        result = supabase.table("exchange_keys").select("*").eq("user_id", user.user_id).eq("is_active", True).execute()
+        # Fetch connections from Supabase (include both active and paused)
+        result = supabase.table("exchange_keys").select("*").eq("user_id", user.user_id).execute()
         
         connections = []
         for row in result.data:
