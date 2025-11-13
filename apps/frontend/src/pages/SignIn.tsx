@@ -10,11 +10,21 @@ import {
   Loader2,
   Zap,
   Shield,
-  TrendingUp
+  TrendingUp,
+  AlertCircle,
+  Clock
 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
 import { supabase } from '../lib/supabase';
+import { 
+  recordFailedAttempt, 
+  clearFailedAttempts, 
+  isAccountLocked, 
+  getRemainingAttempts,
+  formatRemainingTime 
+} from '../utils/accountLockout';
+import { logger } from '../utils/logger';
 
 const SignIn = () => {
   const [formData, setFormData] = useState({
@@ -27,6 +37,8 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [lockoutInfo, setLockoutInfo] = useState<{ locked: boolean; remainingTime?: number } | null>(null);
+  const [remainingAttempts, setRemainingAttempts] = useState<number>(5);
   const formRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -39,7 +51,14 @@ const SignIn = () => {
       // Clear the message from location state
       window.history.replaceState({}, document.title);
     }
-  }, [location.state]);
+
+    // Check account lockout status when email changes
+    if (formData.email) {
+      const lockout = isAccountLocked(formData.email);
+      setLockoutInfo(lockout);
+      setRemainingAttempts(getRemainingAttempts(formData.email));
+    }
+  }, [location.state, formData.email]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -94,6 +113,15 @@ const SignIn = () => {
       return;
     }
 
+    // Check if account is locked
+    const lockout = isAccountLocked(formData.email);
+    if (lockout.locked) {
+      const remainingTime = formatRemainingTime(lockout.remainingTime || 0);
+      setError(`Account temporarily locked due to too many failed login attempts. Please try again in ${remainingTime}.`);
+      setLockoutInfo(lockout);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -116,7 +144,29 @@ const SignIn = () => {
         password: formData.password,
       });
 
-      if (signInError) throw signInError;
+      if (signInError) {
+        // Record failed attempt
+        recordFailedAttempt(formData.email);
+        const attempts = getRemainingAttempts(formData.email);
+        setRemainingAttempts(attempts);
+        
+        // Check if account is now locked
+        const newLockout = isAccountLocked(formData.email);
+        if (newLockout.locked) {
+          const remainingTime = formatRemainingTime(newLockout.remainingTime || 0);
+          throw new Error(`Too many failed login attempts. Account locked for ${remainingTime}.`);
+        }
+        
+        // Provide helpful error message with remaining attempts
+        if (attempts > 0) {
+          throw new Error(`${signInError.message} (${attempts} attempt${attempts !== 1 ? 's' : ''} remaining)`);
+        }
+        throw signInError;
+      }
+
+      // Clear failed attempts on successful login
+      clearFailedAttempts(formData.email);
+      setRemainingAttempts(5);
 
       // Check if email is verified before allowing sign in
       if (data.user) {
@@ -139,7 +189,13 @@ const SignIn = () => {
       // User signed in successfully
       navigate('/app');
     } catch (err: any) {
+      logger.error('Signin error:', err);
       setError(err.message || 'An error occurred during signin');
+      
+      // Update lockout info
+      const lockout = isAccountLocked(formData.email);
+      setLockoutInfo(lockout);
+      setRemainingAttempts(getRemainingAttempts(formData.email));
     } finally {
       setIsLoading(false);
     }
@@ -310,7 +366,43 @@ const SignIn = () => {
               {/* Error Message */}
               {error && (
                 <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4">
-                  <p className="text-red-400 text-sm">{error}</p>
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-red-400 text-sm">{error}</p>
+                      {lockoutInfo?.locked && lockoutInfo.remainingTime && (
+                        <p className="text-red-300 text-xs mt-1 flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          Account will be unlocked in {formatRemainingTime(lockoutInfo.remainingTime)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Account Lockout Warning */}
+              {lockoutInfo?.locked && (
+                <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 mb-4">
+                  <div className="flex items-start gap-2">
+                    <Shield className="h-4 w-4 text-orange-400 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-orange-400 text-sm font-semibold">Account Temporarily Locked</p>
+                      <p className="text-orange-300 text-xs mt-1">
+                        Your account has been locked due to multiple failed login attempts. Please wait {lockoutInfo.remainingTime ? formatRemainingTime(lockoutInfo.remainingTime) : 'a few minutes'} before trying again.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Remaining Attempts Warning */}
+              {!lockoutInfo?.locked && remainingAttempts < 5 && remainingAttempts > 0 && (
+                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2 mb-4">
+                  <p className="text-yellow-400 text-xs flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {remainingAttempts} attempt{remainingAttempts !== 1 ? 's' : ''} remaining before account lockout
+                  </p>
                 </div>
               )}
 

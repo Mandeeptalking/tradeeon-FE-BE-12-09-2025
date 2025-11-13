@@ -13,11 +13,14 @@ import {
   TrendingUp,
   Bot,
   ArrowLeft,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/auth';
+import { checkPasswordStrength, validatePassword } from '../utils/passwordStrength';
+import { logger } from '../utils/logger';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -36,6 +39,7 @@ const Signup = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [emailVerificationNeeded, setEmailVerificationNeeded] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState<ReturnType<typeof checkPasswordStrength> | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { setUser } = useAuthStore();
@@ -64,10 +68,20 @@ const Signup = () => {
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: newValue
     });
+
+    // Check password strength in real-time
+    if (e.target.name === 'password') {
+      if (newValue.length > 0) {
+        setPasswordStrength(checkPasswordStrength(newValue));
+      } else {
+        setPasswordStrength(null);
+      }
+    }
   };
 
   const validateForm = () => {
@@ -87,10 +101,14 @@ const Signup = () => {
       setError('Please enter a valid email address');
       return false;
     }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    
+    // Enhanced password validation
+    const passwordValidation = validatePassword(formData.password);
+    if (!passwordValidation.valid) {
+      setError(passwordValidation.message || 'Password does not meet requirements');
       return false;
     }
+    
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return false;
@@ -142,7 +160,10 @@ const Signup = () => {
         }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        logger.error('Signup error:', authError);
+        throw authError;
+      }
 
       // Check if email is verified
       const isEmailVerified = authData.user?.email_confirmed_at !== null && authData.user?.email_confirmed_at !== undefined;
@@ -441,7 +462,7 @@ const Signup = () => {
                         onChange={handleInputChange}
                         onFocus={() => setFocusedField('password')}
                         onBlur={() => setFocusedField(null)}
-                        placeholder="Password"
+                        placeholder="Password (min. 8 chars, uppercase, lowercase, number, special char)"
                         className="w-full pl-9 pr-10 py-2.5 bg-gray-700/50 border border-gray-600/50 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:bg-gray-700/70 transition-all duration-300"
                         required
                       />
@@ -453,6 +474,46 @@ const Signup = () => {
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
+                    {/* Password Strength Indicator */}
+                    {passwordStrength && formData.password.length > 0 && (
+                      <div className="mt-2 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs font-medium ${passwordStrength.color}`}>
+                            Password Strength: {passwordStrength.label}
+                          </span>
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((level) => (
+                              <div
+                                key={level}
+                                className={`h-1 w-8 rounded-full transition-colors ${
+                                  level <= passwordStrength.score
+                                    ? passwordStrength.score <= 1
+                                      ? 'bg-red-400'
+                                      : passwordStrength.score === 2
+                                      ? 'bg-orange-400'
+                                      : passwordStrength.score === 3
+                                      ? 'bg-yellow-400'
+                                      : passwordStrength.score === 4
+                                      ? 'bg-blue-400'
+                                      : 'bg-green-400'
+                                    : 'bg-gray-600'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {passwordStrength.feedback.length > 0 && passwordStrength.score < 5 && (
+                          <div className="text-xs text-gray-400 space-y-0.5">
+                            {passwordStrength.feedback.map((msg, idx) => (
+                              <div key={idx} className="flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3" />
+                                <span>{msg}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="relative group">
