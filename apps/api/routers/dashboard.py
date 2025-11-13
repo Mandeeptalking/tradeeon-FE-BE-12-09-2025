@@ -266,16 +266,41 @@ async def get_dashboard_summary(user: AuthedUser = Depends(get_current_user)):
                 # Fallback: just use USDT balance
                 logger.warning(f"Using USDT balance only as fallback: {usdt_balance['total']}")
             
-            # Format assets (non-zero balances)
+            # Format assets (non-zero balances) - aggregate by asset across all account types
+            asset_map = {}
+            for b in balances:
+                asset = b["asset"]
+                account_type = b.get("account_type", "SPOT")
+                
+                if asset not in asset_map:
+                    asset_map[asset] = {
+                        "asset": asset,
+                        "free": 0.0,
+                        "locked": 0.0,
+                        "total": 0.0,
+                        "by_account": {
+                            "SPOT": {"free": 0.0, "locked": 0.0, "total": 0.0},
+                            "FUTURES": {"free": 0.0, "locked": 0.0, "total": 0.0},
+                            "FUNDING": {"free": 0.0, "locked": 0.0, "total": 0.0}
+                        }
+                    }
+                
+                # Add to totals
+                asset_map[asset]["free"] += b["free"]
+                asset_map[asset]["locked"] += b["locked"]
+                asset_map[asset]["total"] += b["total"]
+                
+                # Track by account type
+                if account_type in asset_map[asset]["by_account"]:
+                    asset_map[asset]["by_account"][account_type]["free"] += b["free"]
+                    asset_map[asset]["by_account"][account_type]["locked"] += b["locked"]
+                    asset_map[asset]["by_account"][account_type]["total"] += b["total"]
+            
+            # Convert to list and filter zero balances
             assets = [
-                {
-                    "asset": b["asset"],
-                    "free": b["free"],
-                    "locked": b["locked"],
-                    "total": b["total"]
-                }
-                for b in balances
-                if b["total"] > 0
+                asset_data
+                for asset_data in asset_map.values()
+                if asset_data["total"] > 0
             ]
             
             # Format active trades (open orders)
