@@ -165,9 +165,9 @@ const Portfolio = () => {
                 <p className="text-sm text-white/50">{user?.email || 'No email'}</p>
               </div>
 
-              {/* Account Type */}
+              {/* Trading Account Types (SPOT/FUTURES) */}
               <div className="space-y-2">
-                <p className="text-sm text-white/60">Account Type</p>
+                <p className="text-sm text-white/60">Trading Accounts</p>
                 <div className="flex items-center gap-2 flex-wrap">
                   {summary.account.account_types?.map((type) => (
                     <span
