@@ -392,15 +392,20 @@ class BinanceAuthenticatedClient:
         holdings = []
         
         # Get prices for all assets
+        # Use a separate session for public price API (no auth needed)
         async with aiohttp.ClientSession() as session:
             # Fetch all ticker prices at once (more efficient)
             try:
-                async with session.get(f"{self.base_url}/api/v3/ticker/price") as response:
+                price_url = f"{self.base_url}/api/v3/ticker/price"
+                logger.debug(f"Fetching all prices from: {price_url}")
+                async with session.get(price_url, timeout=aiohttp.ClientTimeout(total=10)) as response:
                     if response.status == 200:
                         all_prices = await response.json()
                         # Create a price lookup dictionary: {symbol: price}
                         price_map = {item['symbol']: float(item['price']) for item in all_prices}
+                        logger.debug(f"✅ Fetched {len(price_map)} price pairs")
                     else:
+                        logger.warning(f"Failed to fetch prices: HTTP {response.status}")
                         price_map = {}
             except Exception as e:
                 logger.warning(f"Failed to fetch all prices, will fetch individually: {e}")
@@ -460,7 +465,10 @@ class BinanceAuthenticatedClient:
                             'amount': amount,
                             'value_usdt': value_usdt
                         })
+                    else:
+                        logger.debug(f"⚠️ Could not find price for {asset}, skipping from portfolio value")
         
+        logger.info(f"📊 Portfolio value calculation: {len(holdings)} assets, Total: {total_usdt} USDT")
         return {
             'total_value_usdt': total_usdt,
             'holdings': holdings,
