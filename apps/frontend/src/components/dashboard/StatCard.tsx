@@ -13,6 +13,7 @@ interface StatCardProps {
   gradientTo: string;
   progress?: number; // 0-100 for progress bar
   delay?: number;
+  onClick?: () => void; // Make card clickable
 }
 
 /**
@@ -29,6 +30,7 @@ export const StatCard = ({
   gradientTo,
   progress,
   delay = 0,
+  onClick,
 }: StatCardProps) => {
   return (
     <motion.div
@@ -36,7 +38,10 @@ export const StatCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="group relative overflow-hidden bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-all duration-300"
+      onClick={onClick}
+      className={`group relative overflow-hidden bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-all duration-300 ${
+        onClick ? 'cursor-pointer' : ''
+      }`}
     >
       {/* Animated gradient background */}
       <div
