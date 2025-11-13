@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import {
   Plug,
   ShieldCheck,
@@ -208,9 +208,26 @@ const ConnectionsPage = () => {
     const isPaused = connection.status === 'not_connected';
     const isMenuOpen = showMenuFor === connection.id;
     const isProcessing = deletingId === connection.id || pausingId === connection.id;
+    const menuButtonRef = useRef<HTMLButtonElement>(null);
+    const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
+
+    useEffect(() => {
+      if (isMenuOpen && menuButtonRef.current) {
+        const rect = menuButtonRef.current.getBoundingClientRect();
+        setMenuPosition({
+          top: rect.bottom + 8,
+          right: window.innerWidth - rect.right,
+        });
+      } else {
+        setMenuPosition(null);
+      }
+    }, [isMenuOpen]);
 
     return (
-      <div className="group relative flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur transition hover:border-white/20 hover:bg-white/[0.06] overflow-visible">
+      <div 
+        data-connection-id={connection.id}
+        className="group relative flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur transition hover:border-white/20 hover:bg-white/[0.06] overflow-visible"
+      >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-2xl flex-shrink-0">
             {metadata.badge}
