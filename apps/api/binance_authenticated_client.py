@@ -315,6 +315,116 @@ class BinanceAuthenticatedClient:
         """Get SPOT account information"""
         return await self._make_authenticated_request('GET', '/api/v3/account')
     
+    async def get_commission_rates(self, symbol: Optional[str] = None) -> Dict:
+        """
+        Get commission rates for account
+        If symbol is provided, returns rates for that symbol, otherwise returns default rates
+        
+        Args:
+            symbol: Optional trading symbol (e.g., 'BTCUSDT'). If None, returns default rates.
+        
+        Returns:
+            Dict with commission rates and VIP level info
+        """
+        try:
+            params = {}
+            if symbol:
+                params['symbol'] = symbol
+            
+            # Use /api/v3/account/commission endpoint
+            commission_data = await self._make_authenticated_request('GET', '/api/v3/account/commission', params=params)
+            
+            # Determine VIP level based on commission rates
+            # Lower rates = higher VIP level
+            # Standard rates: Regular = 0.1% maker/0.1% taker, VIP levels have lower rates
+            maker_rate = float(commission_data.get('standardCommission', {}).get('maker', '0.001'))
+            taker_rate = float(commission_data.get('standardCommission', {}).get('taker', '0.001'))
+            
+            # Determine VIP level based on rates
+            # Binance VIP levels: Regular (0.1%), VIP0 (0.09%), VIP1 (0.08%), VIP2 (0.07%), etc.
+            vip_level = "Regular"
+            if maker_rate <= 0.0002:  # 0.02%
+                vip_level = "VIP9"
+            elif maker_rate <= 0.0004:  # 0.04%
+                vip_level = "VIP8"
+            elif maker_rate <= 0.0006:  # 0.06%
+                vip_level = "VIP7"
+            elif maker_rate <= 0.0007:  # 0.07%
+                vip_level = "VIP6"
+            elif maker_rate <= 0.0008:  # 0.08%
+                vip_level = "VIP5"
+            elif maker_rate <= 0.0009:  # 0.09%
+                vip_level = "VIP4"
+            elif maker_rate <= 0.0010:  # 0.10%
+                vip_level = "VIP3"
+            elif maker_rate <= 0.0011:  # 0.11%
+                vip_level = "VIP2"
+            elif maker_rate <= 0.0012:  # 0.12%
+                vip_level = "VIP1"
+            elif maker_rate <= 0.0013:  # 0.13%
+                vip_level = "VIP0"
+            
+            return {
+                'maker_commission': maker_rate,
+                'taker_commission': taker_rate,
+                'buyer_commission': float(commission_data.get('standardCommission', {}).get('buyer', '0.001')),
+                'seller_commission': float(commission_data.get('standardCommission', {}).get('seller', '0.001')),
+                'tax_maker': float(commission_data.get('taxCommission', {}).get('maker', '0')),
+                'tax_taker': float(commission_data.get('taxCommission', {}).get('taker', '0')),
+                'discount_enabled': commission_data.get('discount', {}).get('enabledForAccount', False),
+                'discount_asset': commission_data.get('discount', {}).get('discountAsset', 'BNB'),
+                'discount_rate': float(commission_data.get('discount', {}).get('discount', '0')),
+                'vip_level': vip_level,
+                'account_type': vip_level  # Alias for consistency
+            }
+        except Exception as e:
+            logger.warning(f"Failed to get commission rates, using account info rates: {e}")
+            # Fallback: use rates from account info (in basis points)
+            account_info = await self.get_account_info()
+            maker_bps = account_info.get('makerCommission', 10)  # Default 10 basis points = 0.1%
+            taker_bps = account_info.get('takerCommission', 10)
+            
+            # Convert basis points to decimal (10 = 0.001 = 0.1%)
+            maker_rate = maker_bps / 10000.0
+            taker_rate = taker_bps / 10000.0
+            
+            # Determine VIP level from basis points
+            vip_level = "Regular"
+            if maker_bps <= 2:
+                vip_level = "VIP9"
+            elif maker_bps <= 4:
+                vip_level = "VIP8"
+            elif maker_bps <= 6:
+                vip_level = "VIP7"
+            elif maker_bps <= 7:
+                vip_level = "VIP6"
+            elif maker_bps <= 8:
+                vip_level = "VIP5"
+            elif maker_bps <= 9:
+                vip_level = "VIP4"
+            elif maker_bps <= 10:
+                vip_level = "VIP3"
+            elif maker_bps <= 11:
+                vip_level = "VIP2"
+            elif maker_bps <= 12:
+                vip_level = "VIP1"
+            elif maker_bps <= 13:
+                vip_level = "VIP0"
+            
+            return {
+                'maker_commission': maker_rate,
+                'taker_commission': taker_rate,
+                'buyer_commission': account_info.get('buyerCommission', 10) / 10000.0,
+                'seller_commission': account_info.get('sellerCommission', 10) / 10000.0,
+                'tax_maker': 0.0,
+                'tax_taker': 0.0,
+                'discount_enabled': False,
+                'discount_asset': 'BNB',
+                'discount_rate': 0.0,
+                'vip_level': vip_level,
+                'account_type': vip_level
+            }
+    
     async def get_futures_account_info(self) -> Dict:
         """Get USDT-M Futures account information"""
         # Temporarily override base_url for futures endpoint

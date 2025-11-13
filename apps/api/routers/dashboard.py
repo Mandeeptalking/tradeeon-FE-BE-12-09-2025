@@ -47,19 +47,41 @@ async def get_account_info(user: AuthedUser = Depends(get_current_user)):
         async with BinanceAuthenticatedClient(api_key, api_secret) as client:
             account_info = await client.get_account_info()
             
+            # Get commission rates and VIP level
+            try:
+                commission_info = await client.get_commission_rates()
+            except Exception as e:
+                logger.warning(f"Failed to get commission rates: {e}, using account info rates")
+                # Fallback: convert basis points to decimal
+                maker_bps = account_info.get("makerCommission", 10)
+                taker_bps = account_info.get("takerCommission", 10)
+                commission_info = {
+                    'maker_commission': maker_bps / 10000.0,
+                    'taker_commission': taker_bps / 10000.0,
+                    'buyer_commission': account_info.get("buyerCommission", 10) / 10000.0,
+                    'seller_commission': account_info.get("sellerCommission", 10) / 10000.0,
+                    'vip_level': 'Regular',
+                    'account_type': 'Regular'
+                }
+            
             # Format response
             return {
                 "success": True,
                 "account": {
-                    "maker_commission": account_info.get("makerCommission", 0),
-                    "taker_commission": account_info.get("takerCommission", 0),
-                    "buyer_commission": account_info.get("buyerCommission", 0),
-                    "seller_commission": account_info.get("sellerCommission", 0),
+                    "maker_commission": commission_info.get("maker_commission", 0.001),  # As decimal (0.001 = 0.1%)
+                    "taker_commission": commission_info.get("taker_commission", 0.001),
+                    "buyer_commission": commission_info.get("buyer_commission", 0.001),
+                    "seller_commission": commission_info.get("seller_commission", 0.001),
+                    "vip_level": commission_info.get("vip_level", "Regular"),
+                    "account_type": commission_info.get("account_type", "Regular"),  # VIP level
                     "can_trade": account_info.get("canTrade", False),
                     "can_withdraw": account_info.get("canWithdraw", False),
                     "can_deposit": account_info.get("canDeposit", False),
                     "update_time": account_info.get("updateTime", 0),
-                    "account_type": account_info.get("accountType", "SPOT"),
+                    "spot_account_type": account_info.get("accountType", "SPOT"),  # SPOT/FUTURES account type
+                    "discount_enabled": commission_info.get("discount_enabled", False),
+                    "discount_asset": commission_info.get("discount_asset", "BNB"),
+                    "discount_rate": commission_info.get("discount_rate", 0.0),
                     "balances": account_info.get("balances", [])
                 }
             }

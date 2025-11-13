@@ -209,19 +209,30 @@ const Portfolio = () => {
                 </div>
               </div>
 
-              {/* Commission Rates */}
+              {/* Commission Rates & VIP Level */}
               {accountInfo && (
                 <>
                   <div className="space-y-2">
+                    <p className="text-sm text-white/60">Account Type (VIP Level)</p>
+                    <p className="text-lg font-semibold text-white">
+                      {accountInfo.account.vip_level || accountInfo.account.account_type || 'Regular'}
+                    </p>
+                    {accountInfo.account.discount_enabled && (
+                      <p className="text-xs text-white/50">
+                        {accountInfo.account.discount_asset} discount: {(accountInfo.account.discount_rate || 0) * 100}%
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
                     <p className="text-sm text-white/60">Maker Commission</p>
                     <p className="text-lg font-semibold text-white">
-                      {formatPercentage(accountInfo.account.maker_commission)}
+                      {(accountInfo.account.maker_commission * 100).toFixed(4)}%
                     </p>
                   </div>
                   <div className="space-y-2">
                     <p className="text-sm text-white/60">Taker Commission</p>
                     <p className="text-lg font-semibold text-white">
-                      {formatPercentage(accountInfo.account.taker_commission)}
+                      {(accountInfo.account.taker_commission * 100).toFixed(4)}%
                     </p>
                   </div>
                   <div className="space-y-2">

@@ -91,15 +91,20 @@ export interface DashboardSummary {
 export interface AccountInfo {
   success: boolean;
   account: {
-    maker_commission: number;
-    taker_commission: number;
+    maker_commission: number;  // As decimal (0.001 = 0.1%)
+    taker_commission: number;  // As decimal (0.001 = 0.1%)
     buyer_commission: number;
     seller_commission: number;
+    vip_level: string;  // Regular, VIP0, VIP1, VIP2, etc.
+    account_type: string;  // VIP level (Regular, VIP0, VIP1, etc.)
+    spot_account_type?: string;  // SPOT/FUTURES account type
     can_trade: boolean;
     can_withdraw: boolean;
     can_deposit: boolean;
     update_time: number;
-    account_type: string;
+    discount_enabled?: boolean;
+    discount_asset?: string;
+    discount_rate?: number;
     balances: Array<{
       asset: string;
       free: string;
