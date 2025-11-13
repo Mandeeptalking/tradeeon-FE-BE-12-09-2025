@@ -359,27 +359,27 @@ const Portfolio = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
-            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6"
+            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4"
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-3">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-1">Holdings</h2>
-                <p className="text-sm text-white/60">
-                  {summary.assets.length} {summary.assets.length === 1 ? 'asset' : 'assets'} in your portfolio
+                <h2 className="text-lg font-bold text-white mb-0.5">Holdings</h2>
+                <p className="text-xs text-white/60">
+                  {summary.assets.length} {summary.assets.length === 1 ? 'asset' : 'assets'}
                 </p>
               </div>
             </div>
 
             {summary.assets.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
-                  <Wallet className="h-10 w-10 text-white/20" />
+              <div className="text-center py-8">
+                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-white/5 flex items-center justify-center">
+                  <Wallet className="h-6 w-6 text-white/20" />
                 </div>
-                <p className="text-white/60 text-lg">No holdings found</p>
-                <p className="text-white/40 text-sm mt-2">Connect an exchange to see your holdings</p>
+                <p className="text-white/60 text-sm">No holdings found</p>
+                <p className="text-white/40 text-xs mt-1">Connect an exchange to see your holdings</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 max-h-[280px] overflow-y-auto pr-2 custom-scrollbar">
                 {summary.assets.map((asset, index) => (
                   <AssetCard
                     key={asset.asset}
