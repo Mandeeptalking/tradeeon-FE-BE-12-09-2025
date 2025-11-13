@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { dashboardApi, type DashboardSummary, type AccountInfo } from '../../lib/api/dashboard';
+import { connectionsApi } from '../../lib/api/connections';
 import { useAuthStore } from '../../store/auth';
-import { Wallet, TrendingUp, Activity, DollarSign, RefreshCw, AlertCircle, User, Shield, CheckCircle } from 'lucide-react';
+import { Wallet, TrendingUp, Activity, DollarSign, RefreshCw, AlertCircle, User, Shield, CheckCircle, Play, Pause } from 'lucide-react';
 import { logger } from '../../utils/logger';
 import { sanitizeErrorMessage } from '../../utils/errorHandler';
 import { motion } from 'framer-motion';
 import { AssetCard } from '../../components/dashboard/AssetCard';
+import type { Connection } from '../../types/connections';
 
 const Portfolio = () => {
   const { user } = useAuthStore();
@@ -13,11 +15,47 @@ const Portfolio = () => {
   const [accountInfo, setAccountInfo] = useState<AccountInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pausedConnection, setPausedConnection] = useState<Connection | null>(null);
+  const [resuming, setResuming] = useState(false);
+
+  const checkPausedConnections = async () => {
+    try {
+      const connections = await connectionsApi.listConnections();
+      const pausedBinance = connections.find(
+        (conn) => conn.exchange === 'BINANCE' && conn.status === 'not_connected'
+      );
+      setPausedConnection(pausedBinance || null);
+    } catch (err) {
+      logger.warn('Failed to check paused connections:', err);
+    }
+  };
+
+  const handleResumeConnection = async () => {
+    if (!pausedConnection) return;
+    
+    try {
+      setResuming(true);
+      await connectionsApi.resumeConnection(pausedConnection.id);
+      setPausedConnection(null);
+      // Refresh portfolio data after resuming
+      await fetchPortfolioData();
+    } catch (err: any) {
+      logger.error('Failed to resume connection:', err);
+      const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to resume connection';
+      alert(`Failed to resume connection: ${errorMessage}`);
+    } finally {
+      setResuming(false);
+    }
+  };
 
   const fetchPortfolioData = async () => {
     try {
       setLoading(true);
       setError(null);
+      setPausedConnection(null);
+      
+      // Check for paused connections first
+      await checkPausedConnections();
       
       // Fetch dashboard summary (includes assets, account info)
       const dashboardData = await dashboardApi.getSummary();
@@ -34,6 +72,13 @@ const Portfolio = () => {
     } catch (err: any) {
       logger.error('Failed to fetch portfolio data:', err);
       const errorMessage = sanitizeErrorMessage(err);
+      
+      // Check if error is "No active Binance connection found"
+      if (errorMessage.includes('No active Binance connection found')) {
+        // Check for paused connections
+        await checkPausedConnections();
+      }
+      
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -60,14 +105,6 @@ const Portfolio = () => {
     }).format(value);
   };
 
-  const formatPercentage = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'percent',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value / 100);
-  };
-
   if (loading) {
     return (
       <div className="min-h-full relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
@@ -80,6 +117,54 @@ const Portfolio = () => {
   }
 
   if (error) {
+    // Show paused connection message if connection is paused
+    if (pausedConnection && error.includes('No active Binance connection found')) {
+      return (
+        <div className="min-h-full relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center px-4">
+          <div className="max-w-md w-full bg-gray-800/80 backdrop-blur-sm border border-amber-500/50 rounded-2xl p-8 text-center">
+            <div className="flex items-center justify-center mb-4">
+              <div className="p-3 bg-amber-500/20 rounded-full">
+                <Pause className="h-12 w-12 text-amber-400" />
+              </div>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Connection Paused</h2>
+            <p className="text-gray-400 mb-2">
+              Your Binance connection is currently paused. Resume it to view your portfolio.
+            </p>
+            {pausedConnection.nickname && (
+              <p className="text-sm text-white/60 mb-6">Connection: {pausedConnection.nickname}</p>
+            )}
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleResumeConnection}
+                disabled={resuming}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {resuming ? (
+                  <>
+                    <RefreshCw className="h-5 w-5 animate-spin" />
+                    <span>Resuming...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-5 w-5" />
+                    <span>Resume Connection</span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={fetchPortfolioData}
+                className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Regular error display
     return (
       <div className="min-h-full relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-gray-800/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8 text-center">
