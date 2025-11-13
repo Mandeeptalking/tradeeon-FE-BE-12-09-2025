@@ -9,8 +9,7 @@ import {
 import { authenticatedFetch } from './auth';
 import { logger } from '../../utils/logger';
 import { withRateLimit } from '../../utils/rateLimiter';
-import { retryWithBackoff, fetchWithTimeoutAndRetry } from '../../utils/retry';
-import { isRetryableError } from '../../utils/connectionErrors';
+import { fetchWithTimeoutAndRetry } from '../../utils/retry';
 
 // Security: Enforce HTTPS in production
 function getApiBaseUrl(): string {
@@ -149,84 +148,12 @@ export const connectionsApi = {
     return withRateLimit(
       'test-connection',
       async () => {
-        return retryWithBackoff(
-          async () => {
-            // Import auth utilities
-            const { createAuthHeaders } = await import('./auth');
-            const headers = await createAuthHeaders();
-            
-            const response = await fetchWithTimeoutAndRetry(
-              `${API_BASE_URL}/connections/test`,
-              {
-                method: 'POST',
-                headers: {
-                  ...headers,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(body),
-              },
-              30000, // 30 second timeout
-              {
-                maxRetries: 3,
-                initialDelay: 1000,
-                maxDelay: 5000,
-                retryableErrors: ['timeout', 'network', 'fetch', 'ECONNRESET', 'ETIMEDOUT'],
-                onRetry: (attempt, error) => {
-                  logger.debug(`Retrying connection test (attempt ${attempt}):`, error.message);
-                },
-              }
-            );
-
-            if (!response.ok) {
-              // Try to extract error message from response
-              let errorMessage = 'Failed to test connection';
-              try {
-                const errorData = await response.json();
-                errorMessage = errorData.detail || errorData.message || errorMessage;
-              } catch {
-                // If response is not JSON, use status text
-                errorMessage = response.statusText || errorMessage;
-              }
-              
-              // If it's a 401, provide more specific error
-              if (response.status === 401) {
-                errorMessage = 'Authentication failed. Please sign in again.';
-              }
-              
-              const error: any = new Error(errorMessage);
-              error.response = { data: { detail: errorMessage }, status: response.status };
-              
-              // Only retry if error is retryable
-              if (!isRetryableError(error)) {
-                throw error;
-              }
-              
-              throw error;
-            }
-            
-            return await response.json();
-          },
-          {
-            maxRetries: 0, // Retry logic is handled by fetchWithTimeoutAndRetry
-            onRetry: (attempt, error) => {
-              logger.debug(`Connection test retry attempt ${attempt}:`, error.message);
-            },
-          }
-        );
-      },
-      { limit: 5, interval: 10000 } // Allow 5 requests every 10 seconds
-    );
-  },
-
-  async upsertConnection(body: UpsertConnectionBody): Promise<Connection> {
-    return retryWithBackoff(
-      async () => {
         // Import auth utilities
         const { createAuthHeaders } = await import('./auth');
         const headers = await createAuthHeaders();
         
         const response = await fetchWithTimeoutAndRetry(
-          `${API_BASE_URL}/connections`,
+          `${API_BASE_URL}/connections/test`,
           {
             method: 'POST',
             headers: {
@@ -242,14 +169,14 @@ export const connectionsApi = {
             maxDelay: 5000,
             retryableErrors: ['timeout', 'network', 'fetch', 'ECONNRESET', 'ETIMEDOUT'],
             onRetry: (attempt, error) => {
-              logger.debug(`Retrying connection save (attempt ${attempt}):`, error.message);
+              logger.debug(`Retrying connection test (attempt ${attempt}):`, error.message);
             },
           }
         );
-        
+
         if (!response.ok) {
           // Try to extract error message from response
-          let errorMessage = 'Failed to save connection';
+          let errorMessage = 'Failed to test connection';
           try {
             const errorData = await response.json();
             errorMessage = errorData.detail || errorData.message || errorMessage;
@@ -257,23 +184,66 @@ export const connectionsApi = {
             // If response is not JSON, use status text
             errorMessage = response.statusText || errorMessage;
           }
-          const error: any = new Error(errorMessage);
-          error.response = { data: { detail: errorMessage }, status: response.status };
           
-          // Only retry if error is retryable
-          if (!isRetryableError(error)) {
-            throw error;
+          // If it's a 401, provide more specific error
+          if (response.status === 401) {
+            errorMessage = 'Authentication failed. Please sign in again.';
           }
           
+          const error: any = new Error(errorMessage);
+          error.response = { data: { detail: errorMessage }, status: response.status };
           throw error;
         }
         
         return await response.json();
       },
+      { limit: 5, interval: 10000 } // Allow 5 requests every 10 seconds
+    );
+  },
+
+  async upsertConnection(body: UpsertConnectionBody): Promise<Connection> {
+    // Import auth utilities
+    const { createAuthHeaders } = await import('./auth');
+    const headers = await createAuthHeaders();
+    
+    const response = await fetchWithTimeoutAndRetry(
+      `${API_BASE_URL}/connections`,
       {
-        maxRetries: 0, // Retry logic is handled by fetchWithTimeoutAndRetry
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      },
+      30000, // 30 second timeout
+      {
+        maxRetries: 3,
+        initialDelay: 1000,
+        maxDelay: 5000,
+        retryableErrors: ['timeout', 'network', 'fetch', 'ECONNRESET', 'ETIMEDOUT'],
+        onRetry: (attempt, error) => {
+          logger.debug(`Retrying connection save (attempt ${attempt}):`, error.message);
+        },
       }
     );
+    
+    if (!response.ok) {
+      // Try to extract error message from response
+      let errorMessage = 'Failed to save connection';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorData.message || errorMessage;
+      } catch {
+        // If response is not JSON, use status text
+        errorMessage = response.statusText || errorMessage;
+      }
+      const error: any = new Error(errorMessage);
+      error.response = { data: { detail: errorMessage }, status: response.status };
+      throw error;
+    }
+    
+    return await response.json();
   },
 
   async rotateKeys(id: string, body: UpsertConnectionBody): Promise<Connection> {
