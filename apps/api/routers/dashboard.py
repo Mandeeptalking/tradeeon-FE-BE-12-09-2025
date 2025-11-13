@@ -239,6 +239,15 @@ async def get_dashboard_summary(user: AuthedUser = Depends(get_current_user)):
                     usdt_balance = balance
                     break
             
+            # Calculate total portfolio value in USDT
+            total_portfolio_value = usdt_balance["total"]  # Start with USDT balance
+            try:
+                portfolio_value = await client.get_portfolio_value()
+                total_portfolio_value = portfolio_value.get("total_value_usdt", usdt_balance["total"])
+            except Exception as e:
+                logger.warning(f"Failed to get portfolio value, using USDT balance only: {e}")
+                # Fallback: just use USDT balance
+            
             # Format assets (non-zero balances)
             assets = [
                 {

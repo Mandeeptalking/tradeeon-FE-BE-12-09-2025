@@ -74,6 +74,7 @@ export interface DashboardSummary {
     total_active_trades: number;
     total_futures_positions?: number;
     total_balance_usdt: number;
+    total_portfolio_value_usdt?: number;  // Total value of all assets in USDT
   };
 }
 

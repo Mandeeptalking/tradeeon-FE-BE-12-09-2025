@@ -320,9 +320,9 @@ const Portfolio = () => {
                 <span className="text-xs text-white/60 uppercase tracking-wide">Portfolio Value</span>
               </div>
               <p className="text-3xl font-bold text-white">
-                {formatCurrency(summary.stats.total_balance_usdt)}
+                {formatCurrency(summary.stats.total_portfolio_value_usdt || summary.stats.total_balance_usdt)}
               </p>
-              <p className="text-sm text-white/60 mt-1">Total in USDT</p>
+              <p className="text-sm text-white/60 mt-1">Total value of all assets</p>
             </motion.div>
           </div>
 
