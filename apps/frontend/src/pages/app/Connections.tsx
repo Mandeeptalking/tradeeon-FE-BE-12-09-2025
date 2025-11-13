@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Plug,
   ShieldCheck,
@@ -11,6 +11,7 @@ import {
   Play,
   Trash2,
   MoreVertical,
+  Edit,
 } from 'lucide-react';
 import { connectionsApi } from '../../lib/api/connections';
 import type { Connection, ConnectionGuidance } from '../../types/connections';
