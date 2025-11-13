@@ -212,41 +212,41 @@ const Portfolio = () => {
               {/* Commission Rates & VIP Level */}
               {accountInfo && (
                 <>
-                  <div className="space-y-2">
-                    <p className="text-sm text-white/60">VIP Level</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-lg font-semibold text-white">
+                  <div className="space-y-1">
+                    <p className="text-xs text-white/60">VIP Level</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-semibold text-white">
                         {accountInfo.account.vip_level || accountInfo.account.account_type || 'Regular'}
                       </p>
                       {accountInfo.account.vip_level && accountInfo.account.vip_level !== 'Regular' && (
-                        <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded text-xs font-medium">
+                        <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded text-xs font-medium">
                           VIP
                         </span>
                       )}
                     </div>
                     {accountInfo.account.discount_enabled && (
-                      <p className="text-xs text-white/50 mt-1">
-                        {accountInfo.account.discount_asset} discount: {(accountInfo.account.discount_rate || 0) * 100}%
+                      <p className="text-xs text-white/50 mt-0.5">
+                        {accountInfo.account.discount_asset} {(accountInfo.account.discount_rate || 0) * 100}%
                       </p>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-white/60">Maker Commission</p>
-                    <p className="text-lg font-semibold text-white">
-                      {(accountInfo.account.maker_commission * 100).toFixed(4)}%
+                  <div className="space-y-1">
+                    <p className="text-xs text-white/60">Maker Fee</p>
+                    <p className="text-sm font-semibold text-white">
+                      {(accountInfo.account.maker_commission * 100).toFixed(3)}%
                     </p>
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-white/60">Taker Commission</p>
-                    <p className="text-lg font-semibold text-white">
-                      {(accountInfo.account.taker_commission * 100).toFixed(4)}%
+                  <div className="space-y-1">
+                    <p className="text-xs text-white/60">Taker Fee</p>
+                    <p className="text-sm font-semibold text-white">
+                      {(accountInfo.account.taker_commission * 100).toFixed(3)}%
                     </p>
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-white/60">Account Status</p>
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-green-400" />
-                      <span className="text-sm font-medium text-green-400">Active & Secure</span>
+                  <div className="space-y-1">
+                    <p className="text-xs text-white/60">Status</p>
+                    <div className="flex items-center gap-1.5">
+                      <Shield className="h-3 w-3 text-green-400" />
+                      <span className="text-xs font-medium text-green-400">Active</span>
                     </div>
                   </div>
                 </>
