@@ -83,6 +83,7 @@ const ConnectionsPage = () => {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [guidance, setGuidance] = useState<ConnectionGuidance[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [editingConnection, setEditingConnection] = useState<Connection | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [loadingConnections, setLoadingConnections] = useState(true);
 
@@ -132,6 +133,17 @@ const ConnectionsPage = () => {
       }
       return [...prev, connection];
     });
+    setEditingConnection(null); // Clear editing state
+  };
+
+  const handleEditConnection = (connection: Connection) => {
+    setEditingConnection(connection);
+    setIsDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+    setEditingConnection(null);
   };
 
   const ConnectionCard = ({ connection }: { connection: Connection }) => {
@@ -142,21 +154,30 @@ const ConnectionsPage = () => {
     const status = statusStyles[connection.status];
 
     return (
-      <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur transition hover:border-white/20">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-2xl">
+      <div className="group relative flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur transition hover:border-white/20 hover:bg-white/[0.06]">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-2xl flex-shrink-0">
             {metadata.badge}
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0">
             <span className="text-base font-semibold text-white">{metadata.name}</span>
             {connection.nickname && (
-              <span className="text-sm text-white/60">{connection.nickname}</span>
+              <span className="text-sm text-white/60 truncate">{connection.nickname}</span>
             )}
           </div>
         </div>
-        <div className={`flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${status.pill}`}>
-          <span className={`${status.iconColor}`}>●</span>
-          <span>{status.label}</span>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <div className={`flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${status.pill}`}>
+            <span className={`${status.iconColor}`}>●</span>
+            <span>{status.label}</span>
+          </div>
+          <button
+            onClick={() => handleEditConnection(connection)}
+            className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 text-sm font-medium text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg"
+            title="Edit connection"
+          >
+            Edit
+          </button>
         </div>
       </div>
     );
@@ -325,9 +346,9 @@ const ConnectionsPage = () => {
 
       <ConnectExchangeDrawer
         isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
+        onClose={handleCloseDrawer}
         onConnected={handleConnected}
-        initialConnection={null}
+        initialConnection={editingConnection}
       />
     </div>
   );

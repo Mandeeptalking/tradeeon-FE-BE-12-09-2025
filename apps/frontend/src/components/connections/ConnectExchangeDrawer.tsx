@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Eye, EyeOff, TestTube, CheckCircle, XCircle, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { X, Eye, EyeOff, TestTube, CheckCircle, XCircle, Loader2, AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react';
 import { Exchange, UpsertConnectionBody, TestConnectionBody, Connection } from '../../types/connections';
 import { connectionsApi } from '../../lib/api/connections';
 import { logger } from '../../utils/logger';
@@ -233,29 +233,62 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
             </button>
           </div>
 
-          {/* Progress */}
-          <div className="flex-shrink-0 p-4 border-b border-gray-200">
+          {/* Enhanced Progress Indicator */}
+          <div className="flex-shrink-0 p-4 border-b border-gray-200 bg-gray-50">
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-gray-500">
+                  Step {currentStep + 1} of {steps.length}
+                </span>
+                <span className="text-xs font-medium text-blue-600">
+                  {Math.round(((currentStep + 1) / steps.length) * 100)}% Complete
+                </span>
+              </div>
+              {/* Progress Bar */}
+              <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out"
+                  style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+                />
+              </div>
+            </div>
+            
+            {/* Step Indicators */}
             <div className="flex items-center justify-between">
-              {steps.map((_, index) => (
-                <div key={index} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    index <= currentStep 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-gray-200 text-gray-500'
-                  }`}>
-                    {index + 1}
+              {steps.map((step, index) => (
+                <div key={index} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={`relative w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
+                      index < currentStep
+                        ? 'bg-green-500 text-white shadow-lg shadow-green-500/30'
+                        : index === currentStep
+                        ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-300 ring-offset-2'
+                        : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      {index < currentStep ? (
+                        <CheckCircle className="h-5 w-5" />
+                      ) : (
+                        <span>{index + 1}</span>
+                      )}
+                    </div>
+                    <div className="mt-1.5 text-center">
+                      <p className={`text-xs font-medium ${
+                        index <= currentStep ? 'text-gray-900' : 'text-gray-400'
+                      }`}>
+                        {step.title}
+                      </p>
+                      {index === currentStep && (
+                        <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>
+                      )}
+                    </div>
                   </div>
                   {index < steps.length - 1 && (
-                    <div className={`w-12 h-0.5 mx-2 ${
-                      index < currentStep ? 'bg-blue-500' : 'bg-gray-200'
+                    <div className={`flex-1 h-0.5 mx-2 transition-all duration-300 ${
+                      index < currentStep ? 'bg-green-500' : 'bg-gray-200'
                     }`} />
                   )}
                 </div>
               ))}
-            </div>
-            <div className="mt-2">
-              <h3 className="text-sm font-medium text-gray-900">{steps[currentStep].title}</h3>
-              <p className="text-xs text-gray-500">{steps[currentStep].description}</p>
             </div>
           </div>
 
@@ -517,15 +550,19 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
           </div>
 
           {/* Footer */}
-          <div className="flex-shrink-0 p-4 border-t border-gray-200">
+          <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-gray-50">
             <div className="flex space-x-3">
-              {currentStep > 0 && (
+              {/* Back Button - Always visible when not on first step */}
+              {currentStep > 0 ? (
                 <button
                   onClick={handlePrev}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium"
                 >
-                  Previous
+                  <ArrowLeft className="h-4 w-4" />
+                  Back
                 </button>
+              ) : (
+                <div className="w-0" /> // Spacer to maintain layout
               )}
               {currentStep < steps.length - 1 ? (
                 <button
