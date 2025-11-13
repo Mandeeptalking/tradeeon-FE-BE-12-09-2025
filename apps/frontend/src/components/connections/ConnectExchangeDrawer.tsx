@@ -43,8 +43,6 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
 
   const exchanges = [
     { value: 'BINANCE', label: 'Binance', logo: '🟡', requiresPassphrase: false },
-    { value: 'COINBASE', label: 'Coinbase Pro', logo: '🔵', requiresPassphrase: true },
-    { value: 'KRAKEN', label: 'Kraken', logo: '🟣', requiresPassphrase: true },
     { value: 'ZERODHA', label: 'Zerodha', logo: '🟢', requiresPassphrase: false },
   ];
 
