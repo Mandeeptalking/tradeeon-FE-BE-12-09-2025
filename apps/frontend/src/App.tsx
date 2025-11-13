@@ -11,6 +11,7 @@ import GetStarted from './pages/GetStarted'
 import SignIn from './pages/SignIn'
 import Signup from './pages/Signup'
 import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import AuthCallback from './pages/AuthCallback'
 import Dashboard from './pages/Dashboard'
 import Connections from './pages/app/Connections'
@@ -84,6 +85,7 @@ function App() {
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/auth/reset-password" element={<ResetPassword />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/clean-charts" element={<CleanCharts />} />
         <Route path="/security" element={<Security />} />
