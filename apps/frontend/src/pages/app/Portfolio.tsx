@@ -230,23 +230,26 @@ const Portfolio = () => {
                       </p>
                     )}
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-white/60">Maker Fee</p>
-                    <p className="text-sm font-semibold text-white">
-                      {(accountInfo.account.maker_commission * 100).toFixed(3)}%
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-white/60">Taker Fee</p>
-                    <p className="text-sm font-semibold text-white">
-                      {(accountInfo.account.taker_commission * 100).toFixed(3)}%
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-white/60">Status</p>
-                    <div className="flex items-center gap-1.5">
-                      <Shield className="h-3 w-3 text-green-400" />
-                      <span className="text-xs font-medium text-green-400">Active</span>
+                  {/* Maker Fee, Taker Fee, and Status in one row */}
+                  <div className="col-span-2 md:col-span-3 lg:col-span-4 space-y-1">
+                    <p className="text-xs text-white/60">Fees & Status</p>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-white/60">Maker:</span>
+                        <span className="text-sm font-semibold text-white">
+                          {(accountInfo.account.maker_commission * 100).toFixed(3)}%
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-white/60">Taker:</span>
+                        <span className="text-sm font-semibold text-white">
+                          {(accountInfo.account.taker_commission * 100).toFixed(3)}%
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Shield className="h-3 w-3 text-green-400" />
+                        <span className="text-xs font-medium text-green-400">Active</span>
+                      </div>
                     </div>
                   </div>
                 </>
