@@ -94,25 +94,50 @@ export async function fetchWithTimeoutAndRetry(
   timeoutMs: number = 30000, // 30 seconds default
   retryOptions: RetryOptions = {}
 ): Promise<Response> {
-  return retryWithBackoff(async () => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const opts = { ...DEFAULT_OPTIONS, ...retryOptions };
+  let lastError: Error;
 
+  for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
     try {
-      const response = await fetch(url, {
-        ...options,
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      return response;
-    } catch (error: any) {
-      clearTimeout(timeoutId);
-      
-      if (error.name === 'AbortError') {
-        throw new Error(`Request timeout after ${timeoutMs}ms`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        return response;
+      } catch (error: any) {
+        clearTimeout(timeoutId);
+        
+        if (error.name === 'AbortError') {
+          throw new Error(`Request timeout after ${timeoutMs}ms`);
+        }
+        throw error;
       }
-      throw error;
+    } catch (error: any) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // Don't retry on last attempt
+      if (attempt === opts.maxRetries) {
+        throw lastError;
+      }
+
+      // Check if error is retryable
+      if (!isRetryableError(lastError, opts.retryableErrors)) {
+        throw lastError;
+      }
+
+      // Calculate delay and wait
+      const delay = calculateDelay(attempt, opts);
+      opts.onRetry(attempt + 1, lastError);
+      
+      await sleep(delay);
     }
-  }, retryOptions);
+  }
+
+  throw lastError!;
 }
 
