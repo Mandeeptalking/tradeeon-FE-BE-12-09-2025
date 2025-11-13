@@ -213,12 +213,19 @@ const Portfolio = () => {
               {accountInfo && (
                 <>
                   <div className="space-y-2">
-                    <p className="text-sm text-white/60">Account Type (VIP Level)</p>
-                    <p className="text-lg font-semibold text-white">
-                      {accountInfo.account.vip_level || accountInfo.account.account_type || 'Regular'}
-                    </p>
+                    <p className="text-sm text-white/60">VIP Level</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-lg font-semibold text-white">
+                        {accountInfo.account.vip_level || accountInfo.account.account_type || 'Regular'}
+                      </p>
+                      {accountInfo.account.vip_level && accountInfo.account.vip_level !== 'Regular' && (
+                        <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded text-xs font-medium">
+                          VIP
+                        </span>
+                      )}
+                    </div>
                     {accountInfo.account.discount_enabled && (
-                      <p className="text-xs text-white/50">
+                      <p className="text-xs text-white/50 mt-1">
                         {accountInfo.account.discount_asset} discount: {(accountInfo.account.discount_rate || 0) * 100}%
                       </p>
                     )}
