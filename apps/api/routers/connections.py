@@ -363,10 +363,21 @@ async def pause_connection(connection_id: str, user: AuthedUser = Depends(get_cu
         if not supabase:
             raise HTTPException(status_code=503, detail="Database service is not available")
         
+        # Validate UUID format
+        import uuid
+        try:
+            uuid.UUID(connection_id)
+        except ValueError:
+            logger.error(f"Invalid UUID format for connection_id: {connection_id}")
+            raise HTTPException(status_code=400, detail=f"Invalid connection ID format: '{connection_id}'")
+        
+        logger.info(f"Pausing connection {connection_id} for user {user.user_id}")
+        
         # Verify connection belongs to user
         result = supabase.table("exchange_keys").select("*").eq("id", connection_id).eq("user_id", user.user_id).execute()
         
         if not result.data:
+            logger.warning(f"Connection {connection_id} not found for user {user.user_id}")
             raise HTTPException(status_code=404, detail=f"Connection with id '{connection_id}' not found")
         
         # Pause connection (set is_active to False)
@@ -390,10 +401,21 @@ async def resume_connection(connection_id: str, user: AuthedUser = Depends(get_c
         if not supabase:
             raise HTTPException(status_code=503, detail="Database service is not available")
         
+        # Validate UUID format
+        import uuid
+        try:
+            uuid.UUID(connection_id)
+        except ValueError:
+            logger.error(f"Invalid UUID format for connection_id: {connection_id}")
+            raise HTTPException(status_code=400, detail=f"Invalid connection ID format: '{connection_id}'")
+        
+        logger.info(f"Resuming connection {connection_id} for user {user.user_id}")
+        
         # Verify connection belongs to user
         result = supabase.table("exchange_keys").select("*").eq("id", connection_id).eq("user_id", user.user_id).execute()
         
         if not result.data:
+            logger.warning(f"Connection {connection_id} not found for user {user.user_id}")
             raise HTTPException(status_code=404, detail=f"Connection with id '{connection_id}' not found")
         
         # Resume connection (set is_active to True)
@@ -417,10 +439,21 @@ async def revoke_connection(connection_id: str, user: AuthedUser = Depends(get_c
         if not supabase:
             raise HTTPException(status_code=503, detail="Database service is not available")
         
+        # Validate UUID format
+        import uuid
+        try:
+            uuid.UUID(connection_id)
+        except ValueError:
+            logger.error(f"Invalid UUID format for connection_id: {connection_id}")
+            raise HTTPException(status_code=400, detail=f"Invalid connection ID format: '{connection_id}'")
+        
+        logger.info(f"Deleting connection {connection_id} for user {user.user_id}")
+        
         # Verify connection belongs to user
         result = supabase.table("exchange_keys").select("*").eq("id", connection_id).eq("user_id", user.user_id).execute()
         
         if not result.data:
+            logger.warning(f"Connection {connection_id} not found for user {user.user_id}")
             raise HTTPException(status_code=404, detail=f"Connection with id '{connection_id}' not found")
         
         # Deactivate connection (soft delete)
