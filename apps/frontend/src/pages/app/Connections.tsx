@@ -18,6 +18,7 @@ import type { Connection, ConnectionGuidance } from '../../types/connections';
 import ConnectExchangeDrawer from '../../components/connections/ConnectExchangeDrawer';
 import PreConnectionChecklist from '../../components/connections/PreConnectionChecklist';
 import ConnectionHealthIndicator from '../../components/connections/ConnectionHealthIndicator';
+import ConnectionHistory from '../../components/connections/ConnectionHistory';
 import EmptyState from '../../components/EmptyState';
 import { logger } from '../../utils/logger';
 
