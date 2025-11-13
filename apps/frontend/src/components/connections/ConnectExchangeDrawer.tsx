@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Eye, EyeOff, TestTube, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { X, Eye, EyeOff, TestTube, CheckCircle, XCircle, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Exchange, UpsertConnectionBody, TestConnectionBody, Connection } from '../../types/connections';
 import { connectionsApi } from '../../lib/api/connections';
 import { logger } from '../../utils/logger';
 import { sanitizeInput, validateApiKey, validateApiSecret } from '../../utils/validation';
 import { sanitizeErrorMessage } from '../../utils/errorHandler';
+import { getConnectionErrorMessage } from '../../utils/connectionErrors';
 
 interface ConnectExchangeDrawerProps {
   isOpen: boolean;
@@ -30,6 +31,8 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const steps = [
     { title: 'Exchange', description: 'Select your exchange' },
@@ -113,6 +116,8 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
   const handleTestConnection = async () => {
     setIsTesting(true);
     setTestResult(null);
+    setRetryAttempt(0);
+    setIsRetrying(false);
     
     try {
       const testBody: TestConnectionBody = {
@@ -125,25 +130,26 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
       const result = await connectionsApi.testConnection(testBody);
       setTestResult(result);
     } catch (error: any) {
-      // Extract actual error message from API response
-      const errorMessage = error?.response?.data?.detail || 
-                          error?.response?.data?.message || 
-                          error?.message || 
-                          'Failed to test connection';
+      // Get user-friendly error message with suggestions
+      const errorDetails = getConnectionErrorMessage(error);
       
       setTestResult({
         ok: false,
-        code: error?.response?.status === 401 ? 'authentication_failed' : 'error',
-        message: errorMessage
+        code: errorDetails.code || (error?.response?.status === 401 ? 'authentication_failed' : 'error'),
+        message: errorDetails.message,
+        suggestion: errorDetails.suggestion,
       });
     } finally {
       setIsTesting(false);
+      setIsRetrying(false);
     }
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     setSaveError(null);
+    setRetryAttempt(0);
+    setIsRetrying(false);
     
     try {
       const connectionBody: UpsertConnectionBody = {
@@ -162,14 +168,17 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
       navigate('/app');
     } catch (error: any) {
       logger.error('Failed to save connection:', error);
-      // Extract error message from API response
-      const errorMessage = sanitizeErrorMessage(error?.response?.data?.detail || 
-                         error?.message || 
-                         'Failed to save connection. Please check your credentials and try again.');
+      
+      // Get user-friendly error message with suggestions
+      const errorDetails = getConnectionErrorMessage(error);
+      const errorMessage = errorDetails.suggestion 
+        ? `${errorDetails.message}\n\n${errorDetails.suggestion}`
+        : errorDetails.message;
+      
       setSaveError(errorMessage);
-      // Error is displayed in UI via setSaveError, no need for alert
     } finally {
       setIsSaving(false);
+      setIsRetrying(false);
     }
   };
 
@@ -410,30 +419,42 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
                   <div className={`p-4 rounded-lg ${
                     testResult.ok ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
                   }`}>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-start space-x-2">
                       {testResult.ok ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
                       ) : (
-                        <XCircle className="h-5 w-5 text-red-500" />
+                        <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
                       )}
-                      <span className={`font-medium ${
-                        testResult.ok ? 'text-green-800' : 'text-red-800'
-                      }`}>
-                        {testResult.ok ? 'Connection Successful' : 'Connection Failed'}
-                      </span>
+                      <div className="flex-1">
+                        <span className={`font-medium block ${
+                          testResult.ok ? 'text-green-800' : 'text-red-800'
+                        }`}>
+                          {testResult.ok ? 'Connection Successful' : 'Connection Failed'}
+                        </span>
+                        {testResult.message && (
+                          <p className={`text-sm mt-1 ${
+                            testResult.ok ? 'text-green-700' : 'text-red-700'
+                          }`}>
+                            {testResult.message}
+                          </p>
+                        )}
+                        {testResult.suggestion && !testResult.ok && (
+                          <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                            <div className="flex items-start gap-2">
+                              <AlertCircle className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                              <p className="text-xs text-yellow-800">
+                                <strong>Suggestion:</strong> {testResult.suggestion}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        {testResult.latency_ms && (
+                          <p className="text-xs text-gray-600 mt-1">
+                            Response time: {testResult.latency_ms}ms
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    {testResult.message && (
-                      <p className={`text-sm mt-1 ${
-                        testResult.ok ? 'text-green-700' : 'text-red-700'
-                      }`}>
-                        {testResult.message}
-                      </p>
-                    )}
-                    {testResult.latency_ms && (
-                      <p className="text-xs text-gray-600 mt-1">
-                        Response time: {testResult.latency_ms}ms
-                      </p>
-                    )}
                   </div>
                 )}
               </div>
@@ -449,7 +470,24 @@ const ConnectExchangeDrawer = ({ isOpen, onClose, onConnected, initialConnection
                       <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-red-800">Error</p>
-                        <p className="text-sm text-red-700 mt-1">{saveError}</p>
+                        <div className="text-sm text-red-700 mt-1 whitespace-pre-line">
+                          {saveError.split('\n\n').map((part, idx) => (
+                            <div key={idx} className={idx > 0 ? 'mt-2' : ''}>
+                              {idx === 0 ? (
+                                <p>{part}</p>
+                              ) : (
+                                <div className="p-2 bg-yellow-50 border border-yellow-200 rounded">
+                                  <div className="flex items-start gap-2">
+                                    <AlertCircle className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                                    <p className="text-xs text-yellow-800">
+                                      <strong>Suggestion:</strong> {part}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
