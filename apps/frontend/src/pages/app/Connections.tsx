@@ -477,7 +477,7 @@ const ConnectionsPage = () => {
               </button>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 overflow-visible">
               {connections.map((connection) => (
                 <ConnectionCard key={connection.id} connection={connection} />
               ))}
