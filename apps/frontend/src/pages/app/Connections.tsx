@@ -15,6 +15,7 @@ import {
 import { connectionsApi } from '../../lib/api/connections';
 import type { Connection, ConnectionGuidance } from '../../types/connections';
 import ConnectExchangeDrawer from '../../components/connections/ConnectExchangeDrawer';
+import PreConnectionChecklist from '../../components/connections/PreConnectionChecklist';
 import { logger } from '../../utils/logger';
 
 type StatusStyle = {
@@ -92,6 +93,7 @@ const ConnectionsPage = () => {
   const [loadingConnections, setLoadingConnections] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pausingId, setPausingId] = useState<string | null>(null);
+  const [showPreChecklist, setShowPreChecklist] = useState(false);
 
   useEffect(() => {
     refreshConnections();
@@ -150,6 +152,24 @@ const ConnectionsPage = () => {
   const handleCloseDrawer = () => {
     setIsDrawerOpen(false);
     setEditingConnection(null);
+  };
+
+  const handleConnectExchange = () => {
+    // Show pre-checklist first (only for new connections, not edits)
+    if (!editingConnection) {
+      setShowPreChecklist(true);
+    } else {
+      setIsDrawerOpen(true);
+    }
+  };
+
+  const handlePreChecklistReady = () => {
+    setShowPreChecklist(false);
+    setIsDrawerOpen(true);
+  };
+
+  const handlePreChecklistClose = () => {
+    setShowPreChecklist(false);
   };
 
   const handlePauseConnection = async (connectionId: string) => {
@@ -331,7 +351,7 @@ const ConnectionsPage = () => {
             </div>
             <button
               type="button"
-              onClick={() => setIsDrawerOpen(true)}
+              onClick={handleConnectExchange}
               className="inline-flex items-center gap-2 rounded-full bg-blue-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:bg-blue-600"
             >
               <Plug className="h-4 w-4" />
@@ -456,7 +476,7 @@ const ConnectionsPage = () => {
               </div>
               <button
                 type="button"
-                onClick={() => setIsDrawerOpen(true)}
+                onClick={handleConnectExchange}
                 className="inline-flex items-center gap-2 rounded-full bg-blue-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:bg-blue-600"
               >
                 <Plug className="h-4 w-4" />
@@ -473,6 +493,12 @@ const ConnectionsPage = () => {
         </section>
       </div>
 
+      <PreConnectionChecklist
+        isOpen={showPreChecklist}
+        onClose={handlePreChecklistClose}
+        onReady={handlePreChecklistReady}
+        exchange="BINANCE"
+      />
       <ConnectExchangeDrawer
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
