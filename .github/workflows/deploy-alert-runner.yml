@@ -7,6 +7,7 @@ on:
       - 'apps/api/modules/alerts/**'
       - 'apps/api/modules/bots/**'
       - 'apps/bots/**'
+      - '!apps/bots/condition_evaluator.py'  # Exclude - not yet integrated
       - 'backend/**'
       - 'shared/**'
       - 'requirements.txt'

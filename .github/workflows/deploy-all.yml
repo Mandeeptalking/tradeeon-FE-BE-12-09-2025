@@ -27,6 +27,7 @@ jobs:
           filters: |
             backend:
               - 'apps/api/**'
+              - '!apps/api/routers/condition_registry.py'  # Exclude - not yet integrated
               - 'backend/**'
               - 'shared/**'
               - 'requirements.txt'
@@ -35,6 +36,7 @@ jobs:
               - 'apps/api/modules/alerts/**'
               - 'apps/api/modules/bots/**'
               - 'apps/bots/**'
+              - '!apps/bots/condition_evaluator.py'  # Exclude - not yet integrated
               - 'backend/**'
               - 'shared/**'
               - 'requirements.txt'
