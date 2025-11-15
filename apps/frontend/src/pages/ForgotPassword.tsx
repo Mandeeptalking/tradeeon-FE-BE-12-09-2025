@@ -164,15 +164,33 @@ const ForgotPassword = () => {
 
     try {
       logger.debug('Sending password reset email to:', sanitizedEmail);
+      logger.debug('Redirect URL:', `${window.location.origin}/auth/reset-password`);
       
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
+      const { data, error: resetError } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       });
 
       if (resetError) {
         logger.error('Password reset error:', resetError);
-        // Don't reveal if email exists or not (security best practice)
-        const errorMessage = sanitizeErrorMessage(resetError);
+        logger.error('Error details:', {
+          message: resetError.message,
+          status: resetError.status,
+          name: resetError.name
+        });
+        
+        // Provide more helpful error messages for common issues
+        let errorMessage = sanitizeErrorMessage(resetError);
+        
+        // Check for specific Supabase errors
+        if (resetError.message?.includes('email')) {
+          // Don't reveal if email exists (security), but provide generic message
+          errorMessage = 'If this email is registered, you will receive password reset instructions.';
+        } else if (resetError.message?.includes('rate limit') || resetError.message?.includes('too many')) {
+          errorMessage = 'Too many requests. Please try again later.';
+        } else if (resetError.message?.includes('SMTP') || resetError.message?.includes('email')) {
+          errorMessage = 'Email service temporarily unavailable. Please contact support if this persists.';
+        }
+        
         setError(errorMessage);
         return;
       }
@@ -180,7 +198,7 @@ const ForgotPassword = () => {
       // Success - record attempt and show success message
       recordAttempt();
       setSuccess(true);
-      logger.debug('Password reset email sent successfully');
+      logger.debug('Password reset email sent successfully', data);
       
     } catch (err: any) {
       logger.error('Unexpected error during password reset:', err);
@@ -204,12 +222,23 @@ const ForgotPassword = () => {
     setError(null);
 
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
+      logger.debug('Resending password reset email to:', sanitizedEmail);
+      
+      const { data, error: resetError } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       });
 
       if (resetError) {
-        setError(sanitizeErrorMessage(resetError));
+        logger.error('Resend password reset error:', resetError);
+        let errorMessage = sanitizeErrorMessage(resetError);
+        
+        if (resetError.message?.includes('rate limit') || resetError.message?.includes('too many')) {
+          errorMessage = 'Too many requests. Please try again later.';
+        } else if (resetError.message?.includes('SMTP') || resetError.message?.includes('email')) {
+          errorMessage = 'Email service temporarily unavailable. Please contact support if this persists.';
+        }
+        
+        setError(errorMessage);
         return;
       }
 
@@ -221,6 +250,7 @@ const ForgotPassword = () => {
       
       // Show success toast or message
       setSuccess(true);
+      logger.debug('Password reset email resent successfully', data);
     } catch (err: any) {
       logger.error('Error resending password reset:', err);
       setError(sanitizeErrorMessage(err));
@@ -260,6 +290,19 @@ const ForgotPassword = () => {
                     <li>Create a new password</li>
                     <li>Sign in with your new password</li>
                   </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <div className="text-left">
+                  <p className="text-xs text-yellow-300 font-medium mb-1">Didn't receive the email?</p>
+                  <p className="text-xs text-gray-400">
+                    Check your spam folder, verify the email address is correct, or wait a few minutes. 
+                    If the issue persists, ensure SMTP is configured in your Supabase project settings.
+                  </p>
                 </div>
               </div>
             </div>
