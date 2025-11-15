@@ -11,7 +11,7 @@ from apps.api.models import (
     SymbolListResponse, TickerResponse, KlineResponse, 
     OrderBookResponse, TradesResponse, MarketDataResponse
 )
-from apps.api.routers import connections, portfolio, analytics, market, bots, orders, indicators, alerts, dashboard
+from apps.api.routers import connections, portfolio, analytics, market, bots, orders, indicators, alerts, dashboard, condition_registry
 from apps.api.middleware.rate_limiting import rate_limit_middleware, cleanup_rate_limits
 from apps.api.metrics import get_metrics_response, record_api_request
 from apps.api.utils.errors import (
@@ -54,6 +54,7 @@ app.include_router(bots.router, tags=["bots"])
 app.include_router(orders.router, tags=["orders"])
 app.include_router(indicators.router, tags=["indicators"])
 app.include_router(alerts.router)
+app.include_router(condition_registry.router, tags=["conditions"])
 
 logger = logging.getLogger(__name__)
 
