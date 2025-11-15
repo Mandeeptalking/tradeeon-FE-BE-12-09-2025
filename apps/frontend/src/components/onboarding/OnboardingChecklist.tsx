@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle, Circle, Link as LinkIcon, Wallet, Mail } from 'lucide-react';
+import { CheckCircle, Circle, Link as LinkIcon, Wallet, Mail, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../../store/auth';
 import { connectionsApi } from '../../lib/api/connections';
