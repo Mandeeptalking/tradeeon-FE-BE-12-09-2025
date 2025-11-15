@@ -93,8 +93,8 @@ def hash_condition(normalized_condition: Dict[str, Any]) -> str:
 
 @router.post("/register")
 async def register_condition(
-    condition: Dict[str, Any] = Body(..., description="Condition configuration"),
-    user: AuthedUser = Depends(get_current_user)
+    condition: Dict[str, Any] = Body(..., description="Condition configuration")
+    # Note: No auth required - conditions are public/shared
 ):
     """
     Register a condition and get its unique ID.
@@ -258,6 +258,7 @@ async def unsubscribe_bot_from_condition(
 @router.get("/{condition_id}/status")
 async def get_condition_status(
     condition_id: str = Path(..., description="Condition ID")
+    # Note: No auth required - condition status is public
 ):
     """Get condition status and statistics."""
     try:
