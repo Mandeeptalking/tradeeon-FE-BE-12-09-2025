@@ -47,30 +47,40 @@ class CentralizedConditionEvaluator:
         
         This is the core optimization: fetch data once, calculate indicators once,
         evaluate all conditions using cached values.
+        
+        KEY OPTIMIZATION: Even if 500 users have different price ranges on BTCUSDT,
+        we fetch BTCUSDT data ONCE and evaluate all conditions together.
         """
         if not self.running:
             return
         
         try:
-            # Step 1: Fetch market data once
-            logger.debug(f"Fetching market data for {symbol} {timeframe}")
+            # Step 1: Fetch market data once (shared by ALL conditions for this symbol/timeframe)
+            logger.debug(f"Fetching market data for {symbol} {timeframe} (shared by all conditions)")
             df = await self.market_data.get_klines_as_dataframe(symbol, timeframe, limit=200)
             
             if df.empty:
                 logger.warning(f"No data for {symbol} {timeframe}")
                 return
             
-            # Step 2: Get all conditions for this symbol/timeframe
+            # Step 2: Get ALL conditions for this symbol/timeframe
+            # This includes conditions from ALL users with different price ranges
             conditions = await self._get_conditions_for_symbol_timeframe(symbol, timeframe)
             
             if not conditions:
                 logger.debug(f"No conditions to evaluate for {symbol} {timeframe}")
                 return
             
-            # Step 3: Calculate indicators once (cache them)
+            logger.debug(f"Evaluating {len(conditions)} conditions for {symbol} {timeframe} using shared market data")
+            
+            # Step 3: Calculate indicators once (only for indicator-based conditions)
+            # Price conditions don't need indicators - they use price directly
             indicator_cache = await self._calculate_indicators(df, conditions)
             
-            # Step 4: Evaluate each condition
+            # Step 4: Evaluate each condition using the SAME market data
+            # Even if conditions have different price ranges, they all use same price data
+            current_price = float(df.iloc[-1]["close"])
+            
             for condition in conditions:
                 await self._evaluate_condition(condition, df, indicator_cache, symbol, timeframe)
             
@@ -317,20 +327,37 @@ class CentralizedConditionEvaluator:
         else:
             return df['close'].ewm(span=period).mean()  # Default to EMA
     
-    async def start_evaluation_loop(self, symbols: List[str], timeframes: List[str], interval_seconds: int = 60):
-        """Start continuous evaluation loop."""
-        logger.info(f"Starting evaluation loop for {len(symbols)} symbols, {len(timeframes)} timeframes")
+    async def start_evaluation_loop(self, symbols: Optional[List[str]] = None, timeframes: List[str] = ["1m"], interval_seconds: int = 60):
+        """
+        Start continuous evaluation loop.
+        
+        If symbols not provided, dynamically discovers symbols from active conditions.
+        This ensures we only evaluate symbols that have active conditions.
+        """
+        logger.info(f"Starting evaluation loop for timeframes: {timeframes}")
         
         while self.running:
             try:
-                # Evaluate all symbol/timeframe combinations
+                # Get active symbols from conditions (if not provided)
+                if symbols is None:
+                    symbols = await self._get_active_symbols()
+                    logger.debug(f"Discovered {len(symbols)} active symbols from conditions")
+                
+                # Evaluate all symbol/timeframe combinations in parallel
                 tasks = []
                 for symbol in symbols:
                     for timeframe in timeframes:
                         tasks.append(self.evaluate_symbol_timeframe(symbol, timeframe))
                 
-                # Run evaluations in parallel
-                await asyncio.gather(*tasks, return_exceptions=True)
+                # Run evaluations in parallel (different symbols evaluated simultaneously)
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                
+                # Log any errors
+                for i, result in enumerate(results):
+                    if isinstance(result, Exception):
+                        symbol_idx = i // len(timeframes)
+                        timeframe_idx = i % len(timeframes)
+                        logger.error(f"Error evaluating {symbols[symbol_idx]} {timeframes[timeframe_idx]}: {result}")
                 
                 # Wait before next cycle
                 await asyncio.sleep(interval_seconds)
@@ -338,6 +365,24 @@ class CentralizedConditionEvaluator:
             except Exception as e:
                 logger.error(f"Error in evaluation loop: {e}", exc_info=True)
                 await asyncio.sleep(interval_seconds)
+    
+    async def _get_active_symbols(self) -> List[str]:
+        """Get list of symbols that have active conditions."""
+        if not self.supabase:
+            return []
+        
+        try:
+            # Get unique symbols from condition registry
+            result = self.supabase.table("condition_registry").select("symbol").execute()
+            if not result.data:
+                return []
+            
+            # Extract unique symbols
+            symbols = list(set([row["symbol"] for row in result.data]))
+            return symbols
+        except Exception as e:
+            logger.error(f"Error getting active symbols: {e}")
+            return []
     
     async def stop(self):
         """Stop the evaluator."""
