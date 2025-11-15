@@ -22,32 +22,52 @@ def normalize_condition(condition: Dict[str, Any]) -> Dict[str, Any]:
     
     Handles different bot types and condition formats:
     - DCA Bot conditions
-    - Grid Bot conditions
+    - Grid Bot conditions (price ranges/zones)
     - Trend Following Bot conditions
     - Alert conditions
     """
+    # Detect if this is a price-based condition
+    condition_type = condition.get("type", "indicator")
+    if condition.get("conditionType"):
+        condition_type = condition["conditionType"].lower()
+    
+    # Check if it's a price condition (explicit or implicit)
+    is_price_condition = (
+        condition_type == "price" or 
+        condition_type == "price_action" or
+        (not condition.get("indicator") and condition.get("lowerBound") and condition.get("upperBound"))
+    )
+    
     normalized = {
-        "condition_type": condition.get("type", "indicator"),  # indicator, price, volume
+        "condition_type": "price" if is_price_condition else condition_type,
         "symbol": condition.get("symbol", "").upper().replace("/", ""),  # BTCUSDT
-        "timeframe": condition.get("timeframe", "1h"),
+        "timeframe": condition.get("timeframe", "1m"),  # Grid bots typically use shorter timeframes
         "indicator": condition.get("indicator", ""),
         "component": condition.get("component", condition.get("indicator", "")),
-        "operator": condition.get("operator", ">"),
+        "operator": condition.get("operator", "between"),
         "compare_with": condition.get("compareWith", "value"),
         "compare_value": condition.get("compareValue") or condition.get("value"),
         "period": condition.get("period"),
-        "lower_bound": condition.get("lowerBound"),
-        "upper_bound": condition.get("upperBound"),
+        "lower_bound": condition.get("lowerBound") or condition.get("lower_bound"),
+        "upper_bound": condition.get("upperBound") or condition.get("upper_bound"),
+        "price_field": condition.get("priceField", "close"),  # close, open, high, low
     }
+    
+    # Grid Bot specific: Handle price range conditions
+    if is_price_condition:
+        # Grid bots use "between" operator for price ranges
+        if normalized.get("lower_bound") and normalized.get("upper_bound"):
+            normalized["operator"] = "between"
+        # Handle grid action type (buy/sell)
+        if condition.get("grid_action"):
+            normalized["grid_action"] = condition["grid_action"]  # "buy" or "sell"
+        if condition.get("grid_level"):
+            normalized["grid_level"] = condition["grid_level"]  # Grid level number
     
     # Handle RHS for indicator comparisons
     if condition.get("rhs"):
         normalized["rhs_indicator"] = condition["rhs"].get("indicator")
         normalized["rhs_component"] = condition["rhs"].get("component")
-    
-    # Handle custom conditions
-    if condition.get("conditionType"):
-        normalized["condition_type"] = condition["conditionType"].lower()
     
     # Clean up None values
     normalized = {k: v for k, v in normalized.items() if v is not None}

@@ -100,13 +100,20 @@ class CentralizedConditionEvaluator:
         Calculate all needed indicators once.
         
         Returns a cache of indicator values that can be reused.
+        Note: Price conditions don't need indicator calculation - price is already in df.
         """
         cache = {}
         indicators_needed = set()
         
-        # Collect all unique indicators needed
+        # Collect all unique indicators needed (skip price conditions)
         for condition in conditions:
             indicator_config = condition.get("indicator_config", {})
+            condition_type = indicator_config.get("condition_type", "indicator")
+            
+            # Skip price conditions - they use price directly from df
+            if condition_type == "price":
+                continue
+            
             indicator = indicator_config.get("indicator")
             if indicator:
                 indicators_needed.add(indicator)
@@ -140,17 +147,27 @@ class CentralizedConditionEvaluator:
         try:
             condition_id = condition["condition_id"]
             indicator_config = condition.get("indicator_config", {})
+            condition_type = indicator_config.get("condition_type", "indicator")
             
             # Prepare condition for evaluation
             eval_condition = {
-                "type": indicator_config.get("condition_type", "indicator"),
+                "type": condition_type,
                 "indicator": indicator_config.get("indicator"),
                 "component": indicator_config.get("component"),
-                "operator": indicator_config.get("operator"),
+                "operator": indicator_config.get("operator", "between" if condition_type == "price" else ">"),
                 "compareWith": indicator_config.get("compare_with", "value"),
                 "compareValue": indicator_config.get("compare_value"),
                 "period": indicator_config.get("period"),
             }
+            
+            # Handle price conditions (for grid bots)
+            if condition_type == "price":
+                eval_condition["priceField"] = indicator_config.get("price_field", "close")
+                # Add bounds for "between" operator
+                if indicator_config.get("lower_bound") is not None:
+                    eval_condition["lowerBound"] = indicator_config["lower_bound"]
+                if indicator_config.get("upper_bound") is not None:
+                    eval_condition["upperBound"] = indicator_config["upper_bound"]
             
             # Evaluate condition
             row_index = len(df) - 1  # Latest candle
