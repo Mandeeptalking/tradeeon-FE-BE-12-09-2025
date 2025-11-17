@@ -87,6 +87,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
       - uses: aws-actions/amazon-ecr-login@v2
+      - name: Create ECR repository if it doesn't exist
+        run: |
+          aws ecr describe-repositories --repository-names tradeeon-alert-runner --region ${{ env.AWS_REGION }} || \
+          aws ecr create-repository --repository-name tradeeon-alert-runner --region ${{ env.AWS_REGION }} --image-scanning-configuration scanOnPush=true
       - name: Build and Push
         run: |
           docker build -f Dockerfile.alert-runner -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/tradeeon-alert-runner:latest .
