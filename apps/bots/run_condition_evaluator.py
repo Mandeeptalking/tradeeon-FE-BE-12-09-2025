@@ -38,12 +38,19 @@ api_path = os.path.join(os.path.dirname(__file__), '..', 'api')
 if api_path not in sys.path:
     sys.path.insert(0, api_path)
 
+# Add root path for 'backend' and 'apps' modules
+root_path = os.path.join(os.path.dirname(__file__), '..', '..')
+if root_path not in sys.path:
+    sys.path.insert(0, root_path)
+
 try:
     from condition_evaluator import CentralizedConditionEvaluator
     from apps.api.clients.supabase_client import supabase
 except ImportError as e:
     logger.error(f"Failed to import required modules: {e}")
     logger.error("Make sure you're running from the correct directory")
+    import traceback
+    traceback.print_exc()
     sys.exit(1)
 
 
