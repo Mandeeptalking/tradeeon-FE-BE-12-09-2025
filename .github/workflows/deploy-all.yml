@@ -37,6 +37,10 @@ jobs:
               - 'apps/api/modules/bots/**'
               - 'apps/bots/**'
               - '!apps/bots/condition_evaluator.py'  # Exclude - not yet integrated
+              - '!apps/bots/event_bus.py'  # Exclude - not used by alert runner
+              - '!apps/bots/bot_notifier.py'  # Exclude - not used by alert runner
+              - '!apps/bots/run_condition_evaluator.py'  # Exclude - not used by alert runner
+              - '!apps/bots/run_bot_notifier.py'  # Exclude - not used by alert runner
               - 'backend/**'
               - 'shared/**'
               - 'requirements.txt'
