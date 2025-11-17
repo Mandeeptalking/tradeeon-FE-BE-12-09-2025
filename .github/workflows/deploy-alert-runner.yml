@@ -46,9 +46,17 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v2
     
     - name: Create ECR repository if it doesn't exist
+      continue-on-error: true
       run: |
-        aws ecr describe-repositories --repository-names ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} || \
-        aws ecr create-repository --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} --image-scanning-configuration scanOnPush=true
+        set +e
+        aws ecr describe-repositories --repository-names ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "Repository does not exist, creating it..."
+          aws ecr create-repository --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} --image-scanning-configuration scanOnPush=true
+        else
+          echo "Repository already exists"
+        fi
+        set -e
     
     - name: Build, tag, and push image to Amazon ECR
       id: build-image

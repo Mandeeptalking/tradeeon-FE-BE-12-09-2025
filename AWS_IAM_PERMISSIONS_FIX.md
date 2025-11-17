@@ -65,6 +65,14 @@
         "ecr:DescribeImages"
       ],
       "Resource": "*"
+    },
+    {
+      "Sid": "ECRCreateRepository",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:CreateRepository"
+      ],
+      "Resource": "arn:aws:ecr:us-east-1:531604848081:repository/tradeeon-alert-runner"
     }
   ]
 }
