@@ -5,17 +5,227 @@ from typing import List, Optional, Dict, Any
 import logging
 
 from apps.api.utils.errors import TradeeonError, NotFoundError, DatabaseError
+from apps.api.deps.auth import get_current_user, AuthedUser
 
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from shared.contracts.bots import BotConfig, BotRun, BotStatus, BotType
-from shared.contracts.orders import OrderIntent, ExecutionReport
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/bots", tags=["bots"])
+
+
+def extract_conditions_from_dca_config(bot_config: Dict[str, Any], symbol: str) -> List[Dict[str, Any]]:
+    """
+    Extract conditions from DCA bot configuration.
+    
+    Returns a list of normalized conditions ready for registration.
+    """
+    conditions = []
+    condition_config = bot_config.get("conditionConfig")
+    
+    if not condition_config:
+        return conditions
+    
+    # Handle playbook mode (multiple conditions)
+    if condition_config.get("mode") == "playbook":
+        playbook_conditions = condition_config.get("conditions", [])
+        for playbook_condition in playbook_conditions:
+            if not playbook_condition.get("enabled", True):
+                continue
+            
+            condition_data = playbook_condition.get("condition", {})
+            condition_type = playbook_condition.get("conditionType", "indicator")
+            
+            # Build normalized condition
+            condition = {
+                "type": "price" if condition_type == "Price Action" else "indicator",
+                "symbol": symbol.upper().replace("/", ""),
+                "timeframe": condition_data.get("timeframe", "1h"),
+                "indicator": condition_data.get("indicator"),
+                "component": condition_data.get("component"),
+                "operator": condition_data.get("operator", "crosses_below"),
+                "compareWith": condition_data.get("compareWith", "value"),
+                "compareValue": condition_data.get("compareValue") or condition_data.get("value"),
+                "period": condition_data.get("period"),
+                "lowerBound": condition_data.get("lowerBound"),
+                "upperBound": condition_data.get("upperBound"),
+            }
+            
+            # Remove None values
+            condition = {k: v for k, v in condition.items() if v is not None}
+            conditions.append(condition)
+    
+    # Handle simple mode (single condition)
+    elif condition_config.get("mode") == "simple":
+        condition_data = condition_config.get("condition", {})
+        condition_type = condition_config.get("conditionType", "indicator")
+        
+        condition = {
+            "type": "price" if condition_type == "Price Action" else "indicator",
+            "symbol": symbol.upper().replace("/", ""),
+            "timeframe": condition_data.get("timeframe", "1h"),
+            "indicator": condition_data.get("indicator"),
+            "component": condition_data.get("component"),
+            "operator": condition_data.get("operator", "crosses_below"),
+            "compareWith": condition_data.get("compareWith", "value"),
+            "compareValue": condition_data.get("compareValue") or condition_data.get("value"),
+            "period": condition_data.get("period"),
+            "lowerBound": condition_data.get("lowerBound"),
+            "upperBound": condition_data.get("upperBound"),
+        }
+        
+        # Remove None values
+        condition = {k: v for k, v in condition.items() if v is not None}
+        conditions.append(condition)
+    
+    # Handle DCA rules custom conditions
+    dca_rules = bot_config.get("dcaRules", {})
+    if dca_rules.get("customCondition"):
+        custom_condition = dca_rules.get("customCondition", {}).get("condition", {})
+        condition_type = dca_rules.get("customCondition", {}).get("conditionType", "indicator")
+        
+        condition = {
+            "type": "price" if condition_type == "Price Action" else "indicator",
+            "symbol": symbol.upper().replace("/", ""),
+            "timeframe": custom_condition.get("timeframe", "1h"),
+            "indicator": custom_condition.get("indicator"),
+            "component": custom_condition.get("component"),
+            "operator": custom_condition.get("operator", "crosses_below"),
+            "compareWith": custom_condition.get("compareWith", "value"),
+            "compareValue": custom_condition.get("compareValue") or custom_condition.get("value"),
+            "period": custom_condition.get("period"),
+        }
+        
+        # Remove None values
+        condition = {k: v for k, v in condition.items() if v is not None}
+        conditions.append(condition)
+    
+    return conditions
+
+
+async def register_condition_via_api(condition: Dict[str, Any], api_base_url: str = None) -> Optional[str]:
+    """
+    Register a condition via the condition registry API.
+    
+    Returns condition_id if successful, None otherwise.
+    """
+    try:
+        if api_base_url is None:
+            # Use internal import to call directly
+            from apps.api.routers.condition_registry import normalize_condition, hash_condition
+            from apps.api.clients.supabase_client import supabase
+            from datetime import datetime
+            
+            # Normalize and hash condition
+            normalized = normalize_condition(condition)
+            condition_id = hash_condition(normalized)
+            
+            # Check if condition already exists
+            if supabase:
+                existing = supabase.table("condition_registry").select("*").eq("condition_id", condition_id).execute()
+                
+                if existing.data:
+                    logger.info(f"Condition {condition_id} already exists in registry")
+                    return condition_id
+            
+            # Create new condition entry
+            condition_entry = {
+                "condition_id": condition_id,
+                "condition_type": normalized.get("condition_type", "indicator"),
+                "symbol": normalized.get("symbol"),
+                "timeframe": normalized.get("timeframe"),
+                "indicator_config": normalized,
+                "created_at": datetime.now().isoformat(),
+                "last_evaluated_at": None,
+                "evaluation_count": 0,
+                "last_triggered_at": None,
+                "trigger_count": 0
+            }
+            
+            if supabase:
+                result = supabase.table("condition_registry").insert(condition_entry).execute()
+                logger.info(f"Registered new condition {condition_id}")
+                return condition_id
+            else:
+                logger.warning("Supabase not available - condition not persisted")
+                return None
+        else:
+            # Use HTTP API call (fallback - not recommended)
+            logger.warning("HTTP API calls not implemented - using internal calls only")
+            return None
+    except Exception as e:
+        logger.error(f"Error registering condition: {e}", exc_info=True)
+        return None
+
+
+async def subscribe_bot_to_condition_via_api(
+    bot_id: str,
+    condition_id: str,
+    bot_type: str,
+    bot_config: Dict[str, Any],
+    user_id: str,
+    api_base_url: str = None
+) -> Optional[str]:
+    """
+    Subscribe a bot to a condition via the condition registry API.
+    
+    Returns subscription_id if successful, None otherwise.
+    """
+    try:
+        if api_base_url is None:
+            # Use internal import to call directly
+            from apps.api.clients.supabase_client import supabase
+            from datetime import datetime
+            
+            # Verify condition exists
+            if supabase:
+                condition_check = supabase.table("condition_registry").select("*").eq("condition_id", condition_id).execute()
+                if not condition_check.data:
+                    logger.warning(f"Condition {condition_id} not found in registry")
+                    return None
+            
+            # Check for existing subscription
+            if supabase:
+                existing = supabase.table("user_condition_subscriptions").select("*").eq(
+                    "user_id", user_id
+                ).eq("bot_id", bot_id).eq("condition_id", condition_id).eq("active", True).execute()
+                
+                if existing.data:
+                    logger.info(f"Bot {bot_id} already subscribed to condition {condition_id}")
+                    return existing.data[0]["id"]
+            
+            # Create subscription
+            subscription = {
+                "user_id": user_id,
+                "bot_id": bot_id,
+                "condition_id": condition_id,
+                "bot_type": bot_type,
+                "bot_config": bot_config,
+                "created_at": datetime.now().isoformat(),
+                "active": True,
+                "last_triggered_at": None
+            }
+            
+            if supabase:
+                result = supabase.table("user_condition_subscriptions").insert(subscription).execute()
+                subscription_id = result.data[0]["id"] if result.data else None
+                logger.info(f"Bot {bot_id} subscribed to condition {condition_id}")
+                return subscription_id
+            else:
+                logger.warning("Supabase not available - subscription not persisted")
+                return None
+        else:
+            # Use HTTP API call (requires auth token)
+            # For now, we'll use internal calls
+            logger.warning("HTTP API subscription not implemented - using internal calls")
+            return None
+    except Exception as e:
+        logger.error(f"Error subscribing bot to condition: {e}", exc_info=True)
+        return None
 
 
 @router.get("/")
@@ -125,24 +335,61 @@ async def create_bot(
         # For now, log the config structure
         logger.info(f"Created bot {bot_id} with config keys: {list(config.keys())}")
         if phase1_features:
-            logger.info(f"Phase 1 features enabled: {list(phase1_features.keys())}")
+            logger.info(f"Phase 1 features: {list(phase1_features.keys())}")
         
         return {
             "success": True,
             "bot": bot,
-            "message": "Bot created successfully. Ready to handle Phase 1 features."
+            "bot_id": bot_id
         }
     
+    except TradeeonError:
+        raise
     except Exception as e:
         logger.error(f"Error creating bot: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise TradeeonError(
+            f"Failed to create bot: {str(e)}",
+            "INTERNAL_SERVER_ERROR",
+            status_code=500
+        )
+
+
+def _validate_phase1_features(phase1: Dict[str, Any]):
+    """Validate Phase 1 features structure."""
+    # Market Regime
+    if phase1.get("marketRegime"):
+        regime = phase1["marketRegime"]
+        if not regime.get("regimeTimeframe"):
+            regime["regimeTimeframe"] = "1d"
+    
+    # Dynamic Scaling
+    if phase1.get("dynamicScaling"):
+        scaling = phase1["dynamicScaling"]
+        if not scaling.get("volatilityMultiplier"):
+            scaling["volatilityMultiplier"] = {
+                "lowVolatility": 1.2,
+                "normalVolatility": 1.0,
+                "highVolatility": 0.7
+            }
+        if not scaling.get("supportResistanceMultiplier"):
+            scaling["supportResistanceMultiplier"] = {
+                "nearStrongSupport": 1.5,
+                "neutralZone": 1.0,
+                "nearResistance": 0.5
+            }
+        if not scaling.get("fearGreedIndex"):
+            scaling["fearGreedIndex"] = {
+                "extremeFear": 1.8,
+                "neutral": 1.0,
+                "extremeGreed": 0.5
+            }
 
 
 @router.post("/dca-bots")
 async def create_dca_bot(
     bot_config: Dict[str, Any] = Body(..., description="Full DCA bot configuration including Phase 1 features")
 ):
-    """Create a DCA bot with advanced Phase 1 features."""
+    """Create a DCA bot with advanced Phase 1 features and condition registry integration."""
     try:
         import time
         import sys
@@ -187,6 +434,50 @@ async def create_dca_bot(
         if phase1:
             # Ensure all Phase 1 features have proper structure
             _validate_phase1_features(phase1)
+        
+        # ===== PHASE 1.3: CONDITION REGISTRY INTEGRATION =====
+        condition_ids = []
+        subscription_ids = []
+        
+        # Extract conditions from bot config
+        conditions = extract_conditions_from_dca_config(bot_config, primary_pair)
+        
+        if conditions:
+            logger.info(f"Extracted {len(conditions)} conditions from bot config for bot {bot_id}")
+            
+            # Register each condition
+            for condition in conditions:
+                try:
+                    condition_id = await register_condition_via_api(condition)
+                    if condition_id:
+                        condition_ids.append(condition_id)
+                        logger.info(f"Registered condition {condition_id} for bot {bot_id}")
+                        
+                        # Subscribe bot to condition
+                        subscription_id = await subscribe_bot_to_condition_via_api(
+                            bot_id=bot_id,
+                            condition_id=condition_id,
+                            bot_type="dca",
+                            bot_config=config_dict,
+                            user_id=user_id
+                        )
+                        if subscription_id:
+                            subscription_ids.append(subscription_id)
+                            logger.info(f"Subscribed bot {bot_id} to condition {condition_id}")
+                    else:
+                        logger.warning(f"Failed to register condition for bot {bot_id}: {condition}")
+                except Exception as cond_error:
+                    logger.error(f"Error processing condition for bot {bot_id}: {cond_error}", exc_info=True)
+                    # Continue with bot creation even if condition registration fails
+        else:
+            logger.info(f"No conditions found in bot config for bot {bot_id}")
+        
+        # Store condition IDs in bot config
+        if condition_ids:
+            config_dict["condition_ids"] = condition_ids
+            config_dict["subscription_ids"] = subscription_ids
+            logger.info(f"Stored {len(condition_ids)} condition IDs in bot config")
+        # ===== END PHASE 1.3 INTEGRATION =====
         
         required_capital = bot_config.get("baseOrderSize", 100) * 10  # Estimate
         
@@ -289,165 +580,38 @@ async def create_dca_bot(
                         }
                         
                         # Save to alerts table
-                        supabase.table("alerts").insert(alert).execute()
-                        logger.info(f"Created alert for bot {bot_id} entry condition")
-            
+                        if supabase:
+                            supabase.table("alerts").insert(alert).execute()
+                            logger.info(f"Created alert for bot {bot_id} entry condition")
             except Exception as alert_error:
-                logger.warning(f"Failed to create alert for bot {bot_id}: {alert_error}. Bot created without alert.")
-        
-        logger.info(f"Created DCA bot {bot_id} with {len(selected_pairs)} pairs")
-        logger.info(f"Phase 1 features: {list(phase1.keys()) if phase1 else 'None'}")
+                logger.warning(f"Failed to create alert for bot {bot_id}: {alert_error}")
         
         return {
             "success": True,
             "bot": bot,
-            "bot_id": bot_id,  # Return bot_id for starting
-            "message": "DCA Bot created successfully with Phase 1 features support. Use POST /bots/dca-bots/start-paper to start paper trading."
+            "bot_id": bot_id,
+            "condition_ids": condition_ids,  # Return condition IDs for frontend
+            "subscription_ids": subscription_ids  # Return subscription IDs for frontend
         }
     
-    except Exception as e:
-        logger.error(f"Error creating DCA bot: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-def _validate_phase1_features(phase1: Dict[str, Any]):
-    """Validate Phase 1 features structure."""
-    # Market Regime
-    if phase1.get("marketRegime"):
-        regime = phase1["marketRegime"]
-        if not regime.get("regimeTimeframe"):
-            regime["regimeTimeframe"] = "1d"
-        if not regime.get("pauseConditions"):
-            regime["pauseConditions"] = {"belowMovingAverage": True, "maPeriod": 200, "rsiThreshold": 30, "consecutivePeriods": 7, "useTimeframeScaling": True}
-        if not regime.get("resumeConditions"):
-            regime["resumeConditions"] = {"volumeDecreaseThreshold": 20, "consolidationPeriods": 5, "useTimeframeScaling": True, "priceRangePercent": 5}
-    
-    # Dynamic Scaling
-    if phase1.get("dynamicScaling"):
-        scaling = phase1["dynamicScaling"]
-        if not scaling.get("volatilityMultiplier"):
-            scaling["volatilityMultiplier"] = {"lowVolatility": 1.2, "normalVolatility": 1.0, "highVolatility": 0.7}
-        if not scaling.get("supportResistanceMultiplier"):
-            scaling["supportResistanceMultiplier"] = {"nearStrongSupport": 1.5, "neutralZone": 1.0, "nearResistance": 0.5}
-        if not scaling.get("fearGreedIndex"):
-            scaling["fearGreedIndex"] = {"extremeFear": 1.8, "neutral": 1.0, "extremeGreed": 0.5}
-    
-    # Profit Strategy
-    if phase1.get("profitStrategy"):
-        profit = phase1["profitStrategy"]
-        if not profit.get("partialTargets"):
-            profit["partialTargets"] = []
-        if not profit.get("trailingStop"):
-            profit["trailingStop"] = {"enabled": False, "activationProfit": 10, "trailingDistance": 5, "onlyUp": True}
-        if not profit.get("takeProfitAndRestart"):
-            profit["takeProfitAndRestart"] = {"enabled": False, "profitTarget": 30, "useOriginalCapital": True}
-        if not profit.get("timeBasedExit"):
-            profit["timeBasedExit"] = {"enabled": False, "maxHoldDays": 30, "minProfit": 10}
-    
-    # Emergency Brake
-    if phase1.get("emergencyBrake"):
-        brake = phase1["emergencyBrake"]
-        if not brake.get("circuitBreaker"):
-            brake["circuitBreaker"] = {"enabled": True, "flashCrashPercent": 10, "timeWindowMinutes": 5}
-        if not brake.get("marketWideCrashDetection"):
-            brake["marketWideCrashDetection"] = {"enabled": True, "correlationThreshold": 0.8, "marketDropPercent": 15}
-        if not brake.get("recoveryMode"):
-            brake["recoveryMode"] = {"enabled": True, "stabilizationBars": 10, "resumeAfterStabilized": True}
-
-
-@router.get("/{bot_id}")
-async def get_bot(bot_id: str = Path(..., description="Bot ID")):
-    """Get bot details from database."""
-    try:
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        # Try database first
-        bot = None
-        try:
-            from db_service import db_service
-            bot = db_service.get_bot(bot_id)
-        except Exception as db_error:
-            logger.warning(f"Failed to fetch bot from database: {db_error}")
-        
-        # Fallback to in-memory
-        if not bot:
-            from bot_manager import bot_manager
-            bot_config = bot_manager.get_bot_config(bot_id)
-            if bot_config:
-                # Also check if bot is currently running
-                runner = bot_manager.get_runner(bot_id)
-                current_status = "running" if runner and runner.running else "inactive"
-                
-                bot = {
-                    "bot_id": bot_id,
-                    "user_id": bot_config.get("user_id", "current_user"),
-                    "name": bot_config.get("botName", "DCA Bot"),
-                    "bot_type": "dca",
-                    "status": current_status,
-                    "symbol": bot_config.get("pair", bot_config.get("selectedPairs", ["BTCUSDT"])[0] if bot_config.get("selectedPairs") else "BTCUSDT"),
-                    "interval": "1h",
-                    "config": bot_config,
-                    "required_capital": bot_config.get("baseOrderSize", 100) * 10
-                }
-        
-        if not bot:
-            raise HTTPException(status_code=404, detail=f"Bot {bot_id} not found")
-        
-        return {
-            "success": True,
-            "bot": bot
-        }
-    
-    except HTTPException:
+    except TradeeonError:
         raise
     except Exception as e:
-        logger.error(f"Error fetching bot: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/{bot_id}/start")
-async def start_bot(
-    bot_id: str = Path(..., description="Bot ID"),
-    paper_trading: bool = Body(default=True, description="Enable paper trading"),
-    initial_balance: float = Body(default=10000.0, description="Initial paper trading balance"),
-    interval_seconds: int = Body(default=60, description="Execution interval in seconds")
-):
-    """Start a bot with paper trading."""
-    try:
-        import sys
-        import os
-        
-        # Add bots directory to path
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-            
-        from bot_runner import BotRunner
-        
-        # TODO: Load bot config from database using bot_id
-        # For now, return error - need to get config first
-        # This should be called after creating a bot, or we need to pass config
-        
-        return {
-            "success": False,
-            "message": "Please use /bots/dca-bots/{bot_id}/start-paper after creating a bot"
-        }
-    
-    except Exception as e:
-        logger.error(f"Error starting bot: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error creating DCA bot: {e}", exc_info=True)
+        raise TradeeonError(
+            f"Failed to create DCA bot: {str(e)}",
+            "INTERNAL_SERVER_ERROR",
+            status_code=500
+        )
 
 
 @router.post("/dca-bots/{bot_id}/start-paper")
 async def start_dca_bot_paper(
     bot_id: str = Path(..., description="Bot ID"),
-    initial_balance: float = Body(default=10000.0, description="Initial paper trading balance"),
-    interval_seconds: int = Body(default=60, description="Execution interval in seconds"),
-    use_live_data: bool = Body(default=True, description="Use live market data from Binance")
+    start_config: Dict[str, Any] = Body(default={}, description="Start configuration"),
+    user: AuthedUser = Depends(get_current_user)
 ):
-    """Start a DCA bot in paper trading mode with live market data."""
+    """Start a DCA bot in paper trading mode."""
     try:
         import sys
         import os
@@ -456,481 +620,107 @@ async def start_dca_bot_paper(
         bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
         if bots_path not in sys.path:
             sys.path.insert(0, bots_path)
-            
-        from bot_runner import BotRunner
-        from bot_manager import bot_manager
         
-        # Check if already running
-        existing_runner = bot_manager.get_runner(bot_id)
-        if existing_runner and existing_runner.running:
-            status = await existing_runner.get_status()
+        from db_service import db_service
+        from bot_execution_service import bot_execution_service
+        
+        # Get bot from database
+        if not db_service or not db_service.enabled:
+            raise TradeeonError(
+                "Database service not available",
+                "SERVICE_UNAVAILABLE",
+                status_code=503
+            )
+        
+        # Get bot from database
+        bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
+        
+        if not bot_data:
+            raise NotFoundError("Bot", f"Bot {bot_id} not found")
+        
+        # Verify bot belongs to user
+        if bot_data.get("user_id") != user.user_id:
+            raise HTTPException(status_code=403, detail="Access denied: Bot does not belong to user")
+        
+        # Check if bot is already running
+        if bot_execution_service.is_running(bot_id):
             return {
-                "success": False,
-                "message": f"Bot {bot_id} is already running",
-                "status": status
+                "success": True,
+                "message": "Bot is already running",
+                "bot_id": bot_id,
+                "status": "running"
             }
         
         # Get bot config
-        bot_config = bot_manager.get_bot_config(bot_id)
-        if not bot_config:
-            return {
-                "success": False,
-                "message": f"Bot config not found for {bot_id}. Create bot first using POST /bots/dca-bots"
-            }
+        bot_config = bot_data.get("config", {})
+        bot_config["user_id"] = user.user_id  # Ensure user_id is in config
+        bot_config["botName"] = bot_data.get("name", "DCA Bot")
         
-        # Try to get user_id from database or config
-        user_id = bot_config.get("user_id", "current_user")  # TODO: Get from auth
-        try:
-            sys.path.insert(0, bots_path)
-            from db_service import db_service
-            bot_data = db_service.get_bot(bot_id)
-            if bot_data and bot_data.get("user_id"):
-                user_id = bot_data["user_id"]
-        except Exception:
-            pass
+        # Get start configuration
+        initial_balance = start_config.get("initial_balance", 10000.0)
+        interval_seconds = start_config.get("interval_seconds", 60)
+        use_live_data = start_config.get("use_live_data", True)
         
-        # Update config to ensure live data is used
-        if use_live_data:
-            bot_config['useLiveData'] = True
-            logger.info(f"📊 Bot configured to use LIVE market data from Binance")
-        
-        # Validate Phase 1 features
-        phase1 = bot_config.get("phase1Features", {})
-        if phase1:
-            _validate_phase1_features(phase1)
-        
-        logger.info(f"🚀 Starting DCA bot {bot_id} in TEST mode (paper trading)")
-        logger.info(f"💰 Initial balance: ${initial_balance}")
-        logger.info(f"⏱️  Execution interval: {interval_seconds} seconds")
-        
-        # Create and start bot runner with bot_id and user_id
-        runner = BotRunner(
-            bot_config=bot_config,
-            paper_trading=True,
-            initial_balance=initial_balance,
-            interval_seconds=interval_seconds,
+        # Start bot
+        started = await bot_execution_service.start_bot(
             bot_id=bot_id,
-            user_id=user_id
-        )
-        
-        await runner.start()
-        
-        # Store runner and run_id
-        bot_manager.add_runner(bot_id, runner)
-        if runner.run_id:
-            bot_manager.set_run_id(bot_id, runner.run_id)
-        
-        logger.info(f"✅ Started paper trading bot {bot_id}")
-        
-        return {
-            "success": True,
-            "message": f"Paper trading bot {bot_id} started successfully",
-            "bot_id": bot_id,
-            "paper_trading": True,
-            "initial_balance": initial_balance,
-            "interval_seconds": interval_seconds
-        }
-    
-    except Exception as e:
-        logger.error(f"Error starting paper trading bot: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/dca-bots/start-paper")
-async def start_dca_bot_paper_with_config(
-    bot_config: Dict[str, Any] = Body(..., description="Bot configuration"),
-    initial_balance: float = Body(default=10000.0, description="Initial paper trading balance"),
-    interval_seconds: int = Body(default=60, description="Execution interval in seconds")
-):
-    """Start a DCA bot in paper trading mode with provided config."""
-    try:
-        import sys
-        import os
-        
-        # Add bots directory to path
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-            
-        from bot_runner import BotRunner
-        
-        # Validate config
-        phase1 = bot_config.get("phase1Features", {})
-        if phase1:
-            _validate_phase1_features(phase1)
-        
-        # Create bot runner
-        runner = BotRunner(
             bot_config=bot_config,
-            paper_trading=True,
+            mode="paper",
             initial_balance=initial_balance,
             interval_seconds=interval_seconds
         )
         
-        # Start bot (runs in background)
-        await runner.start()
-        
-        # Store runner (in production, store in database/cache by bot_id)
-        # For now, return success
-        return {
-            "success": True,
-            "message": "Paper trading bot started successfully",
-            "bot_id": bot_config.get("botName", "dca_bot"),
-            "paper_trading": True,
-            "initial_balance": initial_balance,
-            "interval_seconds": interval_seconds,
-            "note": "Bot is running in background. Use GET /bots/dca-bots/status/{bot_id} to check status"
-        }
-    
-    except Exception as e:
-        logger.error(f"Error starting paper trading bot: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/dca-bots/status/{bot_id}")
-async def get_bot_status(bot_id: str = Path(..., description="Bot ID")):
-    """Get bot execution status and statistics."""
-    try:
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-            
-        from bot_manager import bot_manager
-        
-        # Check if bot is currently running
-        runner = bot_manager.get_runner(bot_id)
-        if runner and runner.running:
-            # Get live status from runner
-            status = await runner.get_status()
-            status["bot_id"] = bot_id
-            status["success"] = True
-            return status
-        
-        # Bot not running - try to get from database
-        try:
-            from db_service import db_service
-            bot_data = db_service.get_bot(bot_id)
-            if bot_data:
-                # Get latest run for this bot
-                runs_result = db_service.supabase.table("bot_runs").select("*").eq("bot_id", bot_id).order("started_at", desc=True).limit(1).execute()
-                latest_run = runs_result.data[0] if runs_result.data else None
-                
-                return {
-                    "success": True,
-                    "bot_id": bot_id,
-                    "status": bot_data.get("status", "inactive"),
-                    "paused": False,
-                    "running": False,
-                    "message": f"Bot {bot_id} is not currently running",
-                    "latest_run": latest_run,
-                    "bot_info": {
-                        "name": bot_data.get("name"),
-                        "symbol": bot_data.get("symbol"),
-                        "created_at": bot_data.get("created_at")
-                    }
-                }
-        except Exception as db_error:
-            logger.warning(f"Failed to get bot from database: {db_error}")
-        
-        return {
-            "success": False,
-            "bot_id": bot_id,
-            "status": "not_running",
-            "message": f"Bot {bot_id} is not running. Start it using POST /bots/dca-bots/{bot_id}/start-paper"
-        }
-    
-    except Exception as e:
-        logger.error(f"Error getting bot status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/{bot_id}/stop")
-async def stop_bot(bot_id: str = Path(..., description="Bot ID")):
-    """Stop a bot."""
-    try:
-        import sys
-        import os
-        
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-            
-        from bot_manager import bot_manager
-        
-        runner = bot_manager.get_runner(bot_id)
-        if not runner:
-            # Check if bot exists but is not running
-            bot_config = bot_manager.get_bot_config(bot_id)
-            if not bot_config:
-                try:
-                    from db_service import db_service
-                    bot_data = db_service.get_bot(bot_id)
-                    if not bot_data:
-                        raise HTTPException(status_code=404, detail=f"Bot {bot_id} not found")
-                    # Bot exists but not running - update status
-                    db_service.update_bot_status(bot_id, "stopped")
-                    return {
-                        "success": True,
-                        "message": f"Bot {bot_id} is already stopped (status updated)"
-                    }
-                except Exception:
-                    raise HTTPException(status_code=404, detail=f"Bot {bot_id} not found")
-            
-            return {
-                "success": False,
-                "message": f"Bot {bot_id} is not running"
-            }
-        
-        # Stop the runner (will update database automatically)
-        await runner.stop()
-        bot_manager.remove_runner(bot_id)
-        
-        return {
-            "success": True,
-            "message": f"Bot {bot_id} stopped successfully"
-        }
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error stopping bot: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/{bot_id}/runs")
-async def get_bot_runs(
-    bot_id: str = Path(..., description="Bot ID"),
-    limit: int = Query(default=20, ge=1, le=100, description="Number of runs to return")
-):
-    """Get bot run history from database."""
-    try:
-        import sys
-        import os
-        
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        runs = []
-        try:
-            from db_service import db_service
-            if db_service.enabled:
-                # Query bot_runs table
-                result = db_service.supabase.table("bot_runs").select("*").eq("bot_id", bot_id).order("started_at", desc=True).limit(limit).execute()
-                if result.data:
-                    runs = result.data
-        except Exception as db_error:
-            logger.warning(f"Failed to fetch bot runs from database: {db_error}")
-            # Return empty if database not available
-            pass
-        
-        return {
-            "success": True,
-            "runs": runs[:limit],
-            "count": len(runs)
-        }
-    
-    except Exception as e:
-        logger.error(f"Error fetching bot runs: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.put("/{bot_id}")
-async def update_bot(
-    bot_id: str = Path(..., description="Bot ID"),
-    config: Dict[str, Any] = Body(..., description="Updated bot configuration")
-):
-    """Update bot configuration."""
-    try:
-        import sys
-        import os
-        import time
-        
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        # Check if bot is running (can't update running bots)
-        from bot_manager import bot_manager
-        runner = bot_manager.get_runner(bot_id)
-        if runner and runner.running:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Cannot update bot {bot_id} while it is running. Stop it first."
+        if not started:
+            raise TradeeonError(
+                "Failed to start bot",
+                "INTERNAL_SERVER_ERROR",
+                status_code=500
             )
         
-        # Prepare updated config
-        config_dict = {
-            "botName": config.get("botName"),
-            "direction": config.get("direction"),
-            "pairs": config.get("selectedPairs", [config.get("pair")]),
-            "exchange": config.get("exchange"),
-            "botType": config.get("botType"),
-            "baseOrderSize": config.get("baseOrderSize"),
-            "startOrderType": config.get("startOrderType"),
-            "conditionConfig": config.get("conditionConfig"),
-            "dcaRules": config.get("dcaRules", {}),
-            "dcaAmount": config.get("dcaAmount", {}),
-            "phase1Features": config.get("phase1Features", {})
-        }
+        # Create bot run record
+        if db_service:
+            run_id = db_service.create_bot_run(
+                bot_id=bot_id,
+                user_id=user.user_id,
+                status="running"
+            )
+        else:
+            run_id = None
         
-        # Validate Phase 1 features
-        phase1 = config_dict.get("phase1Features", {})
-        if phase1:
-            _validate_phase1_features(phase1)
-        
-        # Update in database
-        try:
-            from db_service import db_service
-            if db_service.enabled:
-                # Update config JSONB in database
-                db_service.supabase.table("bots").update({
-                    "config": config_dict,
-                    "name": config.get("botName", "DCA Bot"),
-                    "updated_at": datetime.now().isoformat()
-                }).eq("bot_id", bot_id).execute()
-                
-                logger.info(f"✅ Bot {bot_id} updated in database")
-        except Exception as db_error:
-            logger.warning(f"Failed to update bot in database: {db_error}")
-        
-        # Update in-memory config (fallback)
-        bot_manager.store_bot_config(bot_id, config)
+        logger.info(f"✅ DCA bot {bot_id} started in paper trading mode")
         
         return {
             "success": True,
-            "message": f"Bot {bot_id} updated successfully",
-            "updated_at": int(time.time() * 1000)
+            "message": "Bot started successfully in paper trading mode",
+            "bot_id": bot_id,
+            "run_id": run_id,
+            "status": "running",
+            "mode": "paper",
+            "initial_balance": initial_balance,
+            "interval_seconds": interval_seconds
         }
-    
-    except HTTPException:
+        
+    except NotFoundError:
+        raise
+    except TradeeonError:
         raise
     except Exception as e:
-        logger.error(f"Error updating bot: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error starting DCA bot in paper mode: {e}", exc_info=True)
+        raise TradeeonError(
+            f"Failed to start bot: {str(e)}",
+            "INTERNAL_SERVER_ERROR",
+            status_code=500
+        )
 
 
-@router.post("/{bot_id}/pause")
-async def pause_bot(bot_id: str = Path(..., description="Bot ID")):
-    """Pause a running bot (pause execution but keep it loaded)."""
-    try:
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        from bot_manager import bot_manager
-        
-        # Check if bot exists
-        runner = bot_manager.get_runner(bot_id)
-        if not runner:
-            raise HTTPException(status_code=404, detail=f"Bot {bot_id} is not running")
-        
-        if not runner.running:
-            return {
-                "success": True,
-                "message": f"Bot {bot_id} is already paused/stopped"
-            }
-        
-        # Pause the executor (if supported)
-        if runner.executor:
-            runner.executor.paused = True
-        
-        # Update status in database
-        try:
-            from db_service import db_service
-            db_service.update_bot_status(bot_id, "paused")
-        except Exception as db_error:
-            logger.warning(f"Failed to update bot status in database: {db_error}")
-        
-        return {
-            "success": True,
-            "message": f"Bot {bot_id} paused successfully"
-        }
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error pausing bot: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/{bot_id}/resume")
-async def resume_bot(bot_id: str = Path(..., description="Bot ID")):
-    """Resume a paused bot."""
-    try:
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        from bot_manager import bot_manager
-        
-        # Check if bot exists
-        runner = bot_manager.get_runner(bot_id)
-        if not runner:
-            raise HTTPException(status_code=404, detail=f"Bot {bot_id} is not running or doesn't exist")
-        
-        if runner.running and not (runner.executor and runner.executor.paused):
-            return {
-                "success": True,
-                "message": f"Bot {bot_id} is already running"
-            }
-        
-        # Resume the executor
-        if runner.executor:
-            runner.executor.paused = False
-        
-        # Update status in database
-        try:
-            from db_service import db_service
-            db_service.update_bot_status(bot_id, "running")
-        except Exception as db_error:
-            logger.warning(f"Failed to update bot status in database: {db_error}")
-        
-        return {
-            "success": True,
-            "message": f"Bot {bot_id} resumed successfully"
-        }
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error resuming bot: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.delete("/{bot_id}")
-async def delete_bot(bot_id: str = Path(..., description="Bot ID")):
-    """Delete a bot and all its data."""
-    try:
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        from bot_manager import bot_manager
-        
-        # Check if bot is running
-        runner = bot_manager.get_runner(bot_id)
-        if runner and runner.running:
-            # Stop it first
-            await runner.stop()
-            bot_manager.remove_runner(bot_id)
-        
-        # Delete from database (cascade will delete bot_runs, order_logs)
-        try:
-            from db_service import db_service
-            if db_service.enabled:
-                db_service.supabase.table("bots").delete().eq("bot_id", bot_id).execute()
-                logger.info(f"✅ Bot {bot_id} and all related data deleted from database")
-        except Exception as db_error:
-            logger.warning(f"Failed to delete bot from database: {db_error}")
-        
-        # Remove from in-memory storage (will be cleared on restart)
-        
-        return {
-            "success": True,
-            "message": f"Bot {bot_id} deleted successfully. All related data (runs, orders) also deleted."
-        }
-    
-    except Exception as e:
-        logger.error(f"Error deleting bot: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+@router.post("/dca-bots/{bot_id}/start")
+async def start_dca_bot_live(
+    bot_id: str = Path(..., description="Bot ID"),
+    start_config: Dict[str, Any] = Body(default={}, description="Start configuration"),
+    user: AuthedUser = Depends(get_current_user)
+):
+    """Start a DCA bot in live trading mode (NOT IMPLEMENTED YET)."""
+    raise HTTPException(
+        status_code=501,
+        detail="Live trading is not implemented yet. Please use paper trading mode for now."
+    )
