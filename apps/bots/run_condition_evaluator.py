@@ -17,12 +17,18 @@ import os
 from typing import Optional
 
 # Setup logging
+# Determine log path (use /app/logs in Docker, ./ in local)
+log_dir = os.getenv('LOG_DIR', './')
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, 'condition_evaluator.log')
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler('/app/logs/condition_evaluator.log')
+        logging.FileHandler(log_file)
     ]
 )
 

@@ -29,5 +29,7 @@ RUN mkdir -p /app/logs
 ENV PYTHONPATH=/app
 
 # Run Condition Evaluator
+# Note: Path setup is handled by run_condition_evaluator.py
+WORKDIR /app
 CMD ["python", "apps/bots/run_condition_evaluator.py"]
 
