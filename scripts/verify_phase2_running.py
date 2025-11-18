@@ -151,10 +151,10 @@ async def check_registered_conditions():
         result = supabase.table("condition_registry").select("*", count="exact").execute()
         total_conditions = result.count if hasattr(result, 'count') else len(result.data) if result.data else 0
         
-        # Check active subscriptions
+        # Check active subscriptions (use 'active' boolean column, not 'status')
         subscriptions_result = supabase.table("user_condition_subscriptions")\
             .select("*", count="exact")\
-            .eq("status", "active")\
+            .eq("active", True)\
             .execute()
         active_subscriptions = subscriptions_result.count if hasattr(subscriptions_result, 'count') else len(subscriptions_result.data) if subscriptions_result.data else 0
         
