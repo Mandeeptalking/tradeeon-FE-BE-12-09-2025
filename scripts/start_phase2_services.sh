@@ -8,10 +8,18 @@ echo "========================================="
 echo "Starting Phase 2 Services"
 echo "========================================="
 
+# Detect Docker Compose command (supports both docker-compose and docker compose)
+DOCKER_COMPOSE_CMD=""
+if command -v docker-compose &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker-compose"
+elif docker compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker compose"
+fi
+
 # Check if Docker Compose is available
-if command -v docker-compose &> /dev/null || command -v docker &> /dev/null; then
+if [ -n "$DOCKER_COMPOSE_CMD" ]; then
     echo ""
-    echo "Using Docker Compose..."
+    echo "Using Docker Compose ($DOCKER_COMPOSE_CMD)..."
     
     # Navigate to project root
     cd "$(dirname "$0")/.."
@@ -22,30 +30,32 @@ if command -v docker-compose &> /dev/null || command -v docker &> /dev/null; the
         
         # Start Redis if not running
         echo "Starting Redis..."
-        docker-compose up -d redis
+        $DOCKER_COMPOSE_CMD up -d redis
         sleep 2
         
         # Start condition evaluator
         echo "Starting Condition Evaluator..."
-        docker-compose up -d condition-evaluator
+        $DOCKER_COMPOSE_CMD up -d condition-evaluator
         
         # Start bot notifier
         echo "Starting Bot Notifier..."
-        docker-compose up -d bot-notifier
+        $DOCKER_COMPOSE_CMD up -d bot-notifier
+        
+        sleep 3
         
         sleep 3
         
         # Check status
         echo ""
         echo "Service Status:"
-        docker-compose ps condition-evaluator bot-notifier redis
+        $DOCKER_COMPOSE_CMD ps condition-evaluator bot-notifier redis
         
         echo ""
         echo "✅ Services started via Docker Compose"
         echo ""
         echo "To view logs:"
-        echo "  docker-compose logs -f condition-evaluator"
-        echo "  docker-compose logs -f bot-notifier"
+        echo "  $DOCKER_COMPOSE_CMD logs -f condition-evaluator"
+        echo "  $DOCKER_COMPOSE_CMD logs -f bot-notifier"
         
     else
         echo "❌ docker-compose.yml not found"
