@@ -88,18 +88,21 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - uses: aws-actions/amazon-ecr-login@v2
       - name: Create ECR repository if it doesn't exist
-        continue-on-error: true
         run: |
-          set +e
-          aws ecr describe-repositories --repository-names tradeeon-alert-runner --region ${{ env.AWS_REGION }} > /dev/null 2>&1
-          if [ $? -ne 0 ]; then
-            echo "Repository does not exist, creating it..."
-            aws ecr create-repository --repository-name tradeeon-alert-runner --region ${{ env.AWS_REGION }} --image-scanning-configuration scanOnPush=true
+          if ! aws ecr describe-repositories --repository-names tradeeon-alert-runner --region ${{ env.AWS_REGION }} 2>/dev/null; then
+            echo "Repository does not exist, attempting to create it..."
+            if aws ecr create-repository --repository-name tradeeon-alert-runner --region ${{ env.AWS_REGION }} --image-scanning-configuration scanOnPush=true 2>&1; then
+              echo "Repository created successfully"
+            else
+              echo "⚠️ Warning: Failed to create repository. It may already exist or you may need IAM permissions."
+              echo "Continuing anyway - if push fails, create the repository manually:"
+              echo "aws ecr create-repository --repository-name tradeeon-alert-runner --region ${{ env.AWS_REGION }}"
+            fi
           else
             echo "Repository already exists"
           fi
-          set -e
       - name: Build and Push
+        continue-on-error: false
         run: |
           docker build -f Dockerfile.alert-runner -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/tradeeon-alert-runner:latest .
           docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/tradeeon-alert-runner:latest
