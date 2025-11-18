@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  # Redis service (required for event bus)
+  redis:
+    image: redis:7-alpine
+    container_name: tradeeon-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tradeeon-network
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tradeeon-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - REDIS_URL=redis://redis:6379
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173}
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - tradeeon-network
+
+  # Condition Evaluator Service
+  condition-evaluator:
+    build:
+      context: .
+      dockerfile: Dockerfile.condition-evaluator
+    container_name: tradeeon-condition-evaluator
+    environment:
+      - PYTHONPATH=/app
+      - LOG_DIR=/app/logs
+      - REDIS_URL=redis://redis:6379
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - EVALUATOR_INTERVAL_SECONDS=${EVALUATOR_INTERVAL_SECONDS:-60}
+      - EVALUATOR_TIMEFRAMES=${EVALUATOR_TIMEFRAMES:-1h,4h,1d}
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - tradeeon-network
+
+  # Bot Notifier Service
+  bot-notifier:
+    build:
+      context: .
+      dockerfile: Dockerfile.bot-notifier
+    container_name: tradeeon-bot-notifier
+    environment:
+      - PYTHONPATH=/app
+      - LOG_DIR=/app/logs
+      - REDIS_URL=redis://redis:6379
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+      condition-evaluator:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - tradeeon-network
+
+  # Alert Runner Service (optional - runs separately)
+  alert-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.alert-runner
+    container_name: tradeeon-alert-runner
+    environment:
+      - PYTHONPATH=/app
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - ALERT_RUNNER_POLL_MS=${ALERT_RUNNER_POLL_MS:-1000}
+      - ALERT_MAX_ALERTS_PER_SYMBOL=${ALERT_MAX_ALERTS_PER_SYMBOL:-200}
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - tradeeon-network
+    profiles:
+      - alert-runner  # Only start with --profile alert-runner
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  tradeeon-network:
+    driver: bridge
+
