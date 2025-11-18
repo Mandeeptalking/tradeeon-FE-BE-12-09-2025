@@ -6,7 +6,8 @@ on:
   workflow_dispatch:  # Manual trigger
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: us-east-1  # For ECS/ECR (backend services)
+  AWS_REGION_FRONTEND: ap-southeast-1  # For S3/CloudFront (frontend)
   AWS_ACCOUNT_ID: 531604848081
   ECS_CLUSTER: tradeeon-cluster
 
@@ -117,13 +118,16 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
+    env:
+      S3_BUCKET: tradeeon-frontend
+      CLOUDFRONT_DISTRIBUTION_ID: EMF4IMNT9637C
     steps:
       - uses: actions/checkout@v4
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION_FRONTEND }}
       - uses: actions/setup-node@v4
         with:
           node-version: '18'
@@ -144,18 +148,10 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || '' }}
         run: npm run build
       - name: Deploy to S3
-        continue-on-error: true
         run: |
-          aws s3 sync apps/frontend/dist/ s3://tradeeon-frontend/ --delete || echo "S3 sync failed, but continuing..."
+          aws s3 sync apps/frontend/dist/ s3://${{ env.S3_BUCKET }}/ --delete --region ${{ env.AWS_REGION_FRONTEND }}
       - name: Invalidate CloudFront
-        continue-on-error: true
-        env:
-          CLOUDFRONT_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
-          if [ -n "$CLOUDFRONT_ID" ]; then
-            aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_ID" --paths "/*"
-          else
-            echo "CloudFront distribution ID not set, skipping invalidation"
-          fi
+          aws cloudfront create-invalidation --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
 
 
