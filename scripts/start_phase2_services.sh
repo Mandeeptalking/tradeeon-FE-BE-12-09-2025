@@ -43,8 +43,6 @@ if [ -n "$DOCKER_COMPOSE_CMD" ]; then
         
         sleep 3
         
-        sleep 3
-        
         # Check status
         echo ""
         echo "Service Status:"
