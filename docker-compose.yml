@@ -36,9 +36,11 @@ services:
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173}
     volumes:
       - ./logs:/app/logs
-    depends_on:
-      redis:
-        condition: service_healthy
+    # Redis dependency removed - backend can start without Redis
+    # Redis is optional for Phase 2 features, but not required for basic API
+    # depends_on:
+    #   redis:
+    #     condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
