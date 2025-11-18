@@ -720,3 +720,521 @@ async def start_dca_bot_live(
         status_code=501,
         detail="Live trading is not implemented yet. Please use paper trading mode for now."
     )
+
+
+# ==================== BOT CONTROL ENDPOINTS ====================
+
+@router.post("/dca-bots/{bot_id}/stop")
+async def stop_dca_bot(
+    bot_id: str = Path(..., description="Bot ID"),
+    user: AuthedUser = Depends(get_current_user)
+):
+    """Stop a running DCA bot."""
+    try:
+        import sys
+        import os
+        
+        # Add bots directory to path
+        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
+        if bots_path not in sys.path:
+            sys.path.insert(0, bots_path)
+        
+        from db_service import db_service
+        from bot_execution_service import bot_execution_service
+        
+        # Verify bot belongs to user
+        bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
+        if not bot_data:
+            raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
+        
+        # Stop bot
+        stopped = await bot_execution_service.stop_bot(bot_id)
+        
+        if not stopped:
+            # Bot might not be running
+            return {
+                "success": True,
+                "message": "Bot is not running or already stopped",
+                "bot_id": bot_id,
+                "status": "stopped"
+            }
+        
+        logger.info(f"✅ DCA bot {bot_id} stopped successfully")
+        
+        return {
+            "success": True,
+            "message": "Bot stopped successfully",
+            "bot_id": bot_id,
+            "status": "stopped"
+        }
+        
+    except NotFoundError:
+        raise
+    except Exception as e:
+        logger.error(f"Error stopping DCA bot: {e}", exc_info=True)
+        raise TradeeonError(
+            f"Failed to stop bot: {str(e)}",
+            "INTERNAL_SERVER_ERROR",
+            status_code=500
+        )
+
+
+@router.post("/dca-bots/{bot_id}/pause")
+async def pause_dca_bot(
+    bot_id: str = Path(..., description="Bot ID"),
+    user: AuthedUser = Depends(get_current_user)
+):
+    """Pause a running DCA bot."""
+    try:
+        import sys
+        import os
+        
+        # Add bots directory to path
+        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
+        if bots_path not in sys.path:
+            sys.path.insert(0, bots_path)
+        
+        from db_service import db_service
+        from bot_execution_service import bot_execution_service
+        
+        # Verify bot belongs to user
+        bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
+        if not bot_data:
+            raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
+        
+        # Pause bot
+        paused = await bot_execution_service.pause_bot(bot_id)
+        
+        if not paused:
+            # Bot might not be running
+            raise HTTPException(
+                status_code=400,
+                detail="Bot is not running. Cannot pause."
+            )
+        
+        logger.info(f"✅ DCA bot {bot_id} paused successfully")
+        
+        return {
+            "success": True,
+            "message": "Bot paused successfully",
+            "bot_id": bot_id,
+            "status": "paused"
+        }
+        
+    except NotFoundError:
+        raise
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error pausing DCA bot: {e}", exc_info=True)
+        raise TradeeonError(
+            f"Failed to pause bot: {str(e)}",
+            "INTERNAL_SERVER_ERROR",
+            status_code=500
+        )
+
+
+@router.post("/dca-bots/{bot_id}/resume")
+async def resume_dca_bot(
+    bot_id: str = Path(..., description="Bot ID"),
+    user: AuthedUser = Depends(get_current_user)
+):
+    """Resume a paused DCA bot."""
+    try:
+        import sys
+        import os
+        
+        # Add bots directory to path
+        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
+        if bots_path not in sys.path:
+            sys.path.insert(0, bots_path)
+        
+        from db_service import db_service
+        from bot_execution_service import bot_execution_service
+        
+        # Verify bot belongs to user
+        bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
+        if not bot_data:
+            raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
+        
+        # Resume bot
+        resumed = await bot_execution_service.resume_bot(bot_id)
+        
+        if not resumed:
+            # Bot might not be running
+            raise HTTPException(
+                status_code=400,
+                detail="Bot is not running. Cannot resume."
+            )
+        
+        logger.info(f"✅ DCA bot {bot_id} resumed successfully")
+        
+        return {
+            "success": True,
+            "message": "Bot resumed successfully",
+            "bot_id": bot_id,
+            "status": "running"
+        }
+        
+    except NotFoundError:
+        raise
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error resuming DCA bot: {e}", exc_info=True)
+        raise TradeeonError(
+            f"Failed to resume bot: {str(e)}",
+            "INTERNAL_SERVER_ERROR",
+            status_code=500
+        )
+
+
+# ==================== BOT STATUS & MONITORING ENDPOINTS ====================
+
+@router.get("/dca-bots/{bot_id}/status")
+@router.get("/dca-bots/status/{bot_id}")  # Alternative path for frontend compatibility
+async def get_dca_bot_status(
+    bot_id: str = Path(..., description="Bot ID"),
+    user: AuthedUser = Depends(get_current_user)
+):
+    """Get current status and statistics of a DCA bot."""
+    try:
+        import sys
+        import os
+        
+        # Add bots directory to path
+        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
+        if bots_path not in sys.path:
+            sys.path.insert(0, bots_path)
+        
+        from db_service import db_service
+        from bot_execution_service import bot_execution_service
+        
+        # Get bot from database
+        bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
+        if not bot_data:
+            raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
+        
+        # Get execution service status
+        execution_status = bot_execution_service.get_bot_status(bot_id)
+        
+        # Get bot executor if running
+        executor = None
+        if bot_execution_service.is_running(bot_id):
+            executor = bot_execution_service.running_bots.get(bot_id)
+        
+        # Build status response
+        status_data = {
+            "success": True,
+            "bot_id": bot_id,
+            "status": execution_status.get("status", "inactive") if execution_status else "inactive",
+            "paused": execution_status.get("paused", False) if execution_status else False,
+            "paper_trading": execution_status.get("paper_trading", True) if execution_status else True,
+            "running": execution_status.get("running", False) if execution_status else False,
+        }
+        
+        # Add paper trading statistics if executor is available
+        if executor and executor.paper_trading and executor.trading_engine:
+            trading_engine = executor.trading_engine
+            
+            # Get balance
+            balance = trading_engine.get_balance()
+            
+            # Get positions
+            positions = {}
+            total_invested = 0.0
+            total_position_value = 0.0
+            total_unrealized_pnl = 0.0
+            
+            for pair in executor.config.get("selectedPairs", []):
+                position = trading_engine.get_position(pair)
+                if position and position.get("total_qty", 0) > 0:
+                    # Get current price
+                    try:
+                        current_price = await executor.market_data.get_current_price(pair)
+                        if current_price > 0:
+                            # Calculate P&L
+                            pnl_data = trading_engine.get_position_pnl(pair, current_price)
+                            
+                            positions[pair] = {
+                                "qty": float(position.get("total_qty", 0)),
+                                "avg_entry_price": pnl_data.get("avg_entry_price", 0.0),
+                                "current_price": current_price,
+                                "pnl_amount": pnl_data.get("pnl_amount", 0.0),
+                                "pnl_percent": pnl_data.get("pnl_percent", 0.0),
+                                "invested": pnl_data.get("invested", 0.0),
+                                "current_value": pnl_data.get("current_value", 0.0)
+                            }
+                            
+                            total_invested += pnl_data.get("invested", 0.0)
+                            total_position_value += pnl_data.get("current_value", 0.0)
+                            total_unrealized_pnl += pnl_data.get("pnl_amount", 0.0)
+                    except Exception as e:
+                        logger.warning(f"Could not fetch price for {pair}: {e}")
+            
+            # Get total realized P&L
+            total_realized_pnl = float(trading_engine.total_realized_pnl)
+            
+            # Calculate total P&L
+            total_pnl = total_realized_pnl + total_unrealized_pnl
+            
+            # Calculate return percentage
+            initial_balance = float(trading_engine.initial_balance)
+            return_pct = (total_pnl / initial_balance * 100) if initial_balance > 0 else 0.0
+            
+            # Add to status data
+            status_data.update({
+                "initial_balance": initial_balance,
+                "current_balance": balance,
+                "balance": balance,  # Alias for frontend compatibility
+                "total_invested": total_invested,
+                "total_position_value": total_position_value,
+                "total_realized_pnl": total_realized_pnl,
+                "total_unrealized_pnl": total_unrealized_pnl,
+                "total_pnl": total_pnl,
+                "totalPnl": total_pnl,  # Alias for frontend compatibility
+                "total_return_pct": return_pct,
+                "returnPct": return_pct,  # Alias for frontend compatibility
+                "open_positions": len(positions),
+                "openPositions": len(positions),  # Alias for frontend compatibility
+                "positions": positions
+            })
+        
+        return status_data
+        
+    except NotFoundError:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting DCA bot status: {e}", exc_info=True)
+        raise TradeeonError(
+            f"Failed to get bot status: {str(e)}",
+            "INTERNAL_SERVER_ERROR",
+            status_code=500
+        )
+
+
+@router.get("/dca-bots/{bot_id}/positions")
+async def get_dca_bot_positions(
+    bot_id: str = Path(..., description="Bot ID"),
+    user: AuthedUser = Depends(get_current_user)
+):
+    """Get all positions for a DCA bot."""
+    try:
+        import sys
+        import os
+        
+        # Add bots directory to path
+        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
+        if bots_path not in sys.path:
+            sys.path.insert(0, bots_path)
+        
+        from db_service import db_service
+        from bot_execution_service import bot_execution_service
+        
+        # Verify bot belongs to user
+        bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
+        if not bot_data:
+            raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
+        
+        # Get executor if running
+        if not bot_execution_service.is_running(bot_id):
+            return {
+                "success": True,
+                "bot_id": bot_id,
+                "positions": {},
+                "count": 0
+            }
+        
+        executor = bot_execution_service.running_bots.get(bot_id)
+        if not executor or not executor.paper_trading or not executor.trading_engine:
+            return {
+                "success": True,
+                "bot_id": bot_id,
+                "positions": {},
+                "count": 0
+            }
+        
+        trading_engine = executor.trading_engine
+        positions = {}
+        
+        # Get positions for all pairs
+        for pair in executor.config.get("selectedPairs", []):
+            position = trading_engine.get_position(pair)
+            if position and position.get("total_qty", 0) > 0:
+                try:
+                    current_price = await executor.market_data.get_current_price(pair)
+                    if current_price > 0:
+                        pnl_data = trading_engine.get_position_pnl(pair, current_price)
+                        
+                        positions[pair] = {
+                            "qty": float(position.get("total_qty", 0)),
+                            "avg_entry_price": pnl_data.get("avg_entry_price", 0.0),
+                            "current_price": current_price,
+                            "pnl_amount": pnl_data.get("pnl_amount", 0.0),
+                            "pnl_percent": pnl_data.get("pnl_percent", 0.0),
+                            "invested": pnl_data.get("invested", 0.0),
+                            "current_value": pnl_data.get("current_value", 0.0),
+                            "entries": position.get("entries", [])
+                        }
+                except Exception as e:
+                    logger.warning(f"Could not fetch position data for {pair}: {e}")
+        
+        return {
+            "success": True,
+            "bot_id": bot_id,
+            "positions": positions,
+            "count": len(positions)
+        }
+        
+    except NotFoundError:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting bot positions: {e}", exc_info=True)
+        raise TradeeonError(
+            f"Failed to get bot positions: {str(e)}",
+            "INTERNAL_SERVER_ERROR",
+            status_code=500
+        )
+
+
+@router.get("/dca-bots/{bot_id}/orders")
+async def get_dca_bot_orders(
+    bot_id: str = Path(..., description="Bot ID"),
+    limit: int = Query(100, description="Maximum number of orders to return"),
+    user: AuthedUser = Depends(get_current_user)
+):
+    """Get order history for a DCA bot."""
+    try:
+        import sys
+        import os
+        
+        # Add bots directory to path
+        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
+        if bots_path not in sys.path:
+            sys.path.insert(0, bots_path)
+        
+        from db_service import db_service
+        from bot_execution_service import bot_execution_service
+        
+        # Verify bot belongs to user
+        bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
+        if not bot_data:
+            raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
+        
+        # Get orders from paper trading engine if running
+        orders = []
+        if bot_execution_service.is_running(bot_id):
+            executor = bot_execution_service.running_bots.get(bot_id)
+            if executor and executor.paper_trading and executor.trading_engine:
+                order_history = executor.trading_engine.order_history
+                # Return most recent orders
+                orders = order_history[-limit:] if len(order_history) > limit else order_history
+        
+        return {
+            "success": True,
+            "bot_id": bot_id,
+            "orders": orders,
+            "count": len(orders)
+        }
+        
+    except NotFoundError:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting bot orders: {e}", exc_info=True)
+        raise TradeeonError(
+            f"Failed to get bot orders: {str(e)}",
+            "INTERNAL_SERVER_ERROR",
+            status_code=500
+        )
+
+
+@router.get("/dca-bots/{bot_id}/pnl")
+async def get_dca_bot_pnl(
+    bot_id: str = Path(..., description="Bot ID"),
+    user: AuthedUser = Depends(get_current_user)
+):
+    """Get P&L summary for a DCA bot."""
+    try:
+        import sys
+        import os
+        
+        # Add bots directory to path
+        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
+        if bots_path not in sys.path:
+            sys.path.insert(0, bots_path)
+        
+        from db_service import db_service
+        from bot_execution_service import bot_execution_service
+        
+        # Verify bot belongs to user
+        bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
+        if not bot_data:
+            raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
+        
+        # Get P&L from paper trading engine if running
+        if not bot_execution_service.is_running(bot_id):
+            return {
+                "success": True,
+                "bot_id": bot_id,
+                "total_pnl": 0.0,
+                "realized_pnl": 0.0,
+                "unrealized_pnl": 0.0,
+                "return_pct": 0.0
+            }
+        
+        executor = bot_execution_service.running_bots.get(bot_id)
+        if not executor or not executor.paper_trading or not executor.trading_engine:
+            return {
+                "success": True,
+                "bot_id": bot_id,
+                "total_pnl": 0.0,
+                "realized_pnl": 0.0,
+                "unrealized_pnl": 0.0,
+                "return_pct": 0.0
+            }
+        
+        trading_engine = executor.trading_engine
+        
+        # Calculate unrealized P&L from positions
+        total_unrealized_pnl = 0.0
+        for pair in executor.config.get("selectedPairs", []):
+            position = trading_engine.get_position(pair)
+            if position and position.get("total_qty", 0) > 0:
+                try:
+                    current_price = await executor.market_data.get_current_price(pair)
+                    if current_price > 0:
+                        pnl_data = trading_engine.get_position_pnl(pair, current_price)
+                        total_unrealized_pnl += pnl_data.get("pnl_amount", 0.0)
+                except Exception as e:
+                    logger.warning(f"Could not calculate P&L for {pair}: {e}")
+        
+        # Get realized P&L
+        total_realized_pnl = float(trading_engine.total_realized_pnl)
+        
+        # Total P&L
+        total_pnl = total_realized_pnl + total_unrealized_pnl
+        
+        # Return percentage
+        initial_balance = float(trading_engine.initial_balance)
+        return_pct = (total_pnl / initial_balance * 100) if initial_balance > 0 else 0.0
+        
+        return {
+            "success": True,
+            "bot_id": bot_id,
+            "total_pnl": total_pnl,
+            "realized_pnl": total_realized_pnl,
+            "unrealized_pnl": total_unrealized_pnl,
+            "return_pct": return_pct,
+            "initial_balance": initial_balance,
+            "current_balance": float(trading_engine.get_balance())
+        }
+        
+    except NotFoundError:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting bot P&L: {e}", exc_info=True)
+        raise TradeeonError(
+            f"Failed to get bot P&L: {str(e)}",
+            "INTERNAL_SERVER_ERROR",
+            status_code=500
+        )
