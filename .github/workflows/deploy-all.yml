@@ -77,7 +77,9 @@ jobs:
   deploy-alert-runner:
     name: Deploy Alert Runner
     needs: detect-changes
-    if: needs.detect-changes.outputs.alert-runner == 'true'
+    # DISABLED: Alert runner is deployed on Lightsail, not ECS
+    # Changed condition to always be false so this job is skipped
+    if: false && needs.detect-changes.outputs.alert-runner == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

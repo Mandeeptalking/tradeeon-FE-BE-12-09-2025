@@ -1,22 +1,24 @@
 name: Deploy Alert Runner to ECS
 
+# DISABLED: Alert runner is now deployed on Lightsail, not ECS
+# To re-enable: Remove the 'on:' section below and uncomment the original 'on:' above
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'apps/api/modules/alerts/**'
-      - 'apps/api/modules/bots/**'
-      - 'apps/bots/**'
-      - '!apps/bots/condition_evaluator.py'  # Exclude - not yet integrated
-      - '!apps/bots/event_bus.py'  # Exclude - not used by alert runner
-      - '!apps/bots/bot_notifier.py'  # Exclude - not used by alert runner
-      - '!apps/bots/run_condition_evaluator.py'  # Exclude - not used by alert runner
-      - '!apps/bots/run_bot_notifier.py'  # Exclude - not used by alert runner
-      - 'backend/**'
-      - 'shared/**'
-      - 'requirements.txt'
-      - 'Dockerfile.alert-runner'
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:  # Manual trigger only - won't run on push
+  # push:
+  #   branches: [ main ]
+  #   paths:
+  #     - 'apps/api/modules/alerts/**'
+  #     - 'apps/api/modules/bots/**'
+  #     - 'apps/bots/**'
+  #     - '!apps/bots/condition_evaluator.py'  # Exclude - not yet integrated
+  #     - '!apps/bots/event_bus.py'  # Exclude - not used by alert runner
+  #     - '!apps/bots/bot_notifier.py'  # Exclude - not used by alert runner
+  #     - '!apps/bots/run_condition_evaluator.py'  # Exclude - not used by alert runner
+  #     - '!apps/bots/run_bot_notifier.py'  # Exclude - not used by alert runner
+  #     - 'backend/**'
+  #     - 'shared/**'
+  #     - 'requirements.txt'
+  #     - 'Dockerfile.alert-runner'
 
 env:
   AWS_REGION: us-east-1
