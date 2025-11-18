@@ -632,15 +632,11 @@ async def start_dca_bot_paper(
                 status_code=503
             )
         
-        # Get bot from database
+        # Get bot from database (already filtered by user_id)
         bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
         
         if not bot_data:
-            raise NotFoundError("Bot", f"Bot {bot_id} not found")
-        
-        # Verify bot belongs to user
-        if bot_data.get("user_id") != user.user_id:
-            raise HTTPException(status_code=403, detail="Access denied: Bot does not belong to user")
+            raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
         
         # Check if bot is already running
         if bot_execution_service.is_running(bot_id):
