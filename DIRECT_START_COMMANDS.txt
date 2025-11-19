@@ -1,0 +1,11 @@
+# Direct Commands to Start Alert Runner on Lightsail
+# Copy and paste these commands
+
+cd ~/tradeeon-FE-BE-12-09-2025
+source .env
+mkdir -p logs
+nohup python3 -m apps.alerts.runner > logs/alert-runner.log 2>&1 &
+sleep 2
+ps aux | grep alert_runner
+tail -f logs/alert-runner.log
+
