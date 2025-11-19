@@ -147,7 +147,13 @@ async def dispatch_alert_action(alert: Dict[str, Any], snapshot: Dict[str, Any])
     if action_type == "bot_trigger":
         # Execute bot action
         try:
-            from apps.api.modules.bots.bot_action_handler import execute_bot_action
+            # Import from apps/bots (not apps/api/modules/bots)
+            import sys
+            import os
+            bots_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'bots')
+            if bots_path not in sys.path:
+                sys.path.insert(0, bots_path)
+            from bot_action_handler import execute_bot_action
             await execute_bot_action(action, {
                 "alert_id": alert.get("alert_id"),
                 "user_id": alert.get("user_id"),
