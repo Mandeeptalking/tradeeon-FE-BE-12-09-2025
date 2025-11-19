@@ -3,6 +3,14 @@ import { Settings, TrendingUp, TrendingDown, ChevronDown, ChevronUp, Check, X, I
 import { toast } from 'sonner';
 import Tooltip from '../components/Tooltip';
 import { logger } from '../utils/logger';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../components/ui/dialog';
 
 const AVAILABLE_EXCHANGES = ['Binance', 'Coinbase', 'Kraken'];
 
@@ -37,6 +45,8 @@ const fetchBinancePairs = async (): Promise<string[]> => {
 export default function DCABot() {
   // Trading mode: test (paper trading) or live (real trading)
   const [tradingMode, setTradingMode] = useState<'test' | 'live'>('test');
+  // Modal state for live trading confirmation
+  const [showLiveTradingModal, setShowLiveTradingModal] = useState(false);
   
   const [botName, setBotName] = useState('ETH/USDT Classic trading');
   const [market, setMarket] = useState<'spot' | 'futures'>('spot');
@@ -806,11 +816,8 @@ export default function DCABot() {
                     </button>
                     <button
                       onClick={() => {
-                        // Security: Use secure confirmation
-                        const confirmed = window.confirm('⚠️ Warning: Live mode will trade with real money. Are you sure you want to enable live trading?');
-                        if (confirmed) {
-                          setTradingMode('live');
-                        }
+                        // Show custom modal instead of browser alert
+                        setShowLiveTradingModal(true);
                       }}
                       className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
                         tradingMode === 'live'
@@ -5109,6 +5116,48 @@ export default function DCABot() {
           </div>
         </div>
       )}
+
+      {/* Live Trading Confirmation Modal */}
+      <Dialog open={showLiveTradingModal} onOpenChange={setShowLiveTradingModal}>
+        <DialogContent className="sm:max-w-md bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+              </div>
+              <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-white">
+                Enable Live Trading?
+              </DialogTitle>
+            </div>
+            <DialogDescription className="text-sm text-gray-600 dark:text-gray-300 pt-2">
+              <p className="mb-3">
+                <strong className="text-amber-600 dark:text-amber-400">Warning:</strong> Live mode will trade with real money.
+              </p>
+              <p>
+                Are you sure you want to enable live trading? This action cannot be undone easily and will execute real trades on your connected exchange.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-3 sm:justify-end mt-4">
+            <button
+              onClick={() => setShowLiveTradingModal(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                setTradingMode('live');
+                setShowLiveTradingModal(false);
+                toast.success('Live trading mode enabled');
+              }}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm"
+            >
+              Enable Live Trading
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
