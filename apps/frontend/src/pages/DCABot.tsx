@@ -4354,8 +4354,11 @@ export default function DCABot() {
 
         {/* Right Summary Panel */}
         <div className="w-96 flex-shrink-0">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 sticky top-6">
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Summary</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 sticky top-6 max-h-[calc(100vh-2rem)] overflow-y-auto">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>📋</span>
+              <span>Bot Summary</span>
+            </h3>
             
             <div className="space-y-4">
               {/* Trading Mode */}
@@ -4376,49 +4379,256 @@ export default function DCABot() {
                     : '⚠️ Real money trading'}
                 </div>
               </div>
-              
-              {/* Initial Balance */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Initial Balance</span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+
+              {/* Bot Configuration */}
+              <div className="space-y-2 pb-3 border-b border-gray-200 dark:border-gray-700">
+                <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Configuration</div>
+                
+                {/* Bot Name */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Bot Name</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white truncate ml-2 max-w-[60%]">{botName}</span>
+                </div>
+
+                {/* Symbol/Pair */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Symbol</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white">
+                    {botType === 'single' ? pair : `${selectedPairs.length} pairs`}
+                  </span>
+                </div>
+                {botType === 'multi' && selectedPairs.length > 0 && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400 pl-2">
+                    {selectedPairs.slice(0, 3).join(', ')}{selectedPairs.length > 3 ? '...' : ''}
+                  </div>
+                )}
+
+                {/* Exchange */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Exchange</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white truncate ml-2 max-w-[60%]">{exchange}</span>
+                </div>
+
+                {/* Market */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Market</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white capitalize">{market}</span>
+                </div>
+
+                {/* Bot Type */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Bot Type</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white capitalize">
+                    {botType === 'single' ? 'Single-pair' : 'Multi-pair'}
+                  </span>
+                </div>
+
+                {/* Profit Currency */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Profit Currency</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white">
+                    {profitCurrency === 'quote' ? 'Quote (USDT)' : 'Base'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Trading Settings */}
+              <div className="space-y-2 pb-3 border-b border-gray-200 dark:border-gray-700">
+                <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Trading Settings</div>
+                
+                {/* Initial Balance */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Initial Balance</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white">
                     {botStatus?.initial_balance 
                       ? `$${(botStatus.initial_balance).toFixed(2)} USDT` 
                       : '$10,000.00 USDT'}
                   </span>
                 </div>
+
+                {/* Base Order Size */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Base Order</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white">{baseOrderSize} {baseOrderCurrency}</span>
+                </div>
+
+                {/* Order Type */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Order Type</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white capitalize">{startOrderType}</span>
+                </div>
+
+                {/* Trading Start Condition */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Start Mode</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white">
+                    {tradeStartCondition ? '⏳ Wait for Signal' : '⚡ Immediate'}
+                  </span>
+                </div>
               </div>
 
-              {/* Max Amount */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Max amount</span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">{baseOrderSize} USDT</span>
-                </div>
+              {/* Entry Conditions */}
+              <div className="space-y-2 pb-3 border-b border-gray-200 dark:border-gray-700">
+                <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Entry Conditions</div>
+                
+                {showPlaybookBuilder ? (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Mode</span>
+                      <span className="text-xs font-medium text-gray-900 dark:text-white">Playbook</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Logic</span>
+                      <span className="text-xs font-medium text-gray-900 dark:text-white">
+                        {playbookGateLogic === 'ALL' ? 'ALL (AND)' : 'ANY (OR)'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Conditions</span>
+                      <span className="text-xs font-medium text-gray-900 dark:text-white">
+                        {conditionPlaybook.filter(c => c.enabled).length} enabled
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Mode</span>
+                      <span className="text-xs font-medium text-gray-900 dark:text-white">Simple</span>
+                    </div>
+                    {entryCondition && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400 pl-2">
+                        {entryCondition.indicator} {entryCondition.operator} {entryCondition.value}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
-              {/* Trading Conditions */}
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Trading Mode</span>
-                  <Tooltip
-                    content={
-                      "Trading Start Mode:\n\n" +
-                      "• Place Order Immediately: Bot starts trading right away without waiting for entry conditions. First DCA executes immediately.\n" +
-                      "• Wait for Signal: Bot waits for your entry conditions to become true before opening the first position.\n\n" +
-                      "Note: This only affects the FIRST trade. After that, DCA rules determine when subsequent trades execute."
-                    }
-                    position="left"
-                  />
+              {/* DCA Rules */}
+              <div className="space-y-2 pb-3 border-b border-gray-200 dark:border-gray-700">
+                <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">DCA Rules</div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Trigger</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white capitalize">
+                    {dcaRuleType === 'down_from_last_entry' ? 'Down from Last Entry' :
+                     dcaRuleType === 'down_from_average' ? 'Down from Average' :
+                     dcaRuleType === 'loss_by_percent' ? 'Loss by %' :
+                     dcaRuleType === 'loss_by_amount' ? 'Loss by Amount' :
+                     'Custom'}
+                  </span>
                 </div>
-                <div className="text-xs font-medium text-gray-900 dark:text-white">
-                  {tradeStartCondition ? '⏳ Wait for Signal' : '⚡ Place Order Immediately'}
+
+                {dcaRuleType === 'down_from_last_entry' && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600 dark:text-gray-400">Threshold</span>
+                    <span className="text-xs font-medium text-gray-900 dark:text-white">
+                      {dcaRules.downFromLastEntryPercent}%
+                    </span>
+                  </div>
+                )}
+
+                {dcaRuleType === 'down_from_average' && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600 dark:text-gray-400">Threshold</span>
+                    <span className="text-xs font-medium text-gray-900 dark:text-white">
+                      {dcaRules.downFromAveragePricePercent}%
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Max DCA/Position</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white">{dcaRules.maxDcaPerPosition}</span>
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {tradeStartCondition 
-                    ? 'Bot waits for entry conditions' 
-                    : 'Bot opens first position immediately'}
+
+                {dcaRules.dcaCooldownValue > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600 dark:text-gray-400">Cooldown</span>
+                    <span className="text-xs font-medium text-gray-900 dark:text-white">
+                      {dcaRules.dcaCooldownValue} {dcaRules.dcaCooldownUnit}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Phase 1 Features */}
+              <div className="space-y-2 pb-3 border-b border-gray-200 dark:border-gray-700">
+                <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Advanced Features</div>
+                
+                {/* Market Regime Detection */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Market Regime</span>
+                  <span className={`text-xs font-medium ${
+                    marketRegimeConfig.enabled 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-gray-400 dark:text-gray-500'
+                  }`}>
+                    {marketRegimeConfig.enabled ? '✅ Enabled' : '❌ Disabled'}
+                  </span>
                 </div>
+                {marketRegimeConfig.enabled && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400 pl-2 text-[10px]">
+                    {marketRegimeConfig.regimeTimeframe} • MA{marketRegimeConfig.pauseConditions.maPeriod} • RSI{marketRegimeConfig.pauseConditions.rsiThreshold}
+                  </div>
+                )}
+
+                {/* Dynamic Scaling */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Dynamic Scaling</span>
+                  <span className={`text-xs font-medium ${
+                    dynamicScalingConfig.enabled 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-gray-400 dark:text-gray-500'
+                  }`}>
+                    {dynamicScalingConfig.enabled ? '✅ Enabled' : '❌ Disabled'}
+                  </span>
+                </div>
+                {dynamicScalingConfig.enabled && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400 pl-2 text-[10px]">
+                    Volatility • S/R • Fear & Greed
+                  </div>
+                )}
+
+                {/* Profit Strategy */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Profit Strategy</span>
+                  <span className={`text-xs font-medium ${
+                    profitStrategyConfig.enabled 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-gray-400 dark:text-gray-500'
+                  }`}>
+                    {profitStrategyConfig.enabled ? '✅ Enabled' : '❌ Disabled'}
+                  </span>
+                </div>
+                {profitStrategyConfig.enabled && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400 pl-2 text-[10px]">
+                    {profitStrategyConfig.partialTargets.length > 0 && 'Partial • '}
+                    {profitStrategyConfig.trailingStop.enabled && 'Trailing • '}
+                    {profitStrategyConfig.takeProfitAndRestart.enabled && 'TP & Restart • '}
+                    {profitStrategyConfig.timeBasedExit.enabled && 'Time-based'}
+                  </div>
+                )}
+
+                {/* Emergency Brake */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Emergency Brake</span>
+                  <span className={`text-xs font-medium ${
+                    emergencyBrakeConfig.enabled 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-gray-400 dark:text-gray-500'
+                  }`}>
+                    {emergencyBrakeConfig.enabled ? '✅ Enabled' : '❌ Disabled'}
+                  </span>
+                </div>
+                {emergencyBrakeConfig.enabled && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400 pl-2 text-[10px]">
+                    {emergencyBrakeConfig.circuitBreaker.enabled && 'Circuit Breaker • '}
+                    {emergencyBrakeConfig.marketWideCrashDetection.enabled && 'Market Crash • '}
+                    {emergencyBrakeConfig.recoveryMode.enabled && 'Recovery'}
+                  </div>
+                )}
               </div>
 
               {/* Conflict Warning / Resolved */}
