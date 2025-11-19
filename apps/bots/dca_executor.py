@@ -212,6 +212,10 @@ class DCABotExecutor:
     async def _evaluate_entry_conditions(self, pair: str, condition_config: Dict,
                                         market_df: Optional[pd.DataFrame] = None) -> bool:
         """Evaluate entry conditions (playbook or simple) using backend evaluator."""
+        # If no condition config, allow entry
+        if condition_config is None:
+            return True
+        
         if market_df is None or market_df.empty:
             # If conditions are set but no data, skip
             if condition_config:
