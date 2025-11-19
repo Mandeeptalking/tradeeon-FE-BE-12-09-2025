@@ -80,21 +80,24 @@ const Settings = () => {
                 <h3 className="font-medium">Email Notifications</h3>
                 <p className="text-sm text-gray-500">Receive email updates about your portfolio</p>
               </div>
-              <input type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
+              <label htmlFor="email-notifications" className="sr-only">Email Notifications</label>
+              <input id="email-notifications" name="email-notifications" type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-medium">Trading Alerts</h3>
                 <p className="text-sm text-gray-500">Get notified when your bots make trades</p>
               </div>
-              <input type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
+              <label htmlFor="trading-alerts" className="sr-only">Trading Alerts</label>
+              <input id="trading-alerts" name="trading-alerts" type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-medium">Price Alerts</h3>
                 <p className="text-sm text-gray-500">Receive alerts when prices hit your targets</p>
               </div>
-              <input type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
+              <label htmlFor="price-alerts" className="sr-only">Price Alerts</label>
+              <input id="price-alerts" name="price-alerts" type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
             </div>
           </div>
         </div>

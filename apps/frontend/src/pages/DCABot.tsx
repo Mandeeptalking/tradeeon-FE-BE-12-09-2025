@@ -2291,18 +2291,18 @@ export default function DCABot() {
                                         )}
                                         <div className={`grid gap-3 ${entryCondition.operator === 'between' ? 'grid-cols-5' : 'grid-cols-4'}`}>
                                           <div>
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">RSI Period</label>
-                                            <input type="number" min="1" max="100" value={entryCondition.period || 14} onChange={(e) => setEntryCondition({...entryCondition, period: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="14" />
+                                            <label htmlFor="rsi-period" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">RSI Period</label>
+                                            <input id="rsi-period" name="rsi-period" type="number" min="1" max="100" value={entryCondition.period || 14} onChange={(e) => setEntryCondition({...entryCondition, period: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="14" />
                                           </div>
                                           <div>
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Timeframe</label>
-                                            <select value={entryCondition.timeframe} onChange={(e) => setEntryCondition({...entryCondition, timeframe: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <label htmlFor="rsi-timeframe" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Timeframe</label>
+                                            <select id="rsi-timeframe" name="rsi-timeframe" value={entryCondition.timeframe} onChange={(e) => setEntryCondition({...entryCondition, timeframe: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                             <option value="1m">1m</option><option value="3m">3m</option><option value="5m">5m</option><option value="15m">15m</option><option value="30m">30m</option><option value="1h">1h</option><option value="2h">2h</option><option value="4h">4h</option><option value="6h">6h</option><option value="12h">12h</option><option value="1d">1d</option>
                                           </select>
                                         </div>
                                         <div>
-                                          <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Condition</label>
-                                          <select value={entryCondition.operator} onChange={(e) => setEntryCondition({...entryCondition, operator: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                          <label htmlFor="rsi-condition" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Condition</label>
+                                          <select id="rsi-condition" name="rsi-condition" value={entryCondition.operator} onChange={(e) => setEntryCondition({...entryCondition, operator: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                             <option value="crosses_below">Crosses below</option><option value="crosses_above">Crosses above</option><option value="less_than">Less than</option><option value="greater_than">Greater than</option><option value="equals">Equals</option>
                                             <option value="between">🎯 Between ⭐ NEW</option>
                                           </select>
@@ -2310,18 +2310,18 @@ export default function DCABot() {
                                         {entryCondition.operator === 'between' ? (
                                           <>
                                             <div>
-                                              <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Lower Bound</label>
-                                              <input type="number" min="0" max="100" value={entryCondition.lowerBound || 25} onChange={(e) => setEntryCondition({...entryCondition, lowerBound: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="25" />
+                                              <label htmlFor="rsi-lower-bound" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Lower Bound</label>
+                                              <input id="rsi-lower-bound" name="rsi-lower-bound" type="number" min="0" max="100" value={entryCondition.lowerBound || 25} onChange={(e) => setEntryCondition({...entryCondition, lowerBound: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="25" />
                                             </div>
                                             <div>
-                                              <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Upper Bound</label>
-                                              <input type="number" min="0" max="100" value={entryCondition.upperBound || 35} onChange={(e) => setEntryCondition({...entryCondition, upperBound: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="35" />
+                                              <label htmlFor="rsi-upper-bound" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Upper Bound</label>
+                                              <input id="rsi-upper-bound" name="rsi-upper-bound" type="number" min="0" max="100" value={entryCondition.upperBound || 35} onChange={(e) => setEntryCondition({...entryCondition, upperBound: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="35" />
                                             </div>
                                           </>
                                         ) : (
                                           <div>
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">RSI Value</label>
-                                            <input type="number" min="0" max="100" value={entryCondition.value} onChange={(e) => setEntryCondition({...entryCondition, value: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="30" />
+                                            <label htmlFor="rsi-value" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">RSI Value</label>
+                                            <input id="rsi-value" name="rsi-value" type="number" min="0" max="100" value={entryCondition.value} onChange={(e) => setEntryCondition({...entryCondition, value: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="30" />
                                           </div>
                                         )}
                                       </div>
@@ -2330,67 +2330,67 @@ export default function DCABot() {
                                     {conditionType === 'MFI Conditions' && (
                                       <div className="grid grid-cols-4 gap-3">
                                         <div>
-                                          <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">MFI Period</label>
-                                          <input type="number" min="1" max="100" value={entryCondition.mfiPeriod || 14} onChange={(e) => setEntryCondition({...entryCondition, mfiPeriod: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="14" />
+                                          <label htmlFor="mfi-period" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">MFI Period</label>
+                                          <input id="mfi-period" name="mfi-period" type="number" min="1" max="100" value={entryCondition.mfiPeriod || 14} onChange={(e) => setEntryCondition({...entryCondition, mfiPeriod: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="14" />
                                         </div>
                                         <div>
-                                          <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Timeframe</label>
-                                          <select value={entryCondition.timeframe} onChange={(e) => setEntryCondition({...entryCondition, timeframe: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                          <label htmlFor="mfi-timeframe" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Timeframe</label>
+                                          <select id="mfi-timeframe" name="mfi-timeframe" value={entryCondition.timeframe} onChange={(e) => setEntryCondition({...entryCondition, timeframe: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                             <option value="1m">1m</option><option value="3m">3m</option><option value="5m">5m</option><option value="15m">15m</option><option value="30m">30m</option><option value="1h">1h</option><option value="2h">2h</option><option value="4h">4h</option><option value="6h">6h</option><option value="12h">12h</option><option value="1d">1d</option>
                                           </select>
                                         </div>
                                         <div>
-                                          <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Condition</label>
-                                          <select value={entryCondition.operator} onChange={(e) => setEntryCondition({...entryCondition, operator: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                          <label htmlFor="mfi-condition" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Condition</label>
+                                          <select id="mfi-condition" name="mfi-condition" value={entryCondition.operator} onChange={(e) => setEntryCondition({...entryCondition, operator: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                             <option value="crosses_below">Crosses below</option><option value="crosses_above">Crosses above</option><option value="less_than">Less than</option><option value="greater_than">Greater than</option><option value="equals">Equals</option>
                                           </select>
                                         </div>
                                         <div>
-                                          <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">MFI Value</label>
-                                          <input type="number" min="0" max="100" value={entryCondition.value} onChange={(e) => setEntryCondition({...entryCondition, value: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="20" />
+                                          <label htmlFor="mfi-value" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">MFI Value</label>
+                                          <input id="mfi-value" name="mfi-value" type="number" min="0" max="100" value={entryCondition.value} onChange={(e) => setEntryCondition({...entryCondition, value: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="20" />
                                         </div>
                                       </div>
                                     )}
                                     {conditionType === 'CCI Conditions' && (
                                       <div className="grid grid-cols-4 gap-3">
                                         <div>
-                                          <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">CCI Period</label>
-                                          <input type="number" min="1" max="100" value={entryCondition.cciPeriod || 14} onChange={(e) => setEntryCondition({...entryCondition, cciPeriod: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="14" />
+                                          <label htmlFor="cci-period" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">CCI Period</label>
+                                          <input id="cci-period" name="cci-period" type="number" min="1" max="100" value={entryCondition.cciPeriod || 14} onChange={(e) => setEntryCondition({...entryCondition, cciPeriod: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="14" />
                                         </div>
                                         <div>
-                                          <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Timeframe</label>
-                                          <select value={entryCondition.timeframe} onChange={(e) => setEntryCondition({...entryCondition, timeframe: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                          <label htmlFor="cci-timeframe" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Timeframe</label>
+                                          <select id="cci-timeframe" name="cci-timeframe" value={entryCondition.timeframe} onChange={(e) => setEntryCondition({...entryCondition, timeframe: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                             <option value="1m">1m</option><option value="3m">3m</option><option value="5m">5m</option><option value="15m">15m</option><option value="30m">30m</option><option value="1h">1h</option><option value="2h">2h</option><option value="4h">4h</option><option value="6h">6h</option><option value="12h">12h</option><option value="1d">1d</option>
                                           </select>
                                         </div>
                                         <div>
-                                          <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Condition</label>
-                                          <select value={entryCondition.operator} onChange={(e) => setEntryCondition({...entryCondition, operator: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                          <label htmlFor="cci-condition" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Condition</label>
+                                          <select id="cci-condition" name="cci-condition" value={entryCondition.operator} onChange={(e) => setEntryCondition({...entryCondition, operator: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                             <option value="crosses_below">Crosses below</option><option value="crosses_above">Crosses above</option><option value="less_than">Less than</option><option value="greater_than">Greater than</option><option value="equals">Equals</option>
                                           </select>
                                         </div>
                                         <div>
-                                          <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">CCI Value</label>
-                                          <input type="number" min="-200" max="200" step="1" value={entryCondition.value} onChange={(e) => setEntryCondition({...entryCondition, value: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="-100" />
+                                          <label htmlFor="cci-value" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">CCI Value</label>
+                                          <input id="cci-value" name="cci-value" type="number" min="-200" max="200" step="1" value={entryCondition.value} onChange={(e) => setEntryCondition({...entryCondition, value: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="-100" />
                                         </div>
                                       </div>
                                     )}
                                     {conditionType === 'Moving Average (MA)' && (
                                       <div className="space-y-3">
                                         <div>
-                                          <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">MA Type</label>
-                                          <select value={entryCondition.maType || 'EMA'} onChange={(e) => setEntryCondition({...entryCondition, maType: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                          <label htmlFor="ma-type" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">MA Type</label>
+                                          <select id="ma-type" name="ma-type" value={entryCondition.maType || 'EMA'} onChange={(e) => setEntryCondition({...entryCondition, maType: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                             <option value="SMA">SMA</option><option value="EMA">EMA</option><option value="WMA">WMA</option><option value="TEMA">TEMA</option><option value="KAMA">KAMA</option><option value="MAMA">MAMA</option><option value="VWMA">VWMA</option><option value="Hull">Hull</option>
                                           </select>
                                         </div>
                                         <div className="grid grid-cols-4 gap-3">
                                           <div>
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Fast MA</label>
-                                            <input type="number" min="1" max="100" value={entryCondition.fastMA || 9} onChange={(e) => setEntryCondition({...entryCondition, fastMA: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="9" />
+                                            <label htmlFor="ma-fast" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Fast MA</label>
+                                            <input id="ma-fast" name="ma-fast" type="number" min="1" max="100" value={entryCondition.fastMA || 9} onChange={(e) => setEntryCondition({...entryCondition, fastMA: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="9" />
                                           </div>
                                           <div>
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Slow MA</label>
-                                            <input type="number" min="1" max="200" value={entryCondition.slowMA || 26} onChange={(e) => setEntryCondition({...entryCondition, slowMA: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="26" />
+                                            <label htmlFor="ma-slow" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Slow MA</label>
+                                            <input id="ma-slow" name="ma-slow" type="number" min="1" max="200" value={entryCondition.slowMA || 26} onChange={(e) => setEntryCondition({...entryCondition, slowMA: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="26" />
                                           </div>
                                           <div>
                                             <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Condition</label>
@@ -2410,39 +2410,39 @@ export default function DCABot() {
                                     {conditionType === 'MACD Conditions' && (
                                       <div className="space-y-3">
                                         <div>
-                                          <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Component</label>
-                                          <select value={entryCondition.macdComponent || 'histogram'} onChange={(e) => setEntryCondition({...entryCondition, macdComponent: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                          <label htmlFor="macd-component" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Component</label>
+                                          <select id="macd-component" name="macd-component" value={entryCondition.macdComponent || 'histogram'} onChange={(e) => setEntryCondition({...entryCondition, macdComponent: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                             <option value="macd_line">MACD Line</option><option value="signal_line">Signal Line</option><option value="histogram">Histogram</option><option value="zero_line">Zero Line</option>
                                           </select>
                                         </div>
                                         <div className="grid grid-cols-3 gap-3">
                                           <div>
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Fast Period</label>
-                                            <input type="number" min="1" max="50" value={entryCondition.fastPeriod || 12} onChange={(e) => setEntryCondition({...entryCondition, fastPeriod: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="12" />
+                                            <label htmlFor="macd-fast-period" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Fast Period</label>
+                                            <input id="macd-fast-period" name="macd-fast-period" type="number" min="1" max="50" value={entryCondition.fastPeriod || 12} onChange={(e) => setEntryCondition({...entryCondition, fastPeriod: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="12" />
                                           </div>
                                           <div>
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Slow Period</label>
-                                            <input type="number" min="1" max="100" value={entryCondition.slowPeriod || 26} onChange={(e) => setEntryCondition({...entryCondition, slowPeriod: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="26" />
+                                            <label htmlFor="macd-slow-period" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Slow Period</label>
+                                            <input id="macd-slow-period" name="macd-slow-period" type="number" min="1" max="100" value={entryCondition.slowPeriod || 26} onChange={(e) => setEntryCondition({...entryCondition, slowPeriod: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="26" />
                                           </div>
                                           <div>
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Signal Period</label>
-                                            <input type="number" min="1" max="50" value={entryCondition.signalPeriod || 9} onChange={(e) => setEntryCondition({...entryCondition, signalPeriod: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="9" />
+                                            <label htmlFor="macd-signal-period" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Signal Period</label>
+                                            <input id="macd-signal-period" name="macd-signal-period" type="number" min="1" max="50" value={entryCondition.signalPeriod || 9} onChange={(e) => setEntryCondition({...entryCondition, signalPeriod: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="9" />
                                           </div>
                                         </div>
                                         <div className="grid grid-cols-3 gap-3">
                                           <div>
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Condition</label>
-                                            <select value={entryCondition.operator} onChange={(e) => setEntryCondition({...entryCondition, operator: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <label htmlFor="macd-condition" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Condition</label>
+                                            <select id="macd-condition" name="macd-condition" value={entryCondition.operator} onChange={(e) => setEntryCondition({...entryCondition, operator: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                               <option value="crosses_above">Crosses Above</option><option value="crosses_below">Crosses Below</option><option value="greater_than">Greater Than</option><option value="less_than">Less Than</option><option value="equals">Equals</option>
                                             </select>
                                           </div>
                                           <div>
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Value</label>
-                                            <input type="number" step="0.01" value={entryCondition.value} onChange={(e) => setEntryCondition({...entryCondition, value: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0" />
+                                            <label htmlFor="macd-value" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Value</label>
+                                            <input id="macd-value" name="macd-value" type="number" step="0.01" value={entryCondition.value} onChange={(e) => setEntryCondition({...entryCondition, value: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0" />
                                           </div>
                                           <div>
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Timeframe</label>
-                                            <select value={entryCondition.timeframe} onChange={(e) => setEntryCondition({...entryCondition, timeframe: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <label htmlFor="macd-timeframe" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Timeframe</label>
+                                            <select id="macd-timeframe" name="macd-timeframe" value={entryCondition.timeframe} onChange={(e) => setEntryCondition({...entryCondition, timeframe: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                               <option value="1m">1m</option><option value="3m">3m</option><option value="5m">5m</option><option value="15m">15m</option><option value="30m">30m</option><option value="1h">1h</option><option value="2h">2h</option><option value="4h">4h</option><option value="6h">6h</option><option value="12h">12h</option><option value="1d">1d</option>
                                             </select>
                                           </div>
@@ -2452,19 +2452,19 @@ export default function DCABot() {
                                     {conditionType === 'Price Action' && (
                                       <div className="space-y-3">
                                         <div>
-                                          <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">MA Type</label>
-                                          <select value={entryCondition.priceMaType || 'EMA'} onChange={(e) => setEntryCondition({...entryCondition, priceMaType: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                          <label htmlFor="price-ma-type" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">MA Type</label>
+                                          <select id="price-ma-type" name="price-ma-type" value={entryCondition.priceMaType || 'EMA'} onChange={(e) => setEntryCondition({...entryCondition, priceMaType: e.target.value})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                             <option value="EMA">EMA</option><option value="SMA">SMA</option><option value="WMA">WMA</option><option value="TEMA">TEMA</option><option value="KAMA">KAMA</option><option value="MAMA">MAMA</option><option value="VWMA">VWMA</option><option value="Hull">Hull</option>
                                           </select>
                                         </div>
                                         <div className="grid grid-cols-4 gap-3">
                                           <div>
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">MA Length</label>
-                                            <input type="number" min="1" max="200" value={entryCondition.maLength || 20} onChange={(e) => setEntryCondition({...entryCondition, maLength: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="20" />
+                                            <label htmlFor="price-ma-length" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">MA Length</label>
+                                            <input id="price-ma-length" name="price-ma-length" type="number" min="1" max="200" value={entryCondition.maLength || 20} onChange={(e) => setEntryCondition({...entryCondition, maLength: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="20" />
                                           </div>
                                           <div>
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Percentage</label>
-                                            <input type="number" step="0.1" value={entryCondition.pricePercentage || 1.0} onChange={(e) => setEntryCondition({...entryCondition, pricePercentage: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="1.0" />
+                                            <label htmlFor="price-percentage" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Percentage</label>
+                                            <input id="price-percentage" name="price-percentage" type="number" step="0.1" value={entryCondition.pricePercentage || 1.0} onChange={(e) => setEntryCondition({...entryCondition, pricePercentage: Number(e.target.value)})} className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="1.0" />
                                           </div>
                                           <div>
                                             <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">Condition</label>
