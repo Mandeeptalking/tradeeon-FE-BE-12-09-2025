@@ -52,6 +52,27 @@ class BotDatabaseService:
             return False
         
         try:
+            # First, ensure user profile exists in public.users table
+            # Check if user exists
+            user_check = self.supabase.table("users").select("id").eq("id", user_id).execute()
+            if not user_check.data:
+                logger.warning(f"User {user_id} not found in users table, attempting to create profile...")
+                try:
+                    # Try to get user info from auth.users (requires service role)
+                    # For now, create a minimal profile
+                    from datetime import datetime
+                    self.supabase.table("users").insert({
+                        "id": user_id,
+                        "email": f"{user_id}@tradeeon.local",  # Placeholder
+                        "created_at": datetime.now().isoformat(),
+                        "updated_at": datetime.now().isoformat()
+                    }).execute()
+                    logger.info(f"✅ Created user profile for {user_id}")
+                except Exception as user_error:
+                    logger.error(f"❌ Failed to create user profile: {user_error}")
+                    # Continue anyway - might be a permissions issue
+            
+            # Insert bot
             result = self.supabase.table("bots").insert({
                 "bot_id": bot_id,
                 "user_id": user_id,
@@ -66,10 +87,21 @@ class BotDatabaseService:
                 "risk_per_trade": risk_per_trade
             }).execute()
             
-            logger.info(f"✅ Bot {bot_id} saved to database")
-            return True
+            if result.data:
+                logger.info(f"✅ Bot {bot_id} saved to database successfully")
+                logger.debug(f"Bot data: {result.data}")
+                return True
+            else:
+                logger.error(f"❌ Bot insert returned no data: {result}")
+                return False
         except Exception as e:
-            logger.error(f"❌ Failed to save bot {bot_id} to database: {e}")
+            logger.error(f"❌ Failed to save bot {bot_id} to database: {e}", exc_info=True)
+            logger.error(f"   Error type: {type(e).__name__}")
+            logger.error(f"   User ID: {user_id} (type: {type(user_id).__name__})")
+            if hasattr(e, 'message'):
+                logger.error(f"   Error message: {e.message}")
+            if hasattr(e, 'details'):
+                logger.error(f"   Error details: {e.details}")
             return False
     
     def update_bot_status(self, bot_id: str, status: str) -> bool:
