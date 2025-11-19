@@ -1,6 +1,6 @@
 """Bot management API routes."""
 
-from fastapi import APIRouter, HTTPException, Query, Path, Body
+from fastapi import APIRouter, HTTPException, Query, Path, Body, Depends
 from typing import List, Optional, Dict, Any
 import logging
 
