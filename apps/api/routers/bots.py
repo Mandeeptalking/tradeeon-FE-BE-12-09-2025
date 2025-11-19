@@ -769,8 +769,20 @@ async def stop_dca_bot(
         # Stop bot
         stopped = await bot_execution_service.stop_bot(bot_id)
         
+        # Update bot status to "stopped" in database
+        db_service.update_bot_status(bot_id, "stopped")
+        
+        # Update bot run status if there's an active run
+        try:
+            active_runs = db_service.supabase.table("bot_runs").select("*").eq("bot_id", bot_id).eq("status", "running").execute()
+            if active_runs.data:
+                for run in active_runs.data:
+                    db_service.update_bot_run(run["run_id"], status="stopped")
+        except Exception as run_error:
+            logger.warning(f"Failed to update bot run status: {run_error}")
+        
         if not stopped:
-            # Bot might not be running
+            # Bot might not be running, but status is updated
             return {
                 "success": True,
                 "message": "Bot is not running or already stopped",
@@ -778,7 +790,7 @@ async def stop_dca_bot(
                 "status": "stopped"
             }
         
-        logger.info(f"✅ DCA bot {bot_id} stopped successfully")
+        logger.info(f"✅ DCA bot {bot_id} stopped successfully (status: stopped)")
         
         return {
             "success": True,
@@ -824,6 +836,9 @@ async def pause_dca_bot(
         # Pause bot
         paused = await bot_execution_service.pause_bot(bot_id)
         
+        # Update bot status to "paused" in database
+        db_service.update_bot_status(bot_id, "paused")
+        
         if not paused:
             # Bot might not be running
             raise HTTPException(
@@ -831,7 +846,7 @@ async def pause_dca_bot(
                 detail="Bot is not running. Cannot pause."
             )
         
-        logger.info(f"✅ DCA bot {bot_id} paused successfully")
+        logger.info(f"✅ DCA bot {bot_id} paused successfully (status: paused)")
         
         return {
             "success": True,
@@ -879,6 +894,9 @@ async def resume_dca_bot(
         # Resume bot
         resumed = await bot_execution_service.resume_bot(bot_id)
         
+        # Update bot status to "running" in database
+        db_service.update_bot_status(bot_id, "running")
+        
         if not resumed:
             # Bot might not be running
             raise HTTPException(
@@ -886,7 +904,7 @@ async def resume_dca_bot(
                 detail="Bot is not running. Cannot resume."
             )
         
-        logger.info(f"✅ DCA bot {bot_id} resumed successfully")
+        logger.info(f"✅ DCA bot {bot_id} resumed successfully (status: running)")
         
         return {
             "success": True,
