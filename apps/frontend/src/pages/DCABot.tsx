@@ -3,6 +3,7 @@ import { Settings, TrendingUp, TrendingDown, ChevronDown, ChevronUp, Check, X, I
 import { toast } from 'sonner';
 import Tooltip from '../components/Tooltip';
 import { logger } from '../utils/logger';
+import { authenticatedFetch } from '../lib/api/auth';
 import {
   Dialog,
   DialogContent,
@@ -665,23 +666,10 @@ export default function DCABot() {
     logger.debug('Bot config:', botConfig);
     
     try {
-      // Get auth token
-      const { supabase } = await import('../lib/supabase');
-      const { data: { session } } = await supabase.auth.getSession();
-      const authToken = session?.access_token;
-      
-      if (!authToken) {
-        throw new Error('You must be logged in to create a bot');
-      }
-      
       // Send to backend API
       const API_BASE_URL = getApiBaseUrl();
-      const response = await fetch(`${API_BASE_URL}/bots/dca-bots`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        },
         body: JSON.stringify(botConfig)
       });
       
@@ -706,17 +694,8 @@ export default function DCABot() {
             ? `${API_BASE_URL}/bots/dca-bots/${createdBotId}/start-paper`
             : `${API_BASE_URL}/bots/dca-bots/${createdBotId}/start`;
             
-          // Get auth token for start request
-          const { supabase: supabaseStart } = await import('../lib/supabase');
-          const { data: { session: startSession } } = await supabaseStart.auth.getSession();
-          const startAuthToken = startSession?.access_token;
-          
-          const startResponse = await fetch(endpoint, {
+          const startResponse = await authenticatedFetch(endpoint, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(startAuthToken && { 'Authorization': `Bearer ${startAuthToken}` })
-            },
             body: JSON.stringify({
               initial_balance: 10000,
               interval_seconds: 60,
@@ -758,7 +737,9 @@ export default function DCABot() {
     
     try {
       const API_BASE_URL = getApiBaseUrl();
-      const response = await fetch(`${API_BASE_URL}/bots/dca-bots/status/${id}`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots/status/${id}`, {
+        method: 'GET',
+      });
       if (response.ok) {
         const status = await response.json();
         setBotStatus(status);
@@ -769,6 +750,10 @@ export default function DCABot() {
             pollBotStatus(id);
           }, 5000); // Poll every 5 seconds
         }
+      } else if (response.status === 401) {
+        logger.warn('Authentication failed while polling bot status');
+        // Stop polling on auth error
+        statusPollingRef.current = false;
       }
     } catch (error) {
       logger.error('Error fetching bot status:', error);
