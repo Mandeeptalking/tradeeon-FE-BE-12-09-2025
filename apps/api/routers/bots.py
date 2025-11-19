@@ -401,8 +401,8 @@ async def create_dca_bot(
         if bots_path not in sys.path:
             sys.path.insert(0, bots_path)
         
-        # Import alert converter
-        from apps.api.modules.bots.alert_converter import convert_bot_entry_to_alert_conditions, convert_playbook_conditions_to_alert
+        # Import alert converter from bots directory
+        from alert_converter import convert_bot_entry_to_alert_conditions, convert_playbook_conditions_to_alert
         from apps.api.clients.supabase_client import supabase
         
         bot_id = f"dca_bot_{int(time.time())}"
