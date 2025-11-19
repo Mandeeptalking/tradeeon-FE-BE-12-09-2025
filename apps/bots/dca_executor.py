@@ -14,6 +14,14 @@ bots_path = os.path.dirname(__file__)
 if bots_path not in sys.path:
     sys.path.insert(0, bots_path)
 
+# Add backend and alerts paths for evaluator
+backend_path = os.path.join(os.path.dirname(__file__), '..', '..', 'backend')
+alerts_path = os.path.join(os.path.dirname(__file__), '..', 'alerts')
+if backend_path not in sys.path:
+    sys.path.insert(0, backend_path)
+if alerts_path not in sys.path:
+    sys.path.insert(0, alerts_path)
+
 from market_data import MarketDataService
 from paper_trading import PaperTradingEngine
 
@@ -203,19 +211,233 @@ class DCABotExecutor:
         
     async def _evaluate_entry_conditions(self, pair: str, condition_config: Dict,
                                         market_df: Optional[pd.DataFrame] = None) -> bool:
-        """Evaluate entry conditions (playbook or simple)."""
-        # TODO: Integrate with alert evaluator for condition evaluation
-        # For now, if no market data, return True (no condition filtering)
+        """Evaluate entry conditions (playbook or simple) using backend evaluator."""
         if market_df is None or market_df.empty:
             # If conditions are set but no data, skip
             if condition_config:
                 logger.warning(f"No market data for {pair}, cannot evaluate conditions")
                 return False
-            return True
+            return True  # No conditions = allow entry
+        
+        try:
+            # Import evaluator and alert manager
+            from backend.evaluator import evaluate_condition, evaluate_playbook
+            from apps.alerts.alert_manager import AlertManager
+            from apps.alerts.datasource import CandleSource
             
-        # Basic implementation - integrate with evaluator.py later
-        # For now, return True to allow testing
-        return True
+            # Prepare dataframe: ensure it has 'time' column (AlertManager expects 'time' not 'open_time')
+            df = market_df.copy()
+            if 'time' not in df.columns and 'open_time' in df.columns:
+                df['time'] = df['open_time']
+            elif 'time' not in df.columns:
+                # If no time column, create one from index or use sequential
+                if df.index.name == 'time' or isinstance(df.index, pd.DatetimeIndex):
+                    df = df.reset_index()
+                    if 'time' not in df.columns:
+                        df['time'] = df.index
+            
+            # Get mode (playbook or simple)
+            mode = condition_config.get("mode", "simple")
+            
+            if mode == "playbook":
+                # Playbook mode: multiple conditions with AND/OR logic
+                playbook_conditions = condition_config.get("conditions", [])
+                gate_logic = condition_config.get("gateLogic", "ALL")  # ALL = AND, ANY = OR
+                
+                if not playbook_conditions:
+                    logger.warning(f"No conditions in playbook for {pair}")
+                    return True  # No conditions = allow entry
+                
+                # Extract conditions for indicator application
+                conditions_to_evaluate = []
+                for playbook_condition in playbook_conditions:
+                    if not playbook_condition.get("enabled", True):
+                        continue
+                    
+                    condition_data = playbook_condition.get("condition", {})
+                    condition_type = playbook_condition.get("conditionType", "indicator")
+                    
+                    # Build condition dict for evaluator
+                    condition = {
+                        "type": "price" if condition_type == "Price Action" else "indicator",
+                        "indicator": condition_data.get("indicator"),
+                        "component": condition_data.get("component"),
+                        "operator": condition_data.get("operator", ">"),
+                        "compareWith": condition_data.get("compareWith", "value"),
+                        "compareValue": condition_data.get("compareValue") or condition_data.get("value"),
+                        "timeframe": condition_data.get("timeframe", "same"),
+                        "period": condition_data.get("period"),
+                    }
+                    
+                    # Add RHS for price action conditions
+                    if condition_data.get("rhs"):
+                        condition["rhs"] = condition_data.get("rhs")
+                    
+                    # Add price field for price conditions
+                    if condition_type == "Price Action":
+                        condition["priceField"] = condition_data.get("priceField", "close")
+                        condition["maLength"] = condition_data.get("maLength")
+                        condition["priceMaType"] = condition_data.get("priceMaType", "EMA")
+                        condition["percentage"] = condition_data.get("percentage")
+                    
+                    # Add bounds for 'between' operator
+                    if condition_data.get("lowerBound") is not None:
+                        condition["lowerBound"] = condition_data.get("lowerBound")
+                    if condition_data.get("upperBound") is not None:
+                        condition["upperBound"] = condition_data.get("upperBound")
+                    
+                    conditions_to_evaluate.append(condition)
+                
+                if not conditions_to_evaluate:
+                    return True  # No enabled conditions = allow entry
+                
+                # Apply indicators needed for conditions
+                df_with_indicators = await self._apply_indicators(df, conditions_to_evaluate)
+                
+                # Build playbook structure for evaluator
+                playbook = {
+                    "gateLogic": gate_logic,
+                    "evaluationOrder": "priority",
+                    "conditions": []
+                }
+                
+                for i, playbook_condition in enumerate(playbook_conditions):
+                    if not playbook_condition.get("enabled", True):
+                        continue
+                    
+                    condition_data = playbook_condition.get("condition", {})
+                    condition_type = playbook_condition.get("conditionType", "indicator")
+                    
+                    condition = {
+                        "type": "price" if condition_type == "Price Action" else "indicator",
+                        "indicator": condition_data.get("indicator"),
+                        "component": condition_data.get("component"),
+                        "operator": condition_data.get("operator", ">"),
+                        "compareWith": condition_data.get("compareWith", "value"),
+                        "compareValue": condition_data.get("compareValue") or condition_data.get("value"),
+                        "timeframe": condition_data.get("timeframe", "same"),
+                        "period": condition_data.get("period"),
+                    }
+                    
+                    if condition_data.get("rhs"):
+                        condition["rhs"] = condition_data.get("rhs")
+                    
+                    if condition_type == "Price Action":
+                        condition["priceField"] = condition_data.get("priceField", "close")
+                        condition["maLength"] = condition_data.get("maLength")
+                        condition["priceMaType"] = condition_data.get("priceMaType", "EMA")
+                        condition["percentage"] = condition_data.get("percentage")
+                    
+                    if condition_data.get("lowerBound") is not None:
+                        condition["lowerBound"] = condition_data.get("lowerBound")
+                    if condition_data.get("upperBound") is not None:
+                        condition["upperBound"] = condition_data.get("upperBound")
+                    
+                    playbook["conditions"].append({
+                        "id": playbook_condition.get("id", f"cond_{i}"),
+                        "priority": playbook_condition.get("priority", i),
+                        "enabled": True,
+                        "condition": condition,
+                        "logic": playbook_condition.get("logic", "AND"),
+                        "validityDuration": playbook_condition.get("validityDuration"),
+                        "validityDurationUnit": playbook_condition.get("validityDurationUnit", "bars")
+                    })
+                
+                # Evaluate playbook
+                result = evaluate_playbook(df_with_indicators, playbook)
+                triggered = result.get("triggered", False)
+                
+                if triggered:
+                    logger.info(f"✅ Entry conditions met for {pair} (playbook mode, {gate_logic} logic)")
+                else:
+                    logger.debug(f"❌ Entry conditions not met for {pair} (playbook mode)")
+                
+                return triggered
+            
+            else:
+                # Simple mode: single condition
+                condition_data = condition_config.get("condition", {})
+                condition_type = condition_config.get("conditionType", "indicator")
+                
+                if not condition_data:
+                    return True  # No condition = allow entry
+                
+                # Build condition dict
+                condition = {
+                    "type": "price" if condition_type == "Price Action" else "indicator",
+                    "indicator": condition_data.get("indicator"),
+                    "component": condition_data.get("component"),
+                    "operator": condition_data.get("operator", ">"),
+                    "compareWith": condition_data.get("compareWith", "value"),
+                    "compareValue": condition_data.get("compareValue") or condition_data.get("value"),
+                    "timeframe": condition_data.get("timeframe", "same"),
+                    "period": condition_data.get("period"),
+                }
+                
+                # Add RHS for price action conditions
+                if condition_data.get("rhs"):
+                    condition["rhs"] = condition_data.get("rhs")
+                
+                # Add price field for price conditions
+                if condition_type == "Price Action":
+                    condition["priceField"] = condition_data.get("priceField", "close")
+                    condition["maLength"] = condition_data.get("maLength")
+                    condition["priceMaType"] = condition_data.get("priceMaType", "EMA")
+                    condition["percentage"] = condition_data.get("percentage")
+                
+                # Add bounds for 'between' operator
+                if condition_data.get("lowerBound") is not None:
+                    condition["lowerBound"] = condition_data.get("lowerBound")
+                if condition_data.get("upperBound") is not None:
+                    condition["upperBound"] = condition_data.get("upperBound")
+                
+                # Apply indicators needed for condition
+                df_with_indicators = await self._apply_indicators(df, [condition])
+                
+                # Evaluate condition
+                row_index = len(df_with_indicators) - 1
+                if row_index < 0:
+                    logger.warning(f"Empty dataframe after indicator application for {pair}")
+                    return False
+                
+                result = evaluate_condition(df_with_indicators, row_index, condition)
+                
+                if result:
+                    logger.info(f"✅ Entry condition met for {pair} (simple mode)")
+                else:
+                    logger.debug(f"❌ Entry condition not met for {pair} (simple mode)")
+                
+                return result
+                
+        except Exception as e:
+            logger.error(f"Error evaluating entry conditions for {pair}: {e}", exc_info=True)
+            # On error, be conservative: don't allow entry
+            return False
+    
+    async def _apply_indicators(self, df: pd.DataFrame, conditions: List[Dict]) -> pd.DataFrame:
+        """
+        Apply indicators needed for conditions to the dataframe.
+        
+        Uses AlertManager's indicator application logic.
+        """
+        try:
+            from apps.alerts.alert_manager import AlertManager
+            from apps.alerts.datasource import CandleSource
+            
+            # Create AlertManager instance for indicator calculation
+            # We don't need a real CandleSource since we're providing the dataframe
+            src = CandleSource()
+            manager = AlertManager(src)
+            
+            # Apply indicators
+            df_with_indicators = manager._apply_needed_indicators(df, conditions)
+            
+            return df_with_indicators
+            
+        except Exception as e:
+            logger.error(f"Error applying indicators: {e}", exc_info=True)
+            # Return original dataframe on error
+            return df
         
     async def _evaluate_dca_rules(self, pair: str, dca_rules: Dict, 
                                   current_price: float) -> bool:
@@ -274,9 +496,89 @@ class DCABotExecutor:
             return position_pnl["pnl_amount"] <= -loss_amount
             
         elif rule_type == "custom":
-            # Evaluate custom condition
-            # TODO: Use evaluator
-            return True
+            # Evaluate custom condition using evaluator
+            try:
+                custom_condition_config = dca_rules.get("customCondition", {})
+                if not custom_condition_config:
+                    logger.warning(f"No custom condition config for {pair}")
+                    return False
+                
+                condition_data = custom_condition_config.get("condition", {})
+                if not condition_data:
+                    logger.warning(f"No condition data in custom condition for {pair}")
+                    return False
+                
+                condition_type = custom_condition_config.get("conditionType", "indicator")
+                
+                # Get market data if not already available
+                # We need market data for indicator evaluation
+                interval = self.config.get("interval", "1h")
+                market_df = await self.market_data.get_klines_as_dataframe(pair, interval, 200)
+                
+                if market_df.empty:
+                    logger.warning(f"No market data for custom condition evaluation for {pair}")
+                    return False
+                
+                # Prepare dataframe: ensure it has 'time' column
+                df = market_df.copy()
+                if 'time' not in df.columns and 'open_time' in df.columns:
+                    df['time'] = df['open_time']
+                elif 'time' not in df.columns:
+                    if df.index.name == 'time' or isinstance(df.index, pd.DatetimeIndex):
+                        df = df.reset_index()
+                        if 'time' not in df.columns:
+                            df['time'] = df.index
+                
+                # Build condition dict
+                condition = {
+                    "type": "price" if condition_type == "Price Action" else "indicator",
+                    "indicator": condition_data.get("indicator"),
+                    "component": condition_data.get("component"),
+                    "operator": condition_data.get("operator", ">"),
+                    "compareWith": condition_data.get("compareWith", "value"),
+                    "compareValue": condition_data.get("compareValue") or condition_data.get("value"),
+                    "timeframe": condition_data.get("timeframe", "same"),
+                    "period": condition_data.get("period"),
+                }
+                
+                # Add RHS for price action conditions
+                if condition_data.get("rhs"):
+                    condition["rhs"] = condition_data.get("rhs")
+                
+                # Add price field for price conditions
+                if condition_type == "Price Action":
+                    condition["priceField"] = condition_data.get("priceField", "close")
+                    condition["maLength"] = condition_data.get("maLength")
+                    condition["priceMaType"] = condition_data.get("priceMaType", "EMA")
+                    condition["percentage"] = condition_data.get("percentage")
+                
+                # Add bounds for 'between' operator
+                if condition_data.get("lowerBound") is not None:
+                    condition["lowerBound"] = condition_data.get("lowerBound")
+                if condition_data.get("upperBound") is not None:
+                    condition["upperBound"] = condition_data.get("upperBound")
+                
+                # Apply indicators and evaluate
+                df_with_indicators = await self._apply_indicators(df, [condition])
+                
+                if df_with_indicators.empty:
+                    logger.warning(f"Empty dataframe after indicator application for custom condition on {pair}")
+                    return False
+                
+                from backend.evaluator import evaluate_condition
+                row_index = len(df_with_indicators) - 1
+                result = evaluate_condition(df_with_indicators, row_index, condition)
+                
+                if result:
+                    logger.info(f"✅ Custom DCA condition met for {pair}")
+                else:
+                    logger.debug(f"❌ Custom DCA condition not met for {pair}")
+                
+                return result
+                
+            except Exception as e:
+                logger.error(f"Error evaluating custom DCA condition for {pair}: {e}", exc_info=True)
+                return False
             
         return False
         
@@ -295,8 +597,23 @@ class DCABotExecutor:
         if cooldown_unit == "minutes":
             cooldown_delta = timedelta(minutes=cooldown_value)
         elif cooldown_unit == "bars":
-            # TODO: Convert bars to time based on timeframe
-            cooldown_delta = timedelta(minutes=cooldown_value * 5)  # Placeholder
+            # Convert bars to time based on bot's timeframe
+            timeframe = self.config.get("interval", "1h")
+            
+            # Timeframe to minutes mapping
+            timeframe_minutes = {
+                "1m": 1,
+                "5m": 5,
+                "15m": 15,
+                "30m": 30,
+                "1h": 60,
+                "4h": 240,
+                "1d": 1440,
+                "1w": 10080
+            }
+            
+            minutes_per_bar = timeframe_minutes.get(timeframe, 60)  # Default to 1h
+            cooldown_delta = timedelta(minutes=cooldown_value * minutes_per_bar)
         else:
             cooldown_delta = timedelta(minutes=cooldown_value)
             

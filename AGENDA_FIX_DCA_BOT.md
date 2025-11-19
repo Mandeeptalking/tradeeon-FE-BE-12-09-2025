@@ -702,32 +702,34 @@ elif action["action"] == "close_and_restart":
 
 ### Phase 1: Critical Fixes
 
-- [ ] **Fix #1**: Entry Condition Evaluation
-  - [ ] Import evaluator
-  - [ ] Add `_apply_indicators()` method
-  - [ ] Implement playbook evaluation
-  - [ ] Implement simple condition evaluation
+- [x] **Fix #1**: Entry Condition Evaluation
+  - [x] Import evaluator
+  - [x] Add `_apply_indicators()` method
+  - [x] Implement playbook evaluation
+  - [x] Implement simple condition evaluation
   - [ ] Test with RSI condition
   - [ ] Test with EMA condition
   - [ ] Test with playbook
   - [ ] Test with no conditions
-  - **Status**: 🔴 Not Started
-  - **Assigned**: TBD
-  - **Due Date**: TBD
+  - **Status**: 🟡 In Progress (Implementation Complete, Testing Pending)
+  - **Completed**: November 18, 2025
+  - **Notes**: Full integration with backend evaluator. Supports both simple and playbook modes.
 
-- [ ] **Fix #2**: Custom DCA Rules
-  - [ ] Implement custom condition evaluation
+- [x] **Fix #2**: Custom DCA Rules
+  - [x] Implement custom condition evaluation
   - [ ] Test custom DCA rules
-  - **Status**: 🔴 Not Started
-  - **Depends On**: Fix #1
-  - **Due Date**: TBD
+  - **Status**: 🟡 In Progress (Implementation Complete, Testing Pending)
+  - **Depends On**: Fix #1 ✅
+  - **Completed**: November 18, 2025
+  - **Notes**: Uses same evaluator as entry conditions.
 
-- [ ] **Fix #3**: Bar-Based Cooldown
-  - [ ] Add timeframe to minutes mapping
-  - [ ] Fix cooldown calculation
+- [x] **Fix #3**: Bar-Based Cooldown
+  - [x] Add timeframe to minutes mapping
+  - [x] Fix cooldown calculation
   - [ ] Test with different timeframes
-  - **Status**: 🔴 Not Started
-  - **Due Date**: TBD
+  - **Status**: 🟡 In Progress (Implementation Complete, Testing Pending)
+  - **Completed**: November 18, 2025
+  - **Notes**: Supports all common timeframes (1m, 5m, 15m, 30m, 1h, 4h, 1d, 1w).
 
 ### Phase 2: Nice-to-Have
 
@@ -892,19 +894,38 @@ elif action["action"] == "close_and_restart":
 - Created fix plan
 - Set up progress tracking
 
+**Phase 1 Implementation Complete** ✅
+- ✅ **Fix #1**: Entry Condition Evaluation - IMPLEMENTED
+  - Integrated with `backend/evaluator.py`
+  - Added `_apply_indicators()` helper method
+  - Supports both simple and playbook modes
+  - Handles all condition types (indicator, price, volume)
+  - Proper error handling and logging
+  
+- ✅ **Fix #2**: Custom DCA Rules - IMPLEMENTED
+  - Uses same evaluator as entry conditions
+  - Fetches market data when needed
+  - Full condition evaluation support
+  
+- ✅ **Fix #3**: Bar-Based Cooldown - IMPLEMENTED
+  - Added timeframe to minutes mapping
+  - Supports: 1m, 5m, 15m, 30m, 1h, 4h, 1d, 1w
+  - Proper conversion from bars to time
+
 **Current Status**:
-- Entry conditions: ❌ Not working (always returns True)
-- Custom DCA rules: ❌ Not working
-- Bar-based cooldown: ⚠️ Placeholder
-- Fear & Greed: ❌ Not implemented
-- Bot restart: ❌ Not implemented
-- Live trading: ❌ Not implemented
+- Entry conditions: ✅ **FIXED** (needs testing)
+- Custom DCA rules: ✅ **FIXED** (needs testing)
+- Bar-based cooldown: ✅ **FIXED** (needs testing)
+- Fear & Greed: ❌ Not implemented (low priority)
+- Bot restart: ❌ Not implemented (low priority)
+- Live trading: ❌ Not implemented (Phase 3)
 
 **Next Steps**:
-1. Start Fix #1 (Entry Condition Evaluation)
-2. Test entry conditions
-3. Fix custom DCA rules
-4. Fix bar-based cooldown
+1. Test Fix #1 (Entry Condition Evaluation)
+2. Test Fix #2 (Custom DCA Rules)
+3. Test Fix #3 (Bar-Based Cooldown)
+4. Update documentation
+5. Move to Phase 2 (optional features)
 
 ---
 
