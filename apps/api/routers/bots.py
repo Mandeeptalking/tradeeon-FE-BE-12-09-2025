@@ -387,7 +387,8 @@ def _validate_phase1_features(phase1: Dict[str, Any]):
 
 @router.post("/dca-bots")
 async def create_dca_bot(
-    bot_config: Dict[str, Any] = Body(..., description="Full DCA bot configuration including Phase 1 features")
+    bot_config: Dict[str, Any] = Body(..., description="Full DCA bot configuration including Phase 1 features"),
+    user: AuthedUser = Depends(get_current_user)
 ):
     """Create a DCA bot with advanced Phase 1 features and condition registry integration."""
     try:
@@ -406,8 +407,8 @@ async def create_dca_bot(
         
         bot_id = f"dca_bot_{int(time.time())}"
         
-        # Get user_id from auth (TODO: integrate with actual auth)
-        user_id = bot_config.get("user_id") or "current_user"  # TODO: Get from auth header
+        # Get user_id from authenticated user
+        user_id = user.user_id
         
         # Extract key fields
         bot_name = bot_config.get("botName", "DCA Bot")
@@ -481,24 +482,39 @@ async def create_dca_bot(
         
         required_capital = bot_config.get("baseOrderSize", 100) * 10  # Estimate
         
-        # Save bot to database
-        try:
-            sys.path.insert(0, bots_path)
-            from db_service import db_service
-            db_service.create_bot(
-                bot_id=bot_id,
-                user_id=user_id,
-                name=bot_name,
-                bot_type="dca",
-                symbol=primary_pair,
-                interval="1h",
-                config=config_dict,
-                required_capital=required_capital,
-                max_position_size=None,
-                risk_per_trade=None
+        # Save bot to database - REQUIRED, don't continue if it fails
+        sys.path.insert(0, bots_path)
+        from db_service import db_service
+        
+        if not db_service or not db_service.enabled:
+            raise TradeeonError(
+                "Database service not available. Cannot create bot without database.",
+                "SERVICE_UNAVAILABLE",
+                status_code=503
             )
-        except Exception as db_error:
-            logger.warning(f"Failed to save bot to database: {db_error}. Continuing with in-memory storage.")
+        
+        # Save bot to database
+        bot_saved = db_service.create_bot(
+            bot_id=bot_id,
+            user_id=user_id,
+            name=bot_name,
+            bot_type="dca",
+            symbol=primary_pair,
+            interval="1h",
+            config=config_dict,
+            required_capital=required_capital,
+            max_position_size=None,
+            risk_per_trade=None
+        )
+        
+        if not bot_saved:
+            raise TradeeonError(
+                "Failed to save bot to database",
+                "DATABASE_ERROR",
+                status_code=500
+            )
+        
+        logger.info(f"✅ Bot {bot_id} successfully saved to database with status 'inactive'")
         
         bot = {
             "bot_id": bot_id,
@@ -673,17 +689,20 @@ async def start_dca_bot_paper(
                 status_code=500
             )
         
-        # Create bot run record
-        if db_service:
-            run_id = db_service.create_bot_run(
-                bot_id=bot_id,
-                user_id=user.user_id,
-                status="running"
-            )
-        else:
-            run_id = None
+        # Update bot status to "running" in database
+        db_service.update_bot_status(bot_id, "running")
         
-        logger.info(f"✅ DCA bot {bot_id} started in paper trading mode")
+        # Create bot run record
+        run_id = db_service.create_bot_run(
+            bot_id=bot_id,
+            user_id=user.user_id,
+            status="running"
+        )
+        
+        if not run_id:
+            logger.warning(f"Failed to create bot run record for {bot_id}, but bot is running")
+        
+        logger.info(f"✅ DCA bot {bot_id} started in paper trading mode (status: running, run_id: {run_id})")
         
         return {
             "success": True,
