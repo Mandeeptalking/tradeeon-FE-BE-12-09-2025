@@ -47,6 +47,10 @@ export default function DCABot() {
   const [tradingMode, setTradingMode] = useState<'test' | 'live'>('test');
   // Modal state for live trading confirmation
   const [showLiveTradingModal, setShowLiveTradingModal] = useState(false);
+  // Modal state for bot creation summary
+  const [showBotSummaryModal, setShowBotSummaryModal] = useState(false);
+  // Store bot config for summary modal
+  const [pendingBotConfig, setPendingBotConfig] = useState<any>(null);
   
   const [botName, setBotName] = useState('ETH/USDT Classic trading');
   const [market, setMarket] = useState<'spot' | 'futures'>('spot');
@@ -454,8 +458,72 @@ export default function DCABot() {
     setBotType(newType);
   };
 
-  const handleStartBot = async () => {
-    // Prepare condition data based on mode
+  const handleStartBot = () => {
+    // Show summary modal first instead of creating bot directly
+    // Prepare bot config for summary display
+    let conditionConfig: any = null;
+    
+    if (showPlaybookBuilder && conditionPlaybook.length > 0) {
+      conditionConfig = {
+        mode: 'playbook',
+        gateLogic: playbookGateLogic,
+        conditions: conditionPlaybook.filter(c => c.enabled).length
+      };
+    } else if (tradeStartCondition && conditionType) {
+      conditionConfig = {
+        mode: 'simple',
+        conditionType: conditionType
+      };
+    }
+
+    const dcaRulesConfig: any = {
+      ruleType: dcaRuleType,
+      maxDcaPerPosition: dcaRules.maxDcaPerPosition,
+      dcaCooldownValue: dcaRules.dcaCooldownValue,
+      dcaCooldownUnit: dcaRules.dcaCooldownUnit
+    };
+
+    const phase1Config = {
+      marketRegime: marketRegimeConfig.enabled,
+      dynamicScaling: dynamicScalingConfig.enabled,
+      profitStrategy: profitStrategyConfig.enabled,
+      emergencyBrake: emergencyBrakeConfig.enabled
+    };
+
+    const configForSummary = {
+      botName,
+      direction,
+      pair: botType === 'single' ? pair : `${selectedPairs.length} pairs`,
+      selectedPairs,
+      exchange,
+      botType,
+      profitCurrency,
+      baseOrderSize,
+      baseOrderCurrency,
+      startOrderType,
+      tradeStartCondition,
+      conditionConfig,
+      dcaRules: dcaRulesConfig,
+      phase1Features: phase1Config,
+      tradingMode
+    };
+
+    setPendingBotConfig(configForSummary);
+    setShowBotSummaryModal(true);
+  };
+
+  const handleConfirmBotCreation = async () => {
+    if (!pendingBotConfig) return;
+    
+    // Close modal
+    setShowBotSummaryModal(false);
+    
+    // Now create the bot (use the full logic from original handleStartBot)
+    await createBotWithConfig();
+  };
+
+  const createBotWithConfig = async () => {
+    // Prepare condition data based on mode (full config for API)
     let conditionConfig: any = null;
     
     if (showPlaybookBuilder && conditionPlaybook.length > 0) {
@@ -622,8 +690,7 @@ export default function DCABot() {
         const isTestMode = tradingMode === 'test';
         toast.success(`DCA Bot created! Starting ${isTestMode ? 'test mode' : 'live mode'}...`);
         
-        // Automatically start bot in test mode (paper trading with live data)
-        
+        // Automatically start bot
         try {
           const endpoint = isTestMode 
             ? `${API_BASE_URL}/bots/dca-bots/${createdBotId}/start-paper`
@@ -637,7 +704,7 @@ export default function DCABot() {
             body: JSON.stringify({
               initial_balance: 10000,
               interval_seconds: 60,
-              use_live_data: true // Always use live market data
+              use_live_data: true
             })
           });
           
@@ -649,7 +716,6 @@ export default function DCABot() {
             // Start polling for status
             setStatusPolling(true);
             statusPollingRef.current = true;
-            // Poll immediately (delay to ensure state is set)
             setTimeout(() => {
               pollBotStatus(createdBotId);
             }, 100);
@@ -5364,6 +5430,190 @@ export default function DCABot() {
               className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm"
             >
               Enable Live Trading
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bot Creation Summary Modal */}
+      <Dialog open={showBotSummaryModal} onOpenChange={setShowBotSummaryModal}>
+        <DialogContent className="sm:max-w-2xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>📋</span>
+              <span>Bot Configuration Summary</span>
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-600 dark:text-gray-300 pt-2">
+              Review your bot configuration before creating it.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {pendingBotConfig && (
+            <div className="space-y-4 py-4">
+              {/* Trading Mode */}
+              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Trading Mode</span>
+                  <span className={`px-2 py-1 text-xs font-medium rounded ${
+                    pendingBotConfig.tradingMode === 'test'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400'
+                      : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'
+                  }`}>
+                    {pendingBotConfig.tradingMode === 'test' ? '🧪 Test Mode' : '🔴 Live Mode'}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {pendingBotConfig.tradingMode === 'test' 
+                    ? 'Paper trading with live market data'
+                    : '⚠️ Real money trading - trades will execute on your exchange'}
+                </div>
+              </div>
+
+              {/* Bot Configuration */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Configuration</div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Bot Name:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{pendingBotConfig.botName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Symbol:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{pendingBotConfig.pair}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Exchange:</span>
+                      <span className="font-medium text-gray-900 dark:text-white truncate ml-2 max-w-[60%]">{pendingBotConfig.exchange}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Bot Type:</span>
+                      <span className="font-medium text-gray-900 dark:text-white capitalize">
+                        {pendingBotConfig.botType === 'single' ? 'Single-pair' : 'Multi-pair'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Base Order:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {pendingBotConfig.baseOrderSize} {pendingBotConfig.baseOrderCurrency}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Order Type:</span>
+                      <span className="font-medium text-gray-900 dark:text-white capitalize">{pendingBotConfig.startOrderType}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Settings</div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Start Mode:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {pendingBotConfig.tradeStartCondition ? '⏳ Wait for Signal' : '⚡ Immediate'}
+                      </span>
+                    </div>
+                    {pendingBotConfig.conditionConfig && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Entry Conditions:</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {pendingBotConfig.conditionConfig.mode === 'playbook' 
+                            ? `Playbook (${pendingBotConfig.conditionConfig.conditions} conditions)`
+                            : 'Simple'}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">DCA Trigger:</span>
+                      <span className="font-medium text-gray-900 dark:text-white capitalize">
+                        {pendingBotConfig.dcaRules.ruleType === 'down_from_last_entry' ? 'Down from Last Entry' :
+                         pendingBotConfig.dcaRules.ruleType === 'down_from_average' ? 'Down from Average' :
+                         pendingBotConfig.dcaRules.ruleType === 'loss_by_percent' ? 'Loss by %' :
+                         pendingBotConfig.dcaRules.ruleType === 'loss_by_amount' ? 'Loss by Amount' :
+                         'Custom'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Max DCA/Position:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{pendingBotConfig.dcaRules.maxDcaPerPosition}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Phase 1 Features */}
+              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">Advanced Features</div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Market Regime:</span>
+                    <span className={`font-medium ${
+                      pendingBotConfig.phase1Features.marketRegime 
+                        ? 'text-green-600 dark:text-green-400' 
+                        : 'text-gray-400 dark:text-gray-500'
+                    }`}>
+                      {pendingBotConfig.phase1Features.marketRegime ? '✅ Enabled' : '❌ Disabled'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Dynamic Scaling:</span>
+                    <span className={`font-medium ${
+                      pendingBotConfig.phase1Features.dynamicScaling 
+                        ? 'text-green-600 dark:text-green-400' 
+                        : 'text-gray-400 dark:text-gray-500'
+                    }`}>
+                      {pendingBotConfig.phase1Features.dynamicScaling ? '✅ Enabled' : '❌ Disabled'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Profit Strategy:</span>
+                    <span className={`font-medium ${
+                      pendingBotConfig.phase1Features.profitStrategy 
+                        ? 'text-green-600 dark:text-green-400' 
+                        : 'text-gray-400 dark:text-gray-500'
+                    }`}>
+                      {pendingBotConfig.phase1Features.profitStrategy ? '✅ Enabled' : '❌ Disabled'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Emergency Brake:</span>
+                    <span className={`font-medium ${
+                      pendingBotConfig.phase1Features.emergencyBrake 
+                        ? 'text-green-600 dark:text-green-400' 
+                        : 'text-gray-400 dark:text-gray-500'
+                    }`}>
+                      {pendingBotConfig.phase1Features.emergencyBrake ? '✅ Enabled' : '❌ Disabled'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {pendingBotConfig.tradingMode === 'live' && (
+                <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 border border-red-200 dark:border-red-800">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-red-800 dark:text-red-300">
+                      <strong>Live Trading Warning:</strong> This bot will trade with real money. Make sure you've reviewed all settings and are ready to start trading.
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="flex gap-3 sm:justify-end mt-4">
+            <button
+              onClick={() => setShowBotSummaryModal(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmBotCreation}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
+            >
+              Create & Start Bot
             </button>
           </DialogFooter>
         </DialogContent>
