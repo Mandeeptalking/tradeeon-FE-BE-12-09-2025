@@ -534,7 +534,7 @@ async def create_dca_bot(
         from bot_manager import bot_manager
         bot_manager.store_bot_config(bot_id, bot_config)
         
-        # Create alert for entry condition if present
+        # Create alert for entry condition if present (optional - don't fail bot creation if this fails)
         condition_config = config_dict.get("conditionConfig")
         if condition_config:
             try:
@@ -565,13 +565,16 @@ async def create_dca_bot(
                         }
                         
                         # Save to alerts table
-                        supabase.table("alerts").insert(alert).execute()
-                        logger.info(f"Created alert for bot {bot_id} entry condition (playbook mode)")
+                        if supabase:
+                            supabase.table("alerts").insert(alert).execute()
+                            logger.info(f"Created alert for bot {bot_id} entry condition (playbook mode)")
+                        else:
+                            logger.warning(f"Supabase not available, skipping alert creation for bot {bot_id}")
                 
-                # Check if single entry condition
-                elif condition_config.get("entryCondition"):
-                    entry_condition = condition_config.get("entryCondition")
-                    condition_type = condition_config.get("entryConditionType")
+                # Check if simple mode with entry condition
+                elif condition_config.get("mode") == "simple":
+                    entry_condition = condition_config.get("condition", {})
+                    condition_type = condition_config.get("conditionType")
                     
                     if entry_condition and condition_type:
                         # Convert to alert format
@@ -580,27 +583,31 @@ async def create_dca_bot(
                             condition_type
                         )
                         
-                        # Create alert
-                        alert = {
-                            "user_id": user_id,
-                            "symbol": primary_pair,
-                            "base_timeframe": entry_condition.get("timeframe", "15m"),
-                            "conditions": alert_conditions,
-                            "logic": "AND",
-                            "action": {
-                                "type": "bot_trigger",
-                                "bot_id": bot_id,
-                                "action_type": "execute_entry"
-                            },
-                            "status": "active" if bot_config.get("status") == "active" else "paused"
-                        }
-                        
-                        # Save to alerts table
-                        if supabase:
-                            supabase.table("alerts").insert(alert).execute()
-                            logger.info(f"Created alert for bot {bot_id} entry condition")
+                        if alert_conditions:
+                            # Create alert
+                            alert = {
+                                "user_id": user_id,
+                                "symbol": primary_pair,
+                                "base_timeframe": entry_condition.get("timeframe", "15m"),
+                                "conditions": alert_conditions,
+                                "logic": "AND",
+                                "action": {
+                                    "type": "bot_trigger",
+                                    "bot_id": bot_id,
+                                    "action_type": "execute_entry"
+                                },
+                                "status": "active" if bot_config.get("status") == "active" else "paused"
+                            }
+                            
+                            # Save to alerts table
+                            if supabase:
+                                supabase.table("alerts").insert(alert).execute()
+                                logger.info(f"Created alert for bot {bot_id} entry condition (simple mode)")
+                            else:
+                                logger.warning(f"Supabase not available, skipping alert creation for bot {bot_id}")
             except Exception as alert_error:
-                logger.warning(f"Failed to create alert for bot {bot_id}: {alert_error}")
+                logger.warning(f"Failed to create alert for bot {bot_id}: {alert_error}", exc_info=True)
+                # Don't fail bot creation if alert creation fails
         
         return {
             "success": True,
