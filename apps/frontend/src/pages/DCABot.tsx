@@ -665,12 +665,22 @@ export default function DCABot() {
     logger.debug('Bot config:', botConfig);
     
     try {
+      // Get auth token
+      const { supabase } = await import('../lib/supabase');
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token;
+      
+      if (!authToken) {
+        throw new Error('You must be logged in to create a bot');
+      }
+      
       // Send to backend API
       const API_BASE_URL = getApiBaseUrl();
       const response = await fetch(`${API_BASE_URL}/bots/dca-bots`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify(botConfig)
       });
@@ -696,10 +706,16 @@ export default function DCABot() {
             ? `${API_BASE_URL}/bots/dca-bots/${createdBotId}/start-paper`
             : `${API_BASE_URL}/bots/dca-bots/${createdBotId}/start`;
             
+          // Get auth token for start request
+          const { supabase: supabaseStart } = await import('../lib/supabase');
+          const { data: { session: startSession } } = await supabaseStart.auth.getSession();
+          const startAuthToken = startSession?.access_token;
+          
           const startResponse = await fetch(endpoint, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              ...(startAuthToken && { 'Authorization': `Bearer ${startAuthToken}` })
             },
             body: JSON.stringify({
               initial_balance: 10000,
