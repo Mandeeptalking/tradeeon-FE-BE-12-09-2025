@@ -519,32 +519,61 @@ async def create_dca_bot(
         
         # Save bot to database - REQUIRED, don't continue if it fails
         sys.path.insert(0, bots_path)
-        from db_service import db_service
-        
-        if not db_service or not db_service.enabled:
+        try:
+            from db_service import db_service
+        except ImportError as db_import_error:
+            logger.error(f"Failed to import db_service: {db_import_error}", exc_info=True)
             raise TradeeonError(
-                "Database service not available. Cannot create bot without database.",
+                f"Database service not available: {str(db_import_error)}",
+                "SERVICE_UNAVAILABLE",
+                status_code=503
+            )
+        
+        if not db_service:
+            logger.error("db_service is None after import")
+            raise TradeeonError(
+                "Database service is None. Cannot create bot without database.",
+                "SERVICE_UNAVAILABLE",
+                status_code=503
+            )
+        
+        if not db_service.enabled:
+            logger.error("db_service.enabled is False")
+            raise TradeeonError(
+                "Database service is disabled. Cannot create bot without database.",
                 "SERVICE_UNAVAILABLE",
                 status_code=503
             )
         
         # Save bot to database
-        bot_saved = db_service.create_bot(
-            bot_id=bot_id,
-            user_id=user_id,
-            name=bot_name,
-            bot_type="dca",
-            symbol=primary_pair,
-            interval="1h",
-            config=config_dict,
-            required_capital=required_capital,
-            max_position_size=None,
-            risk_per_trade=None
-        )
+        logger.info(f"Attempting to save bot {bot_id} to database...")
+        logger.debug(f"Bot data: user_id={user_id}, name={bot_name}, symbol={primary_pair}, bot_type=dca")
+        
+        try:
+            bot_saved = db_service.create_bot(
+                bot_id=bot_id,
+                user_id=user_id,
+                name=bot_name,
+                bot_type="dca",
+                symbol=primary_pair,
+                interval="1h",
+                config=config_dict,
+                required_capital=required_capital,
+                max_position_size=None,
+                risk_per_trade=None
+            )
+        except Exception as db_save_error:
+            logger.error(f"Exception during db_service.create_bot: {db_save_error}", exc_info=True)
+            raise TradeeonError(
+                f"Failed to save bot to database: {str(db_save_error)}",
+                "DATABASE_ERROR",
+                status_code=500
+            )
         
         if not bot_saved:
+            logger.error(f"db_service.create_bot returned False for bot {bot_id}")
             raise TradeeonError(
-                "Failed to save bot to database",
+                "Failed to save bot to database. Check logs for details.",
                 "DATABASE_ERROR",
                 status_code=500
             )
