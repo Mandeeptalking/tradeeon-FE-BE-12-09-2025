@@ -418,8 +418,28 @@ async def create_dca_bot(
         
         # Extract key fields
         bot_name = bot_config.get("botName", "DCA Bot")
-        selected_pairs = bot_config.get("selectedPairs", [bot_config.get("pair", "BTCUSDT")])
-        primary_pair = selected_pairs[0] if selected_pairs else bot_config.get("pair", "BTCUSDT")
+        selected_pairs = bot_config.get("selectedPairs", [])
+        
+        # Handle pair extraction - support both single and multi-pair bots
+        if not selected_pairs:
+            # Try to get from pair field
+            pair = bot_config.get("pair", "BTCUSDT")
+            if pair:
+                selected_pairs = [pair]
+            else:
+                selected_pairs = ["BTCUSDT"]  # Fallback
+        
+        # Ensure selected_pairs is a list
+        if not isinstance(selected_pairs, list):
+            selected_pairs = [selected_pairs] if selected_pairs else ["BTCUSDT"]
+        
+        # Get primary pair (first in list)
+        primary_pair = selected_pairs[0] if selected_pairs else "BTCUSDT"
+        
+        # Normalize pair format (remove / if present, ensure uppercase)
+        primary_pair = primary_pair.upper().replace("/", "")
+        
+        logger.debug(f"Bot {bot_id}: name={bot_name}, primary_pair={primary_pair}, selected_pairs={selected_pairs}")
         
         # Validate and prepare config
         config_dict = {
@@ -447,47 +467,52 @@ async def create_dca_bot(
                 # Don't fail bot creation if validation fails
         
         # ===== PHASE 1.3: CONDITION REGISTRY INTEGRATION =====
+        # This is optional - don't fail bot creation if it fails
         condition_ids = []
         subscription_ids = []
         
-        # Extract conditions from bot config
-        conditions = extract_conditions_from_dca_config(bot_config, primary_pair)
-        
-        if conditions:
-            logger.info(f"Extracted {len(conditions)} conditions from bot config for bot {bot_id}")
+        try:
+            # Extract conditions from bot config
+            conditions = extract_conditions_from_dca_config(bot_config, primary_pair)
             
-            # Register each condition
-            for condition in conditions:
-                try:
-                    condition_id = await register_condition_via_api(condition)
-                    if condition_id:
-                        condition_ids.append(condition_id)
-                        logger.info(f"Registered condition {condition_id} for bot {bot_id}")
-                        
-                        # Subscribe bot to condition
-                        subscription_id = await subscribe_bot_to_condition_via_api(
-                            bot_id=bot_id,
-                            condition_id=condition_id,
-                            bot_type="dca",
-                            bot_config=config_dict,
-                            user_id=user_id
-                        )
-                        if subscription_id:
-                            subscription_ids.append(subscription_id)
-                            logger.info(f"Subscribed bot {bot_id} to condition {condition_id}")
-                    else:
-                        logger.warning(f"Failed to register condition for bot {bot_id}: {condition}")
-                except Exception as cond_error:
-                    logger.error(f"Error processing condition for bot {bot_id}: {cond_error}", exc_info=True)
-                    # Continue with bot creation even if condition registration fails
-        else:
-            logger.info(f"No conditions found in bot config for bot {bot_id}")
-        
-        # Store condition IDs in bot config
-        if condition_ids:
-            config_dict["condition_ids"] = condition_ids
-            config_dict["subscription_ids"] = subscription_ids
-            logger.info(f"Stored {len(condition_ids)} condition IDs in bot config")
+            if conditions:
+                logger.info(f"Extracted {len(conditions)} conditions from bot config for bot {bot_id}")
+                
+                # Register each condition
+                for condition in conditions:
+                    try:
+                        condition_id = await register_condition_via_api(condition)
+                        if condition_id:
+                            condition_ids.append(condition_id)
+                            logger.info(f"Registered condition {condition_id} for bot {bot_id}")
+                            
+                            # Subscribe bot to condition
+                            subscription_id = await subscribe_bot_to_condition_via_api(
+                                bot_id=bot_id,
+                                condition_id=condition_id,
+                                bot_type="dca",
+                                bot_config=config_dict,
+                                user_id=user_id
+                            )
+                            if subscription_id:
+                                subscription_ids.append(subscription_id)
+                                logger.info(f"Subscribed bot {bot_id} to condition {condition_id}")
+                        else:
+                            logger.warning(f"Failed to register condition for bot {bot_id}: {condition}")
+                    except Exception as cond_error:
+                        logger.error(f"Error processing condition for bot {bot_id}: {cond_error}", exc_info=True)
+                        # Continue with bot creation even if condition registration fails
+            else:
+                logger.info(f"No conditions found in bot config for bot {bot_id}")
+            
+            # Store condition IDs in bot config
+            if condition_ids:
+                config_dict["condition_ids"] = condition_ids
+                config_dict["subscription_ids"] = subscription_ids
+                logger.info(f"Stored {len(condition_ids)} condition IDs in bot config")
+        except Exception as condition_registry_error:
+            logger.warning(f"Condition registry integration failed: {condition_registry_error}. Continuing with bot creation.")
+            # Don't fail bot creation if condition registry fails
         # ===== END PHASE 1.3 INTEGRATION =====
         
         required_capital = bot_config.get("baseOrderSize", 100) * 10  # Estimate
