@@ -401,8 +401,14 @@ async def create_dca_bot(
         if bots_path not in sys.path:
             sys.path.insert(0, bots_path)
         
-        # Import alert converter from bots directory
-        from alert_converter import convert_bot_entry_to_alert_conditions, convert_playbook_conditions_to_alert
+        # Import alert converter from bots directory (optional - don't fail if missing)
+        try:
+            from alert_converter import convert_bot_entry_to_alert_conditions, convert_playbook_conditions_to_alert
+        except ImportError as import_err:
+            logger.warning(f"Could not import alert_converter: {import_err}. Alert creation will be skipped.")
+            convert_bot_entry_to_alert_conditions = None
+            convert_playbook_conditions_to_alert = None
+        
         from apps.api.clients.supabase_client import supabase
         
         bot_id = f"dca_bot_{int(time.time())}"
@@ -536,7 +542,7 @@ async def create_dca_bot(
         
         # Create alert for entry condition if present (optional - don't fail bot creation if this fails)
         condition_config = config_dict.get("conditionConfig")
-        if condition_config:
+        if condition_config and convert_bot_entry_to_alert_conditions and convert_playbook_conditions_to_alert:
             try:
                 # Check if using playbook mode
                 if condition_config.get("mode") == "playbook":
