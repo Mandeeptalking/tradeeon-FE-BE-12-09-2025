@@ -439,8 +439,12 @@ async def create_dca_bot(
         # Validate Phase 1 features structure
         phase1 = config_dict.get("phase1Features", {})
         if phase1:
-            # Ensure all Phase 1 features have proper structure
-            _validate_phase1_features(phase1)
+            try:
+                # Ensure all Phase 1 features have proper structure
+                _validate_phase1_features(phase1)
+            except Exception as phase1_error:
+                logger.warning(f"Phase 1 validation failed: {phase1_error}. Continuing with bot creation.")
+                # Don't fail bot creation if validation fails
         
         # ===== PHASE 1.3: CONDITION REGISTRY INTEGRATION =====
         condition_ids = []
@@ -536,9 +540,14 @@ async def create_dca_bot(
             "updated_at": int(time.time() * 1000)
         }
         
-        # Store bot config for later use (in-memory fallback)
-        from bot_manager import bot_manager
-        bot_manager.store_bot_config(bot_id, bot_config)
+        # Store bot config for later use (in-memory fallback) - optional
+        try:
+            from bot_manager import bot_manager
+            bot_manager.store_bot_config(bot_id, bot_config)
+            logger.debug(f"Stored bot config in bot_manager for {bot_id}")
+        except Exception as manager_error:
+            logger.warning(f"Could not store bot config in bot_manager: {manager_error}. Bot is still created in database.")
+            # Don't fail bot creation if bot_manager is unavailable
         
         # Create alert for entry condition if present (optional - don't fail bot creation if this fails)
         condition_config = config_dict.get("conditionConfig")
