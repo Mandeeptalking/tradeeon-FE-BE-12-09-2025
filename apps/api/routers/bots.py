@@ -1,6 +1,7 @@
 """Bot management API routes."""
 
 from fastapi import APIRouter, HTTPException, Query, Path, Body, Depends
+from fastapi.exceptions import RequestValidationError
 from typing import List, Optional, Dict, Any
 import logging
 
@@ -20,22 +21,33 @@ router = APIRouter(prefix="/bots", tags=["bots"])
 
 @router.get("/")
 async def list_bots(
-    status: Optional[BotStatus] = Query(None, description="Filter by status"),
+    status: Optional[BotStatus] = Query(None, description="Filter by status (optional)"),
     user: AuthedUser = Depends(get_current_user)
 ):
-    """List user's bots from database."""
+    """
+    List user's bots from database.
+    
+    Requires authentication via Authorization header.
+    User ID is extracted from JWT token automatically.
+    """
     try:
+        # Get user_id from authenticated user (extracted from JWT token)
+        user_id = user.user_id
+        logger.debug(f"Listing bots for user_id: {user_id}, status filter: {status}")
+        
         bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
         if bots_path not in sys.path:
             sys.path.insert(0, bots_path)
         
-        user_id = user.user_id
         bots = []
         try:
             from db_service import db_service
-            bots = db_service.list_bots(user_id, status.value if status else None)
+            status_filter = status.value if status else None
+            bots = db_service.list_bots(user_id, status_filter)
+            logger.info(f"Found {len(bots)} bots for user {user_id}")
         except Exception as db_error:
             logger.warning(f"Failed to fetch bots from database: {db_error}. Returning empty list.")
+            bots = []
         
         return {
             "success": True,
@@ -43,10 +55,13 @@ async def list_bots(
             "count": len(bots)
         }
     
+    except HTTPException:
+        # Re-raise HTTP exceptions (like 401 from auth)
+        raise
     except TradeeonError:
         raise
     except Exception as e:
-        logger.error(f"Error listing bots: {e}")
+        logger.error(f"Error listing bots: {e}", exc_info=True)
         raise TradeeonError(
             f"Failed to list bots: {str(e)}",
             "INTERNAL_SERVER_ERROR",
