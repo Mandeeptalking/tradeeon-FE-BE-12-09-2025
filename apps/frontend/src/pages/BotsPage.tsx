@@ -42,17 +42,56 @@ export default function BotsPage() {
       setError(null);
       
       const API_BASE_URL = getApiBaseUrl();
+      logger.debug('Fetching bots from:', `${API_BASE_URL}/bots/`);
+      
       const response = await authenticatedFetch(`${API_BASE_URL}/bots/`);
       
+      logger.debug('Response status:', response.status, response.statusText);
+      
       if (!response.ok) {
+        let errorMessage = `Failed to fetch bots (${response.status})`;
+        
         if (response.status === 401) {
-          throw new Error('Please sign in to view your bots');
+          errorMessage = 'Please sign in to view your bots';
+        } else {
+          try {
+            const errorData = await response.json();
+            logger.debug('Error response data:', errorData);
+            
+            // Handle different error formats
+            if (errorData.detail) {
+              if (Array.isArray(errorData.detail)) {
+                // FastAPI validation errors
+                errorMessage = errorData.detail.map((e: any) => e.msg || JSON.stringify(e)).join(', ');
+              } else if (typeof errorData.detail === 'string') {
+                errorMessage = errorData.detail;
+              } else {
+                errorMessage = JSON.stringify(errorData.detail);
+              }
+            } else if (errorData.message) {
+              errorMessage = errorData.message;
+            } else if (errorData.error) {
+              errorMessage = typeof errorData.error === 'string' ? errorData.error : JSON.stringify(errorData.error);
+            }
+          } catch (parseError) {
+            const text = await response.text().catch(() => '');
+            logger.debug('Error response text:', text);
+            errorMessage = text || `Failed to fetch bots: ${response.status} ${response.statusText}`;
+          }
         }
-        const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch bots' }));
-        throw new Error(errorData.detail || `Failed to fetch bots: ${response.status}`);
+        
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();
+      logger.debug('Bots API response:', data);
+      
+      if (!data || !data.bots) {
+        logger.warn('Unexpected response format:', data);
+        setBots([]);
+        return;
+      }
+      
       const botsList: Bot[] = (data.bots || []).map((bot: any) => ({
         bot_id: bot.bot_id || bot.id,
         name: bot.name || 'Unnamed Bot',
@@ -64,12 +103,30 @@ export default function BotsPage() {
         updated_at: bot.updated_at || new Date().toISOString(),
       }));
       
+      logger.debug('Parsed bots:', botsList);
       setBots(botsList);
-      logger.debug('Bots loaded:', botsList);
+      
+      if (botsList.length === 0) {
+        logger.info('No bots found in database');
+      }
     } catch (err: any) {
-      const errorMessage = err.message || 'Failed to load bots';
+      // Extract proper error message
+      let errorMessage = 'Failed to load bots';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      } else if (err?.detail) {
+        errorMessage = typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail);
+      } else {
+        errorMessage = JSON.stringify(err);
+      }
+      
       setError(errorMessage);
-      logger.error('Error fetching bots:', err);
+      logger.error('Error fetching bots:', { error: err, message: errorMessage });
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -197,7 +254,20 @@ export default function BotsPage() {
       {/* Error Display */}
       {error && (
         <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-4">
-          <p className="text-red-400">{error}</p>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <p className="text-red-400 font-medium mb-1">Error loading bots</p>
+              <p className="text-red-300 text-sm">{error}</p>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setError(null)}
+              className="text-red-400 hover:text-red-300"
+            >
+              ×
+            </Button>
+          </div>
         </div>
       )}
 
