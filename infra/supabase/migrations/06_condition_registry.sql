@@ -101,3 +101,4 @@ CREATE TRIGGER update_condition_registry_updated_at BEFORE UPDATE ON public.cond
 CREATE TRIGGER update_user_subscriptions_updated_at BEFORE UPDATE ON public.user_condition_subscriptions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+

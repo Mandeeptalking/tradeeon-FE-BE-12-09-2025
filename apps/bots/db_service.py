@@ -350,6 +350,26 @@ class BotDatabaseService:
         except Exception as e:
             logger.error(f"Failed to list bots: {e}")
             return []
+    
+    def delete_bot(self, bot_id: str, user_id: str) -> bool:
+        """Delete a bot from the database."""
+        if not self.enabled:
+            logger.debug(f"Database disabled, skipping bot deletion for {bot_id}")
+            return False
+        
+        try:
+            # Delete bot (user_id check ensures user can only delete their own bots)
+            result = self.supabase.table("bots").delete().eq("bot_id", bot_id).eq("user_id", user_id).execute()
+            
+            if result.data:
+                logger.info(f"✅ Bot {bot_id} deleted from database successfully")
+                return True
+            else:
+                logger.warning(f"Bot {bot_id} not found or already deleted")
+                return False
+        except Exception as e:
+            logger.error(f"❌ Failed to delete bot {bot_id} from database: {e}", exc_info=True)
+            return False
 
 
 # Global instance

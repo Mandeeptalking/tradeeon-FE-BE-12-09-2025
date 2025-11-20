@@ -340,3 +340,4 @@ If you were running services directly (not in Docker):
 
 **All services are now containerized and managed with Docker Compose!** 🚀
 
+

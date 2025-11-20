@@ -1,0 +1,90 @@
+name: Deploy Backend to Lightsail
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'apps/api/**'
+      - 'apps/bots/**'
+      - 'backend/**'
+      - 'shared/**'
+      - 'requirements.txt'
+      - 'Dockerfile'
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend to Lightsail
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.LIGHTSAIL_SSH_PRIVATE_KEY }}
+      
+      - name: Add Lightsail to known hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.LIGHTSAIL_HOST }} >> ~/.ssh/known_hosts
+      
+      - name: Deploy to Lightsail
+        env:
+          LIGHTSAIL_USER: ${{ secrets.LIGHTSAIL_USER }}
+          LIGHTSAIL_HOST: ${{ secrets.LIGHTSAIL_HOST }}
+        run: |
+          ssh $LIGHTSAIL_USER@$LIGHTSAIL_HOST << 'EOF'
+            set -e
+            echo "=== Deploying Backend to Lightsail ==="
+            
+            # Navigate to project
+            cd ~/tradeeon-FE-BE-12-09-2025 || exit 1
+            
+            # Stash local changes
+            git stash || true
+            
+            # Pull latest code
+            echo "Pulling latest code..."
+            git pull origin main || exit 1
+            
+            # Restart Docker container
+            echo "Restarting Docker container..."
+            sudo docker restart tradeeon-backend || {
+              echo "Container restart failed, rebuilding..."
+              sudo docker stop tradeeon-backend 2>/dev/null || true
+              sudo docker rm tradeeon-backend 2>/dev/null || true
+              sudo docker build -t tradeeon-backend . || exit 1
+              sudo docker run -d \
+                --name tradeeon-backend \
+                --restart unless-stopped \
+                -p 8000:8000 \
+                --env-file apps/api/.env \
+                tradeeon-backend || exit 1
+            }
+            
+            # Wait for container
+            sleep 5
+            
+            # Verify health
+            echo "Verifying health..."
+            for i in {1..10}; do
+              if curl -s http://localhost:8000/health | grep -q '"status":"ok"'; then
+                echo "✅ Backend is healthy"
+                exit 0
+              fi
+              echo "Waiting for backend... ($i/10)"
+              sleep 3
+            done
+            
+            echo "❌ Backend health check failed"
+            sudo docker logs tradeeon-backend --tail 30
+            exit 1
+          EOF
+      
+      - name: Verify deployment
+        run: |
+          echo "✅ Backend deployment complete!"
+          echo "Test at: https://api.tradeeon.com/health"
+

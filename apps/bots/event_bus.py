@@ -326,3 +326,4 @@ async def create_event_bus(redis_url: Optional[str] = None) -> Optional[EventBus
         logger.warning("Failed to connect to Redis - event bus disabled")
         return None
 
+

@@ -43,10 +43,10 @@ export default function BotsPage() {
       setBots(botsData);
       setFilteredBots(filterBots(botsData, filters));
       setKPIs(getKPIs(botsData));
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to load bots data',
+        description: error.message || 'Failed to load bots data',
         variant: 'destructive',
       });
     } finally {
@@ -58,6 +58,11 @@ export default function BotsPage() {
   useEffect(() => {
     loadBots();
   }, []);
+
+  // Refresh bots when filters change
+  useEffect(() => {
+    loadBots();
+  }, [filters]);
 
   // Update filtered bots when filters change
   useEffect(() => {
@@ -128,15 +133,14 @@ export default function BotsPage() {
         description: 'Bot deleted successfully',
       });
       
-      // Refresh KPIs
-      const remainingBots = bots.filter(bot => bot.bot_id !== botId);
-      setKPIs(getKPIs(remainingBots));
-    } catch (error) {
+      // Reload bots to get updated data
+      await loadBots();
+    } catch (error: any) {
       // Rollback on error
-      loadBots();
+      await loadBots();
       toast({
         title: 'Error',
-        description: 'Failed to delete bot',
+        description: error.message || 'Failed to delete bot',
         variant: 'destructive',
       });
     }
@@ -144,20 +148,13 @@ export default function BotsPage() {
 
   const handleCreateBot = async (payload: CreateBotPayload) => {
     try {
-      const newBot = await createBot(payload);
-      setBots(prevBots => [...prevBots, newBot]);
-      
-      toast({
-        title: 'Success',
-        description: `${payload.name} created successfully`,
-      });
-      
-      // Refresh KPIs
-      setKPIs(getKPIs([...bots, newBot]));
-    } catch (error) {
+      // Bot creation is handled in DCABot page
+      // This is just for the create sheet - redirect to DCA bot page
+      window.location.href = '/dca-bot';
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to create bot',
+        description: error.message || 'Failed to create bot',
         variant: 'destructive',
       });
     }

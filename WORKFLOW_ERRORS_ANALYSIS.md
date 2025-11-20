@@ -182,3 +182,4 @@ Once permissions are added:
 
 **Next Action**: Add ECR permissions to IAM user `Mandeep1` in AWS Console
 
+

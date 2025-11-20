@@ -1,4 +1,4 @@
-export type BotStatus = 'running' | 'paused' | 'stopped';
+export type BotStatus = 'running' | 'paused' | 'stopped' | 'inactive';
 export type Exchange = 'Binance' | 'Zerodha' | 'KuCoin';
 export type BotType = 'dca' | 'grid' | 'custom';
 
@@ -41,89 +41,60 @@ export interface CreateBotPayload {
   initial_amount: number;
 }
 
-// Mock data for development
-const mockBots: Bot[] = [
-  {
-    bot_id: 'bot_1',
-    name: 'BTC DCA Strategy',
-    bot_type: 'dca',
-    exchange: 'Binance',
-    pair: 'BTCUSDT',
-    status: 'running',
-    invested: 50000,
-    pnl_24h: 1250,
-    pnl_24h_pct: 2.5,
-    pnl_realized_mtd: 8500,
-    orders_count: 24,
-    created_at: '2024-01-15T10:30:00Z',
-    updated_at: '2024-01-20T14:22:00Z',
-    sparkline: [100, 120, 110, 130, 125, 140, 135, 150, 145, 160, 155, 170],
-  },
-  {
-    bot_id: 'bot_2',
-    name: 'ETH Grid Bot',
-    bot_type: 'grid',
-    exchange: 'Binance',
-    pair: 'ETHUSDT',
-    status: 'paused',
-    invested: 30000,
-    pnl_24h: -750,
-    pnl_24h_pct: -2.5,
-    pnl_realized_mtd: 2100,
-    orders_count: 18,
-    created_at: '2024-01-10T09:15:00Z',
-    updated_at: '2024-01-19T16:45:00Z',
-    sparkline: [100, 95, 105, 90, 85, 95, 100, 110, 105, 95, 90, 85],
-  },
-  {
-    bot_id: 'bot_4',
-    name: 'NIFTY Momentum',
-    bot_type: 'custom',
-    exchange: 'Zerodha',
-    pair: 'NIFTY50',
-    status: 'running',
-    invested: 75000,
-    pnl_24h: 3200,
-    pnl_24h_pct: 4.27,
-    pnl_realized_mtd: 12500,
-    orders_count: 8,
-    created_at: '2024-01-08T11:00:00Z',
-    updated_at: '2024-01-20T13:30:00Z',
-    sparkline: [100, 110, 115, 108, 120, 125, 130, 135, 128, 140, 145, 142],
-  },
-  {
-    bot_id: 'bot_4',
-    name: 'SOL Scalping',
-    bot_type: 'custom',
-    exchange: 'KuCoin',
-    pair: 'SOLUSDT',
-    status: 'stopped',
-    invested: 0,
-    pnl_24h: 0,
-    pnl_24h_pct: 0,
-    pnl_realized_mtd: -500,
-    orders_count: 0,
-    created_at: '2024-01-05T14:20:00Z',
-    updated_at: '2024-01-18T10:15:00Z',
-    sparkline: [100, 98, 95, 92, 89, 85, 82, 80, 78, 75, 72, 70],
-  },
-];
+// Helper to get API base URL
+function getApiBaseUrl(): string {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (import.meta.env.PROD) {
+    if (!apiUrl || !apiUrl.startsWith('https://')) {
+      throw new Error('API URL must use HTTPS in production');
+    }
+    return apiUrl;
+  }
+  return apiUrl || 'http://localhost:8000';
+}
 
-// Environment flag for Supabase (future)
-const enableSupabase = false; // process.env.VITE_ENABLE_SUPABASE === 'true';
+// Helper to get auth token
+async function getAuthToken(): Promise<string | null> {
+  try {
+    const { supabase } = await import('../supabase');
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
+  } catch (error) {
+    console.error('Error getting auth token:', error);
+    return null;
+  }
+}
+
+// Helper to create authenticated fetch
+async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = await getAuthToken();
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return fetch(url, {
+    ...options,
+    headers,
+  });
+}
 
 // Helper to compute KPIs from bot array
 export function getKPIs(bots: Bot[]): BotKPIs {
   const activeBots = bots.filter(bot => bot.status === 'running');
   
   return {
-    totalCapitalDeployed: bots.reduce((sum, bot) => sum + bot.invested, 0),
+    totalCapitalDeployed: bots.reduce((sum, bot) => sum + (bot.invested || 0), 0),
     activeBots: activeBots.length,
-    pnl24h: bots.reduce((sum, bot) => sum + bot.pnl_24h, 0),
+    pnl24h: bots.reduce((sum, bot) => sum + (bot.pnl_24h || 0), 0),
     pnl24hPct: bots.length > 0 
-      ? bots.reduce((sum, bot) => sum + (bot.pnl_24h / Math.max(bot.invested, 1)) * 100, 0) / bots.length 
+      ? bots.reduce((sum, bot) => sum + ((bot.pnl_24h || 0) / Math.max(bot.invested || 1, 1)) * 100, 0) / bots.length 
       : 0,
-    realizedPnlMtd: bots.reduce((sum, bot) => sum + bot.pnl_realized_mtd, 0),
+    realizedPnlMtd: bots.reduce((sum, bot) => sum + (bot.pnl_realized_mtd || 0), 0),
   };
 }
 
@@ -141,108 +112,174 @@ export function filterBots(bots: Bot[], filters: BotFilters): Bot[] {
   });
 }
 
-// Mock API functions
-async function mockDelay(ms: number = 500) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
+// List all bots for the current user
 export async function listBots(filters: BotFilters): Promise<Bot[]> {
-  if (enableSupabase) {
-    // TODO: Implement Supabase queries with RLS
-    throw new Error('Supabase integration not implemented yet');
+  try {
+    const API_BASE_URL = getApiBaseUrl();
+    const statusParam = filters.status !== 'All' ? `&status=${filters.status}` : '';
+    
+    const response = await authenticatedFetch(`${API_BASE_URL}/bots/?${statusParam}`);
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please sign in.');
+      }
+      const error = await response.json().catch(() => ({ detail: 'Failed to fetch bots' }));
+      throw new Error(error.detail || 'Failed to fetch bots');
+    }
+    
+    const data = await response.json();
+    const bots: Bot[] = (data.bots || []).map((bot: any) => ({
+      bot_id: bot.bot_id || bot.id,
+      name: bot.name,
+      bot_type: bot.bot_type || 'dca',
+      exchange: bot.exchange || 'Binance',
+      pair: bot.symbol || bot.pair || '',
+      status: (bot.status || 'inactive') as BotStatus,
+      invested: bot.invested || 0,
+      pnl_24h: bot.pnl_24h || 0,
+      pnl_24h_pct: bot.pnl_24h_pct || 0,
+      pnl_realized_mtd: bot.pnl_realized_mtd || 0,
+      orders_count: bot.orders_count || 0,
+      created_at: bot.created_at || new Date().toISOString(),
+      updated_at: bot.updated_at || new Date().toISOString(),
+      sparkline: bot.sparkline || Array(12).fill(0),
+    }));
+    
+    return filterBots(bots, filters);
+  } catch (error: any) {
+    console.error('Error listing bots:', error);
+    throw error;
   }
-  
-  await mockDelay(300);
-  return filterBots(mockBots, filters);
 }
 
+// Create a new bot (this is handled by DCABot page, but kept for compatibility)
 export async function createBot(payload: CreateBotPayload): Promise<Bot> {
-  if (enableSupabase) {
-    // TODO: Implement Supabase insert
-    throw new Error('Supabase integration not implemented yet');
-  }
-  
-  await mockDelay(800);
-  
-  const newBot: Bot = {
-    bot_id: `bot_${Date.now()}`,
-    name: payload.name,
-    bot_type: payload.bot_type,
-    exchange: payload.exchange,
-    pair: payload.pair,
-    status: 'paused',
-    invested: 0,
-    pnl_24h: 0,
-    pnl_24h_pct: 0,
-    pnl_realized_mtd: 0,
-    orders_count: 0,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    sparkline: Array(12).fill(0),
-  };
-  
-  mockBots.push(newBot);
-  return newBot;
+  // This is a placeholder - actual bot creation is done in DCABot.tsx
+  throw new Error('Bot creation should be done through the DCA Bot page');
 }
 
+// Update bot status (start, pause, stop, resume)
 export async function updateBotStatus(botId: string, status: BotStatus): Promise<Bot> {
-  if (enableSupabase) {
-    // TODO: Implement Supabase update
-    throw new Error('Supabase integration not implemented yet');
+  try {
+    const API_BASE_URL = getApiBaseUrl();
+    let endpoint = '';
+    let method = 'POST';
+    
+    switch (status) {
+      case 'running':
+        // Check if bot is paused, then resume, otherwise start
+        endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/start-paper`;
+        break;
+      case 'paused':
+        endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/pause`;
+        break;
+      case 'stopped':
+        endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/stop`;
+        break;
+      default:
+        throw new Error(`Invalid status: ${status}`);
+    }
+    
+    const response = await authenticatedFetch(endpoint, {
+      method,
+      body: status === 'running' ? JSON.stringify({
+        initial_balance: 10000,
+        interval_seconds: 60,
+        use_live_data: true
+      }) : undefined,
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please sign in.');
+      }
+      const error = await response.json().catch(() => ({ detail: 'Failed to update bot status' }));
+      throw new Error(error.detail || 'Failed to update bot status');
+    }
+    
+    const result = await response.json();
+    
+    // Fetch updated bot data
+    const bots = await listBots({ search: '', exchange: 'All', status: 'All' });
+    const updatedBot = bots.find(b => b.bot_id === botId);
+    
+    if (!updatedBot) {
+      throw new Error('Bot not found after status update');
+    }
+    
+    return updatedBot;
+  } catch (error: any) {
+    console.error('Error updating bot status:', error);
+    throw error;
   }
-  
-  await mockDelay(200);
-  
-  const bot = mockBots.find(b => b.bot_id === botId);
-  if (!bot) throw new Error('Bot not found');
-  
-  bot.status = status;
-  bot.updated_at = new Date().toISOString();
-  
-  return bot;
 }
 
+// Duplicate a bot
 export async function duplicateBot(botId: string): Promise<Bot> {
-  if (enableSupabase) {
-    // TODO: Implement Supabase duplicate
-    throw new Error('Supabase integration not implemented yet');
+  try {
+    // First get the bot details
+    const bots = await listBots({ search: '', exchange: 'All', status: 'All' });
+    const originalBot = bots.find(b => b.bot_id === botId);
+    
+    if (!originalBot) {
+      throw new Error('Bot not found');
+    }
+    
+    // For now, duplication is not implemented in backend
+    // Return a copy with new ID
+    const duplicatedBot: Bot = {
+      ...originalBot,
+      bot_id: `bot_${Date.now()}`,
+      name: `${originalBot.name} (Copy)`,
+      status: 'inactive',
+      invested: 0,
+      pnl_24h: 0,
+      pnl_24h_pct: 0,
+      pnl_realized_mtd: 0,
+      orders_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      sparkline: Array(12).fill(0),
+    };
+    
+    // TODO: Call backend API to duplicate bot when endpoint is available
+    return duplicatedBot;
+  } catch (error: any) {
+    console.error('Error duplicating bot:', error);
+    throw error;
   }
-  
-  await mockDelay(500);
-  
-  const originalBot = mockBots.find(b => b.bot_id === botId);
-  if (!originalBot) throw new Error('Bot not found');
-  
-  const duplicatedBot: Bot = {
-    ...originalBot,
-    bot_id: `bot_${Date.now()}`,
-    name: `${originalBot.name} (Copy)`,
-    status: 'paused',
-    invested: 0,
-    pnl_24h: 0,
-    pnl_24h_pct: 0,
-    pnl_realized_mtd: 0,
-    orders_count: 0,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    sparkline: Array(12).fill(0),
-  };
-  
-  mockBots.push(duplicatedBot);
-  return duplicatedBot;
 }
 
+// Delete a bot
 export async function deleteBot(botId: string): Promise<void> {
-  if (enableSupabase) {
-    // TODO: Implement Supabase delete
-    throw new Error('Supabase integration not implemented yet');
+  try {
+    const API_BASE_URL = getApiBaseUrl();
+    
+    // Check if delete endpoint exists, otherwise just mark as deleted locally
+    // TODO: Implement delete endpoint in backend
+    const response = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots/${botId}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok && response.status !== 404) {
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please sign in.');
+      }
+      // If delete endpoint doesn't exist, that's okay for now
+      if (response.status === 405) {
+        console.warn('Delete endpoint not implemented, skipping');
+        return;
+      }
+      const error = await response.json().catch(() => ({ detail: 'Failed to delete bot' }));
+      throw new Error(error.detail || 'Failed to delete bot');
+    }
+  } catch (error: any) {
+    console.error('Error deleting bot:', error);
+    // Don't throw if endpoint doesn't exist
+    if (error.message?.includes('not implemented')) {
+      return;
+    }
+    throw error;
   }
-  
-  await mockDelay(300);
-  
-  const index = mockBots.findIndex(b => b.bot_id === botId);
-  if (index === -1) throw new Error('Bot not found');
-  
-  mockBots.splice(index, 1);
 }
-

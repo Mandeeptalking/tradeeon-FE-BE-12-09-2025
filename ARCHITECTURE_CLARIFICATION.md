@@ -137,3 +137,4 @@ This creates **inconsistency**:
 
 **Summary**: Backend is in Docker (correct), but Phase 2 services are running as Python processes (inconsistent). We should containerize them for consistency and easier deployment.
 
+

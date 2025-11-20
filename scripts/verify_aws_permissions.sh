@@ -41,3 +41,4 @@ echo "✅ Permission check complete!"
 echo ""
 echo "If any checks failed, add the required permissions to IAM user."
 
+

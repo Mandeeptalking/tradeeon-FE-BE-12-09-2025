@@ -95,7 +95,7 @@ def hash_condition(normalized_condition: Dict[str, Any]) -> str:
 async def register_condition(
     condition: Dict[str, Any] = Body(..., description="Condition configuration")
     # Note: No auth required - conditions are public/shared
-):
+) -> Dict[str, Any]:
     """
     Register a condition and get its unique ID.
     
@@ -139,6 +139,12 @@ async def register_condition(
         if supabase:
             result = supabase.table("condition_registry").insert(condition_entry).execute()
             logger.info(f"Registered new condition {condition_id}")
+            # Update condition_entry with actual database result if available
+            if result.data:
+                condition_entry = result.data[0]
+        else:
+            logger.warning("Supabase not available - condition not persisted to database")
+            raise HTTPException(status_code=503, detail="Database not available")
         
         return {
             "success": True,
@@ -259,7 +265,7 @@ async def unsubscribe_bot_from_condition(
 async def get_condition_status(
     condition_id: str = Path(..., description="Condition ID")
     # Note: No auth required - condition status is public
-):
+) -> Dict[str, Any]:
     """Get condition status and statistics."""
     try:
         if supabase:

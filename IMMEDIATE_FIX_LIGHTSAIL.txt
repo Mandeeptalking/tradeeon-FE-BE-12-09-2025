@@ -1,0 +1,22 @@
+# IMMEDIATE FIX - Copy and paste these commands on Lightsail
+
+# Fix 1: Install missing dependency
+pip3 install prometheus-client
+
+# Fix 2: Resolve git conflict
+git stash
+git pull origin main
+
+# Fix 3: Install all dependencies
+pip3 install -r requirements.txt
+
+# Fix 4: Start alert runner
+source .env
+mkdir -p logs
+nohup python3 -m apps.alerts.runner > logs/alert-runner.log 2>&1 &
+sleep 3
+
+# Fix 5: Verify
+ps aux | grep alert_runner
+tail -30 logs/alert-runner.log
+

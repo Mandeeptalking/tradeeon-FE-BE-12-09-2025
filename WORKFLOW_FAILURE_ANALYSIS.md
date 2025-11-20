@@ -1,63 +1,55 @@
 # Workflow Failure Analysis
 
-## 🔍 Issue Identified
+## Root Cause
 
-Recent commits added new files that trigger deployment workflows:
-- `apps/bots/condition_evaluator.py` → Triggers alert-runner deployment
-- `apps/api/routers/condition_registry.py` → Triggers backend deployment
+All workflows are failing because:
 
-## 📋 Failed Workflows
+### Issue 1: Missing `redis` in requirements.txt ✅ FIXED
+- `Dockerfile.alert-runner` installs dependencies from `requirements.txt`
+- `event_bus.py` requires `redis>=5.0.0`
+- Docker build failed → Workflow failed
 
-1. **Deploy Alert Runner to ECS** (#5, #6, #7)
-   - Triggered by: Changes to `apps/bots/**`
-   - Files changed: `apps/bots/condition_evaluator.py`
-   - Likely issue: New dependencies or import errors
+**Fix:** ✅ Added `redis>=5.0.0` to `requirements.txt`
 
-2. **Deploy All Services** (#239, #240)
-   - Triggered by: Changes to `apps/api/**` or `apps/bots/**`
-   - Files changed: 
-     - `apps/api/routers/condition_registry.py`
-     - `apps/bots/condition_evaluator.py`
-   - Likely issue: Build or deployment errors
+### Issue 2: Missing `python-dotenv` in Docker ✅ ALREADY EXISTS
+- `supabase_client.py` imports `from dotenv import load_dotenv`
+- Already in requirements.txt ✅
 
-## 🔧 Potential Issues
+## What Failed
 
-### 1. Missing Dependencies
-The new files might import modules that aren't in `requirements.txt`:
-- `apps/bots/condition_evaluator.py` imports from `backend.evaluator`
-- `apps/api/routers/condition_registry.py` uses Supabase client
+When `event_bus.py` was added to `apps/bots/`:
+1. Workflow triggered (file changed)
+2. Docker build started
+3. Build failed: `ModuleNotFoundError: No module named 'redis'`
+4. Workflow failed ❌
 
-### 2. Import Path Issues
-- `condition_evaluator.py` imports `from backend.evaluator import evaluate_condition`
-- This path might not exist in the Docker container
+## Fix Applied
 
-### 3. Docker Build Context
-- New files might not be included in Docker build context
-- Or Dockerfile might not copy the new files
+✅ Added `redis>=5.0.0` to `requirements.txt`
+✅ Committed and pushed
 
-## ✅ Solutions
+## Next Workflow Run
 
-### Option 1: Exclude New Files from Deployment (Temporary)
-Update workflow paths to exclude new files until they're ready:
+Should now:
+1. ✅ Pull latest code
+2. ✅ Build Docker image with redis installed
+3. ✅ Deploy successfully
+4. ✅ Workflow passes ✅
 
-```yaml
-# In deploy-alert-runner.yml
-paths:
-  - 'apps/api/modules/alerts/**'
-  - 'apps/api/modules/bots/**'
-  - 'apps/bots/**'
-  - '!apps/bots/condition_evaluator.py'  # Exclude new file
+## For Lightsail
+
+Still need to install dependencies manually:
+```bash
+pip3 install python-dotenv redis>=5.0.0
+cd ~/tradeeon-FE-BE-12-09-2025
+git pull origin main
+cd apps/bots
+pkill -f run_condition_evaluator && pkill -f run_bot_notifier
+sleep 2
+nohup python3 run_condition_evaluator.py > evaluator.log 2>&1 &
+nohup python3 run_bot_notifier.py > notifier.log 2>&1 &
 ```
 
-### Option 2: Fix Dependencies
-Ensure all dependencies are in `requirements.txt` and Dockerfile copies the files.
+---
 
-### Option 3: Fix Import Paths
-Update import paths to work in Docker container context.
-
-## 🎯 Recommended Action
-
-**For now**: The new centralized bot system files are not yet integrated into the deployment pipeline. They're API endpoints and evaluation logic that don't need to be deployed yet.
-
-**Quick Fix**: Update workflow paths to exclude these files until integration is complete.
-
+**Fix is committed - workflows should pass on next run!** ✅

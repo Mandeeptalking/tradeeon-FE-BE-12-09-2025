@@ -232,7 +232,9 @@ class CentralizedConditionEvaluator:
                 
                 # Publish to event bus (if available)
                 if self.event_bus:
-                    await self.event_bus.publish(f"condition.{condition_id}", trigger_event)
+                    channel = f"condition.{condition_id}"
+                    await self.event_bus.publish(channel, trigger_event)
+                    logger.debug(f"Published trigger event to channel: {channel}")
                 
                 # Notify each subscriber
                 for subscriber in subscribers.data:
@@ -244,16 +246,17 @@ class CentralizedConditionEvaluator:
             logger.error(f"Error publishing condition trigger: {e}", exc_info=True)
     
     async def _notify_subscriber(self, subscriber: Dict, trigger_event: Dict):
-        """Notify a single subscriber about condition trigger."""
-        # This would integrate with bot execution system
-        # For now, log it
+        """
+        Notify a single subscriber about condition trigger.
+        
+        Note: Actual bot execution is handled by BotNotifier service
+        which subscribes to Redis event bus. This method is kept for
+        backward compatibility and direct notifications if needed.
+        """
         logger.info(f"Notifying user {subscriber['user_id']} bot {subscriber['bot_id']} about condition trigger")
         
-        # TODO: Integrate with bot execution engine
-        # - DCA Bot: Trigger DCA buy order
-        # - Grid Bot: Trigger grid order placement
-        # - Trend Bot: Trigger trend entry/exit
-        # etc.
+        # Bot execution is handled by BotNotifier service via Redis event bus
+        # This method logs the notification for tracking purposes
     
     async def _update_condition_stats(self, condition_id: str):
         """Update condition statistics."""
@@ -261,13 +264,15 @@ class CentralizedConditionEvaluator:
             return
         
         try:
+            # Get current trigger count
+            current = self.supabase.table("condition_registry").select("trigger_count").eq("condition_id", condition_id).execute()
+            current_count = current.data[0]["trigger_count"] if current.data else 0
+            
+            # Update with incremented count
             self.supabase.table("condition_registry").update({
                 "last_triggered_at": datetime.now().isoformat(),
-                "trigger_count": self.supabase.rpc("increment", {
-                    "table": "condition_registry",
-                    "column": "trigger_count",
-                    "condition_id": condition_id
-                })
+                "trigger_count": current_count + 1,
+                "last_evaluated_at": datetime.now().isoformat()
             }).eq("condition_id", condition_id).execute()
         except Exception as e:
             logger.error(f"Error updating condition stats: {e}")
@@ -387,5 +392,8 @@ class CentralizedConditionEvaluator:
     async def stop(self):
         """Stop the evaluator."""
         self.running = False
+        # Cleanup market data service
+        if hasattr(self, 'market_data') and self.market_data:
+            await self.market_data.cleanup()
         logger.info("Centralized Condition Evaluator stopped")
 

@@ -102,3 +102,4 @@ AND table_name IN ('condition_registry', 'user_condition_subscriptions', 'condit
 
 **Current Step**: Step 1 - Database Migration
 
+

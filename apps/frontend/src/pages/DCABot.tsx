@@ -685,43 +685,13 @@ export default function DCABot() {
       setBotId(createdBotId);
       
       if (createdBotId) {
-        const isTestMode = tradingMode === 'test';
-        toast.success(`DCA Bot created! Starting ${isTestMode ? 'test mode' : 'live mode'}...`);
+        toast.success('DCA Bot created successfully! You can start it from the Bots page.');
+        logger.debug('Bot created:', result);
         
-        // Automatically start bot
-        try {
-          const endpoint = isTestMode 
-            ? `${API_BASE_URL}/bots/dca-bots/${createdBotId}/start-paper`
-            : `${API_BASE_URL}/bots/dca-bots/${createdBotId}/start`;
-            
-          const startResponse = await authenticatedFetch(endpoint, {
-            method: 'POST',
-            body: JSON.stringify({
-              initial_balance: 10000,
-              interval_seconds: 60,
-              use_live_data: true
-            })
-          });
-          
-          if (startResponse.ok) {
-            const startResult = await startResponse.json();
-            toast.success(`✅ Bot started in ${isTestMode ? 'test mode' : 'live mode'} with live market data! Bot ID: ${createdBotId}`);
-            logger.debug('Bot started:', startResult);
-            
-            // Start polling for status
-            setStatusPolling(true);
-            statusPollingRef.current = true;
-            setTimeout(() => {
-              pollBotStatus(createdBotId);
-            }, 100);
-          } else {
-            const error = await startResponse.json();
-            toast.warning(`Bot created but failed to start: ${error.message || 'Unknown error'}`);
-          }
-        } catch (startError: any) {
-          toast.warning(`Bot created but failed to start: ${startError.message}`);
-          logger.error('Error starting bot:', startError);
-        }
+        // Navigate to Bots page after a short delay
+        setTimeout(() => {
+          window.location.href = '/bots';
+        }, 1500);
       } else {
         toast.success('DCA Bot created successfully with Phase 1 features!');
       }

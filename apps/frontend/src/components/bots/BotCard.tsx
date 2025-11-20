@@ -99,8 +99,15 @@ export default function BotCard({
           ring: 'ring-amber-500/20'
         };
       case 'stopped':
+      case 'inactive':
         return { 
-          label: 'Stopped', 
+          label: status === 'inactive' ? 'Inactive' : 'Stopped', 
+          color: 'bg-gray-100 text-gray-800 border-gray-200',
+          ring: 'ring-gray-500/20'
+        };
+      default:
+        return { 
+          label: 'Unknown', 
           color: 'bg-gray-100 text-gray-800 border-gray-200',
           ring: 'ring-gray-500/20'
         };
@@ -131,7 +138,7 @@ export default function BotCard({
   };
 
   const statusConfig = getStatusConfig(bot.status);
-  const canStart = bot.status === 'paused' || bot.status === 'stopped';
+  const canStart = bot.status === 'paused' || bot.status === 'stopped' || bot.status === 'inactive';
   const canPause = bot.status === 'running';
   const canStop = bot.status === 'running' || bot.status === 'paused';
 
