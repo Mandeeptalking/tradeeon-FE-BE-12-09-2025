@@ -1,16 +1,19 @@
+# DISABLED: Backend is deployed via Docker directly, not through GitHub Actions
+# This workflow is kept for reference but will not run automatically
 name: Deploy Backend to Lightsail
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'apps/api/**'
-      - 'apps/bots/**'
-      - 'backend/**'
-      - 'shared/**'
-      - 'requirements.txt'
-      - 'Dockerfile'
-  workflow_dispatch:  # Manual trigger
+  # DISABLED - Backend deployment is handled via Docker on Lightsail
+  # push:
+  #   branches: [ main ]
+  #   paths:
+  #     - 'apps/api/**'
+  #     - 'apps/bots/**'
+  #     - 'backend/**'
+  #     - 'shared/**'
+  #     - 'requirements.txt'
+  #     - 'Dockerfile'
+  workflow_dispatch:  # Manual trigger only (disabled by default)
 
 jobs:
   deploy-backend:
