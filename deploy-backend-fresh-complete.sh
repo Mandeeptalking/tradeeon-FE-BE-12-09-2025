@@ -15,32 +15,80 @@ echo "1. Navigating to project root..."
 cd ~/tradeeon-FE-BE-12-09-2025 || { echo "❌ Failed to change directory. Exiting."; exit 1; }
 echo "   Current directory: $(pwd)"
 
-# 2. Stash any local changes
-echo "2. Stashing local changes (if any)..."
+# 2. Handle git conflicts and untracked files
+echo "2. Handling git conflicts and untracked files..."
+# Stash any local changes
 git stash || true
 echo "   ✅ Local changes stashed."
 
+# Remove or backup untracked files that might conflict
+echo "   Checking for conflicting untracked files..."
+UNTRACKED=$(git ls-files --others --exclude-standard)
+if [ -n "$UNTRACKED" ]; then
+    echo "   Found untracked files: $UNTRACKED"
+    # Backup conflicting files
+    for file in $UNTRACKED; do
+        if [ -f "$file" ]; then
+            echo "   Backing up $file to ${file}.backup"
+            cp "$file" "${file}.backup" 2>/dev/null || true
+        fi
+    done
+    # Remove untracked files that would conflict
+    git clean -fd || true
+    echo "   ✅ Untracked files handled."
+else
+    echo "   ✅ No untracked files found."
+fi
+
 # 3. Pull latest code from Git
 echo "3. Pulling latest code from Git (origin main)..."
-git pull origin main || { echo "❌ Git pull failed. Exiting."; exit 1; }
+# Reset any local changes that might conflict
+git reset --hard HEAD 2>/dev/null || true
+# Fetch latest
+git fetch origin main || { echo "❌ Git fetch failed. Exiting."; exit 1; }
+# Pull with strategy to prefer remote
+git pull origin main --no-rebase || { 
+    echo "❌ Git pull failed. Attempting merge strategy...";
+    git merge origin/main --no-edit || {
+        echo "❌ Git merge failed. Resetting to remote state...";
+        git reset --hard origin/main || { echo "❌ Git reset failed. Exiting."; exit 1; }
+    }
+}
 echo "   ✅ Git pull complete."
 echo "   Latest commit: $(git log -1 --oneline)"
 
 # 4. Verify the fix is in the code
 echo "4. Verifying fix is in bots.py..."
+if [ ! -f "apps/api/routers/bots.py" ]; then
+    echo "❌ ERROR: apps/api/routers/bots.py not found!"
+    exit 1
+fi
+
 if grep -q "user: AuthedUser = Depends(get_current_user)" apps/api/routers/bots.py; then
     echo "   ✅ Correct endpoint definition found (uses Depends(get_current_user))"
 else
     echo "❌ ERROR: The fix is NOT in the code! The endpoint still expects user_id as query parameter."
     echo "   Please check apps/api/routers/bots.py"
+    echo "   Current content (first 30 lines of list_bots):"
+    grep -A 5 "@router.get" apps/api/routers/bots.py | head -10
     exit 1
 fi
 
-if grep -q "user_id.*Query" apps/api/routers/bots.py; then
+if grep -q "user_id.*Query\|Query.*user_id" apps/api/routers/bots.py; then
     echo "❌ ERROR: Found user_id Query parameter in bots.py! This should NOT be there."
+    echo "   Problematic lines:"
+    grep -n "user_id.*Query\|Query.*user_id" apps/api/routers/bots.py
     exit 1
 else
     echo "   ✅ No user_id Query parameter found (correct)"
+fi
+
+# Verify Supabase client is properly configured
+echo "   Verifying Supabase client configuration..."
+if grep -q "SUPABASE_SERVICE_ROLE_KEY\|SUPABASE_URL" apps/api/clients/supabase_client.py; then
+    echo "   ✅ Supabase client configuration found"
+else
+    echo "   ⚠️  Warning: Supabase client configuration might be missing"
 fi
 
 # 5. Clear Python cache files (aggressive)
