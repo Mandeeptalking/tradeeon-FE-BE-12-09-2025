@@ -338,17 +338,39 @@ class BotDatabaseService:
     def list_bots(self, user_id: str, status: Optional[str] = None) -> list:
         """List all bots for a user."""
         if not self.enabled:
+            logger.warning("Database service is disabled, cannot list bots")
             return []
         
         try:
+            logger.debug(f"Querying bots for user_id: {user_id} (type: {type(user_id).__name__}), status filter: {status}")
+            
+            # Build query
             query = self.supabase.table("bots").select("*").eq("user_id", user_id)
             if status:
                 query = query.eq("status", status)
             
+            logger.debug(f"Executing Supabase query: bots table, user_id={user_id}, status={status}")
             result = query.execute()
-            return result.data if result.data else []
+            
+            logger.debug(f"Supabase query result: {result}")
+            logger.debug(f"Result data type: {type(result.data)}, length: {len(result.data) if result.data else 0}")
+            
+            if result.data:
+                logger.info(f"✅ Successfully fetched {len(result.data)} bots for user {user_id}")
+                logger.debug(f"Bot IDs: {[bot.get('bot_id') for bot in result.data]}")
+                return result.data
+            else:
+                logger.info(f"✅ Query successful but no bots found for user {user_id}")
+                return []
         except Exception as e:
-            logger.error(f"Failed to list bots: {e}")
+            logger.error(f"❌ Failed to list bots for user {user_id}: {e}", exc_info=True)
+            logger.error(f"   Error type: {type(e).__name__}")
+            if hasattr(e, 'message'):
+                logger.error(f"   Error message: {e.message}")
+            if hasattr(e, 'details'):
+                logger.error(f"   Error details: {e.details}")
+            if hasattr(e, 'code'):
+                logger.error(f"   Error code: {e.code}")
             return []
     
     def delete_bot(self, bot_id: str, user_id: str) -> bool:

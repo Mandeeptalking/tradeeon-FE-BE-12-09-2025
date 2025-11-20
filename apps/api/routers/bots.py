@@ -42,12 +42,37 @@ async def list_bots(
         bots = []
         try:
             from db_service import db_service
+            
+            # Check if database service is enabled
+            if not db_service.enabled:
+                logger.error("Database service is not enabled! Cannot fetch bots.")
+                raise TradeeonError(
+                    "Database service is not configured",
+                    "SERVICE_UNAVAILABLE",
+                    status_code=503
+                )
+            
             status_filter = status.value if status else None
+            logger.debug(f"Calling db_service.list_bots(user_id={user_id}, status={status_filter})")
             bots = db_service.list_bots(user_id, status_filter)
-            logger.info(f"Found {len(bots)} bots for user {user_id}")
+            logger.info(f"✅ Successfully fetched {len(bots)} bots for user {user_id}")
+            
+            if bots:
+                logger.debug(f"Bot details: {[{'bot_id': b.get('bot_id'), 'name': b.get('name'), 'status': b.get('status')} for b in bots]}")
+            else:
+                logger.warning(f"⚠️  No bots found for user {user_id} in database")
+        except TradeeonError:
+            # Re-raise TradeeonError
+            raise
         except Exception as db_error:
-            logger.warning(f"Failed to fetch bots from database: {db_error}. Returning empty list.")
-            bots = []
+            logger.error(f"❌ Failed to fetch bots from database: {db_error}", exc_info=True)
+            logger.error(f"   Error type: {type(db_error).__name__}")
+            # Don't return empty list on error - let the error propagate
+            raise TradeeonError(
+                f"Failed to fetch bots from database: {str(db_error)}",
+                "DATABASE_ERROR",
+                status_code=500
+            )
         
         return {
             "success": True,
