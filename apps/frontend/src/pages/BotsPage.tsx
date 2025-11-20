@@ -1,264 +1,192 @@
-import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Bot as BotIcon, Home, ChevronRight, RefreshCw } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Bot as BotIcon, RefreshCw, Play, Pause, Square, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Separator } from '../components/ui/separator';
-import { useToast } from '../hooks/use-toast';
-import BotKPI from '../components/bots/BotKPI';
-import BotFilters from '../components/bots/BotFilters';
-import BotCard from '../components/bots/BotCard';
-import BotTemplates from '../components/bots/BotTemplates';
-import BotCreateSheet from '../components/bots/BotCreateSheet';
-import {
-  listBots,
-  startBot,
-  resumeBot,
-  pauseBot,
-  stopBot,
-  deleteBot,
-  duplicateBot,
-  getKPIs,
-  filterBots,
-} from '../lib/api/bots';
-import type { Bot, BotFilters as BotFiltersType, BotKPIs, BotType, CreateBotPayload } from '../lib/api/bots';
+import { toast } from 'sonner';
+import { authenticatedFetch } from '../lib/api/auth';
+import { logger } from '../utils/logger';
+
+// Helper to get API base URL
+function getApiBaseUrl(): string {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (import.meta.env.PROD) {
+    if (!apiUrl || !apiUrl.startsWith('https://')) {
+      throw new Error('API URL must use HTTPS in production');
+    }
+    return apiUrl;
+  }
+  return apiUrl || 'http://localhost:8000';
+}
+
+// Bot interface
+interface Bot {
+  bot_id: string;
+  name: string;
+  bot_type: string;
+  exchange: string;
+  symbol: string;
+  status: 'running' | 'paused' | 'stopped' | 'inactive';
+  created_at: string;
+  updated_at: string;
+}
 
 export default function BotsPage() {
-  const { toast } = useToast();
-  
-  // State
   const [bots, setBots] = useState<Bot[]>([]);
-  const [filteredBots, setFilteredBots] = useState<Bot[]>([]);
-  const [kpis, setKPIs] = useState<BotKPIs | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [filters, setFilters] = useState<BotFiltersType>(() => {
-    const saved = localStorage.getItem('bots.filters');
-    return saved ? JSON.parse(saved) : { search: '', exchange: 'All', status: 'All' };
-  });
-  const [showCreateSheet, setShowCreateSheet] = useState(false);
-  const [preselectedType, setPreselectedType] = useState<BotType | undefined>();
+  const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Load bots data from Supabase via API
-  const loadBots = useCallback(async (showLoading = true) => {
+  // Fetch bots from API
+  const fetchBots = async () => {
     try {
-      if (showLoading) {
-        setIsLoading(true);
-      } else {
-        setIsRefreshing(true);
+      setIsLoading(true);
+      setError(null);
+      
+      const API_BASE_URL = getApiBaseUrl();
+      const response = await authenticatedFetch(`${API_BASE_URL}/bots/`);
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Please sign in to view your bots');
+        }
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch bots' }));
+        throw new Error(errorData.detail || `Failed to fetch bots: ${response.status}`);
       }
       
-      const botsData = await listBots(filters);
-      setBots(botsData);
-      setFilteredBots(filterBots(botsData, filters));
-      setKPIs(getKPIs(botsData));
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to load bots data',
-        variant: 'destructive',
-      });
+      const data = await response.json();
+      const botsList: Bot[] = (data.bots || []).map((bot: any) => ({
+        bot_id: bot.bot_id || bot.id,
+        name: bot.name || 'Unnamed Bot',
+        bot_type: bot.bot_type || 'dca',
+        exchange: bot.exchange || 'Binance',
+        symbol: bot.symbol || bot.pair || '',
+        status: (bot.status || 'inactive') as Bot['status'],
+        created_at: bot.created_at || new Date().toISOString(),
+        updated_at: bot.updated_at || new Date().toISOString(),
+      }));
+      
+      setBots(botsList);
+      logger.debug('Bots loaded:', botsList);
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to load bots';
+      setError(errorMessage);
+      logger.error('Error fetching bots:', err);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
-      setIsRefreshing(false);
     }
-  }, [filters, toast]);
+  };
+
+  // Handle bot actions
+  const handleBotAction = async (botId: string, action: 'start' | 'pause' | 'resume' | 'stop' | 'delete') => {
+    try {
+      setActionLoading(botId);
+      const API_BASE_URL = getApiBaseUrl();
+      let endpoint = '';
+      let method = 'POST';
+      
+      switch (action) {
+        case 'start':
+          endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/start-paper`;
+          break;
+        case 'pause':
+          endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/pause`;
+          break;
+        case 'resume':
+          endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/resume`;
+          break;
+        case 'stop':
+          endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/stop`;
+          break;
+        case 'delete':
+          endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}`;
+          method = 'DELETE';
+          break;
+      }
+      
+      const response = await authenticatedFetch(endpoint, {
+        method,
+        ...(action === 'start' && {
+          body: JSON.stringify({
+            initial_balance: 10000,
+            interval_seconds: 60,
+            use_live_data: true
+          })
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: `Failed to ${action} bot` }));
+        throw new Error(errorData.detail || `Failed to ${action} bot`);
+      }
+      
+      toast.success(`Bot ${action === 'start' ? 'started' : action === 'pause' ? 'paused' : action === 'resume' ? 'resumed' : action === 'stop' ? 'stopped' : 'deleted'} successfully`);
+      
+      // Refresh bots list
+      await fetchBots();
+    } catch (err: any) {
+      const errorMessage = err.message || `Failed to ${action} bot`;
+      logger.error(`Error ${action}ing bot:`, err);
+      toast.error(errorMessage);
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   // Initial load
   useEffect(() => {
-    loadBots();
-  }, [loadBots]);
+    fetchBots();
+  }, []);
 
-  // Update filtered bots when filters change
-  useEffect(() => {
-    setFilteredBots(filterBots(bots, filters));
-  }, [bots, filters]);
-
-  // Save filters to localStorage
-  useEffect(() => {
-    localStorage.setItem('bots.filters', JSON.stringify(filters));
-  }, [filters]);
-
-  // Handlers
-  const handleFiltersChange = (newFilters: BotFiltersType) => {
-    setFilters(newFilters);
-  };
-
-  const handleStart = async (botId: string) => {
-    try {
-      await startBot(botId);
-      toast({
-        title: 'Success',
-        description: 'Bot started successfully',
-      });
-      await loadBots(false);
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to start bot',
-        variant: 'destructive',
-      });
-      await loadBots(false);
+  const getStatusColor = (status: Bot['status']) => {
+    switch (status) {
+      case 'running':
+        return 'bg-green-500';
+      case 'paused':
+        return 'bg-yellow-500';
+      case 'stopped':
+      case 'inactive':
+        return 'bg-gray-500';
+      default:
+        return 'bg-gray-500';
     }
   };
 
-  const handleResume = async (botId: string) => {
-    try {
-      await resumeBot(botId);
-      toast({
-        title: 'Success',
-        description: 'Bot resumed successfully',
-      });
-      await loadBots(false);
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to resume bot',
-        variant: 'destructive',
-      });
-      await loadBots(false);
+  const getStatusLabel = (status: Bot['status']) => {
+    switch (status) {
+      case 'running':
+        return 'Running';
+      case 'paused':
+        return 'Paused';
+      case 'stopped':
+        return 'Stopped';
+      case 'inactive':
+        return 'Inactive';
+      default:
+        return status;
     }
-  };
-
-  const handlePause = async (botId: string) => {
-    try {
-      await pauseBot(botId);
-      toast({
-        title: 'Success',
-        description: 'Bot paused successfully',
-      });
-      await loadBots(false);
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to pause bot',
-        variant: 'destructive',
-      });
-      await loadBots(false);
-    }
-  };
-
-  const handleStop = async (botId: string) => {
-    try {
-      await stopBot(botId);
-      toast({
-        title: 'Success',
-        description: 'Bot stopped successfully',
-      });
-      await loadBots(false);
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to stop bot',
-        variant: 'destructive',
-      });
-      await loadBots(false);
-    }
-  };
-
-  const handleDelete = async (botId: string) => {
-    try {
-      await deleteBot(botId);
-      toast({
-        title: 'Success',
-        description: 'Bot deleted successfully',
-      });
-      await loadBots(false);
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to delete bot',
-        variant: 'destructive',
-      });
-      await loadBots(false);
-    }
-  };
-
-  const handleDuplicate = async (botId: string) => {
-    try {
-      const duplicatedBot = await duplicateBot(botId);
-      toast({
-        title: 'Success',
-        description: 'Bot duplicated successfully',
-      });
-      await loadBots(false);
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to duplicate bot',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleCreateBot = async (payload: CreateBotPayload) => {
-    try {
-      // Bot creation is handled in DCABot page
-      // This is just for the create sheet - redirect to DCA bot page
-      window.location.href = '/dca-bot';
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to create bot',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleCreateFromTemplate = (type: BotType) => {
-    setPreselectedType(type);
-    setShowCreateSheet(true);
-  };
-
-  const handleEdit = (_botId: string) => {
-    toast({
-      title: 'Edit Bot',
-      description: 'Edit functionality coming soon',
-    });
-  };
-
-  const handleView = (_botId: string) => {
-    toast({
-      title: 'View Bot',
-      description: 'Bot details view coming soon',
-    });
-  };
-
-  const handleRefresh = () => {
-    loadBots(false);
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-1">
-          {/* Breadcrumb */}
-          <div className="flex items-center space-x-1 text-sm text-muted-foreground mb-2">
-            <Home className="h-4 w-4" />
-            <ChevronRight className="h-4 w-4" />
-            <span>Bots</span>
-          </div>
-          
-          <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
-            Trading Bots
-          </h1>
-          <p className="text-muted-foreground">
-            Manage your automated trading strategies
-          </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Trading Bots</h1>
+          <p className="text-gray-400 mt-1">Manage your automated trading strategies</p>
         </div>
-
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
+            onClick={fetchBots}
+            disabled={isLoading}
+            className="text-white border-gray-600 hover:bg-gray-800"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
           <Button
-            onClick={() => setShowCreateSheet(true)}
-            className="bg-primary hover:bg-primary/90"
+            onClick={() => window.location.href = '/app/dca-bot'}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Plus className="h-4 w-4 mr-2" />
             Create Bot
@@ -266,97 +194,137 @@ export default function BotsPage() {
         </div>
       </div>
 
-      <Separator />
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-4">
+          <p className="text-red-400">{error}</p>
+        </div>
+      )}
 
-      {/* KPIs */}
-      <BotKPI kpis={kpis} isLoading={isLoading} />
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
+      )}
 
-      {/* Filters */}
-      <BotFilters
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-      />
-
-      {/* Content */}
-      <div className="min-h-[400px]">
-        {isLoading ? (
-          // Loading Skeletons
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="h-64 bg-muted animate-pulse rounded-2xl" />
-            ))}
-          </div>
-        ) : filteredBots.length > 0 ? (
-          // Active Bots Grid
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">
-                Your Bots ({filteredBots.length})
-              </h2>
-            </div>
-            
-            <motion.div 
-              className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
-              layout
-            >
-              <AnimatePresence>
-                {filteredBots.map((bot) => (
-                  <BotCard
-                    key={bot.bot_id}
-                    bot={bot}
-                    onStart={handleStart}
-                    onResume={handleResume}
-                    onPause={handlePause}
-                    onStop={handleStop}
-                    onDelete={handleDelete}
-                    onDuplicate={handleDuplicate}
-                    onEdit={handleEdit}
-                    onView={handleView}
-                  />
-                ))}
-              </AnimatePresence>
-            </motion.div>
-          </div>
-        ) : (
-          // Empty State
-          <div className="text-center space-y-8 py-12">
-            <div className="space-y-4">
-              <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center">
-                <BotIcon className="h-12 w-12 text-muted-foreground" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold">No bots found</h3>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  Get started by creating your first trading bot. Choose from our templates or build a custom strategy.
-                </p>
-              </div>
+      {/* Bots List */}
+      {!isLoading && !error && (
+        <>
+          {bots.length === 0 ? (
+            <div className="text-center py-12">
+              <BotIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">No bots found</h3>
+              <p className="text-gray-400 mb-4">Create your first trading bot to get started</p>
               <Button
-                onClick={() => setShowCreateSheet(true)}
-                className="bg-primary hover:bg-primary/90"
+                onClick={() => window.location.href = '/app/dca-bot'}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Your First Bot
               </Button>
             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {bots.map((bot) => (
+                <div
+                  key={bot.bot_id}
+                  className="bg-gray-800 border border-gray-700 rounded-lg p-4 space-y-4"
+                >
+                  {/* Bot Header */}
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">{bot.name}</h3>
+                      <p className="text-sm text-gray-400">{bot.symbol} • {bot.exchange}</p>
+                    </div>
+                    <span className={`px-2 py-1 rounded text-xs font-medium text-white ${getStatusColor(bot.status)}`}>
+                      {getStatusLabel(bot.status)}
+                    </span>
+                  </div>
 
-            <Separator className="max-w-md mx-auto" />
+                  {/* Bot Info */}
+                  <div className="text-sm text-gray-400">
+                    <p>Type: {bot.bot_type.toUpperCase()}</p>
+                    <p>Created: {new Date(bot.created_at).toLocaleDateString()}</p>
+                  </div>
 
-            {/* Templates */}
-            <BotTemplates onCreateBot={handleCreateFromTemplate} />
-          </div>
-        )}
-      </div>
-
-      {/* Create Bot Sheet */}
-      <BotCreateSheet
-        isOpen={showCreateSheet}
-        onClose={() => {
-          setShowCreateSheet(false);
-          setPreselectedType(undefined);
-        }}
-        onCreateBot={handleCreateBot}
-        preselectedType={preselectedType}
-      />
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-gray-700">
+                    {(bot.status === 'inactive' || bot.status === 'stopped') && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleBotAction(bot.bot_id, 'start')}
+                        disabled={actionLoading === bot.bot_id}
+                        className="bg-green-600 hover:bg-green-700 text-white flex-1"
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        Start
+                      </Button>
+                    )}
+                    {bot.status === 'paused' && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleBotAction(bot.bot_id, 'resume')}
+                        disabled={actionLoading === bot.bot_id}
+                        className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        Resume
+                      </Button>
+                    )}
+                    {bot.status === 'running' && (
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={() => handleBotAction(bot.bot_id, 'pause')}
+                          disabled={actionLoading === bot.bot_id}
+                          className="bg-yellow-600 hover:bg-yellow-700 text-white flex-1"
+                        >
+                          <Pause className="h-4 w-4 mr-1" />
+                          Pause
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleBotAction(bot.bot_id, 'stop')}
+                          disabled={actionLoading === bot.bot_id}
+                          className="bg-red-600 hover:bg-red-700 text-white flex-1"
+                        >
+                          <Square className="h-4 w-4 mr-1" />
+                          Stop
+                        </Button>
+                      </>
+                    )}
+                    {(bot.status === 'paused' || bot.status === 'stopped') && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleBotAction(bot.bot_id, 'stop')}
+                        disabled={actionLoading === bot.bot_id}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        <Square className="h-4 w-4 mr-1" />
+                        Stop
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to delete ${bot.name}?`)) {
+                          handleBotAction(bot.bot_id, 'delete');
+                        }
+                      }}
+                      disabled={actionLoading === bot.bot_id}
+                      className="border-red-600 text-red-400 hover:bg-red-900/20"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
