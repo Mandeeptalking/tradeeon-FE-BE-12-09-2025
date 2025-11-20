@@ -85,14 +85,29 @@ export default function BotsPage() {
       
       const data = await response.json();
       logger.debug('Bots API response:', data);
+      console.log('🔍 Bots API response:', data);
       
-      if (!data || !data.bots) {
+      // Handle different response formats
+      let botsArray = [];
+      if (Array.isArray(data)) {
+        // Response is directly an array
+        botsArray = data;
+      } else if (data.bots && Array.isArray(data.bots)) {
+        // Response has bots property
+        botsArray = data.bots;
+      } else if (data.data && Array.isArray(data.data)) {
+        // Response has data property
+        botsArray = data.data;
+      } else {
         logger.warn('Unexpected response format:', data);
+        console.warn('⚠️ Unexpected response format:', data);
         setBots([]);
         return;
       }
       
-      const botsList: Bot[] = (data.bots || []).map((bot: any) => ({
+      console.log(`✅ Found ${botsArray.length} bots in response`);
+      
+      const botsList: Bot[] = botsArray.map((bot: any) => ({
         bot_id: bot.bot_id || bot.id,
         name: bot.name || 'Unnamed Bot',
         bot_type: bot.bot_type || 'dca',
