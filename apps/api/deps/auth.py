@@ -1,4 +1,5 @@
 from fastapi import Depends, Header, HTTPException, status
+from typing import Optional
 import jwt
 import os
 import logging
@@ -11,9 +12,14 @@ class AuthedUser:
     def __init__(self, user_id: str):
         self.user_id = user_id
 
-def get_current_user(authorization: str = Header(None)) -> AuthedUser:
+def get_current_user(authorization: Optional[str] = Header(None, alias="Authorization")) -> AuthedUser:
+    """
+    Extract and validate user from JWT token in Authorization header.
+    
+    This dependency MUST be used - do NOT use user_id as a query parameter.
+    """
     if not authorization or not authorization.lower().startswith("bearer "):
-        logger.warning("Missing Authorization header or invalid format")
+        logger.warning("Missing Authorization header or invalid format. Header value: %s", authorization[:50] if authorization else "None")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing token")
     token = authorization.split(" ", 1)[1]
     
