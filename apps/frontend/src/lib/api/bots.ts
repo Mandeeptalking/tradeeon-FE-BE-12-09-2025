@@ -112,7 +112,7 @@ export function filterBots(bots: Bot[], filters: BotFilters): Bot[] {
   });
 }
 
-// List all bots for the current user
+// List all bots for the current user from Supabase via API
 export async function listBots(filters: BotFilters): Promise<Bot[]> {
   try {
     const API_BASE_URL = getApiBaseUrl();
@@ -136,7 +136,7 @@ export async function listBots(filters: BotFilters): Promise<Bot[]> {
       exchange: bot.exchange || 'Binance',
       pair: bot.symbol || bot.pair || '',
       status: (bot.status || 'inactive') as BotStatus,
-      invested: bot.invested || 0,
+      invested: bot.invested || bot.required_capital || 0,
       pnl_24h: bot.pnl_24h || 0,
       pnl_24h_pct: bot.pnl_24h_pct || 0,
       pnl_realized_mtd: bot.pnl_realized_mtd || 0,
@@ -153,66 +153,195 @@ export async function listBots(filters: BotFilters): Promise<Bot[]> {
   }
 }
 
-// Create a new bot (this is handled by DCABot page, but kept for compatibility)
-export async function createBot(payload: CreateBotPayload): Promise<Bot> {
-  // This is a placeholder - actual bot creation is done in DCABot.tsx
-  throw new Error('Bot creation should be done through the DCA Bot page');
-}
-
-// Update bot status (start, pause, stop, resume)
-export async function updateBotStatus(botId: string, status: BotStatus): Promise<Bot> {
+// Start a bot (for inactive/stopped bots)
+export async function startBot(botId: string): Promise<Bot> {
   try {
     const API_BASE_URL = getApiBaseUrl();
-    let endpoint = '';
-    let method = 'POST';
-    
-    switch (status) {
-      case 'running':
-        // Check if bot is paused, then resume, otherwise start
-        endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/start-paper`;
-        break;
-      case 'paused':
-        endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/pause`;
-        break;
-      case 'stopped':
-        endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/stop`;
-        break;
-      default:
-        throw new Error(`Invalid status: ${status}`);
-    }
+    const endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/start-paper`;
     
     const response = await authenticatedFetch(endpoint, {
-      method,
-      body: status === 'running' ? JSON.stringify({
+      method: 'POST',
+      body: JSON.stringify({
         initial_balance: 10000,
         interval_seconds: 60,
         use_live_data: true
-      }) : undefined,
+      }),
     });
     
     if (!response.ok) {
       if (response.status === 401) {
         throw new Error('Authentication required. Please sign in.');
       }
-      const error = await response.json().catch(() => ({ detail: 'Failed to update bot status' }));
-      throw new Error(error.detail || 'Failed to update bot status');
+      const error = await response.json().catch(() => ({ detail: 'Failed to start bot' }));
+      throw new Error(error.detail || 'Failed to start bot');
     }
     
-    const result = await response.json();
-    
-    // Fetch updated bot data
+    // Refresh bot list to get updated status
     const bots = await listBots({ search: '', exchange: 'All', status: 'All' });
     const updatedBot = bots.find(b => b.bot_id === botId);
     
     if (!updatedBot) {
-      throw new Error('Bot not found after status update');
+      throw new Error('Bot not found after starting');
     }
     
     return updatedBot;
   } catch (error: any) {
-    console.error('Error updating bot status:', error);
+    console.error('Error starting bot:', error);
     throw error;
   }
+}
+
+// Resume a paused bot
+export async function resumeBot(botId: string): Promise<Bot> {
+  try {
+    const API_BASE_URL = getApiBaseUrl();
+    const endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/resume`;
+    
+    const response = await authenticatedFetch(endpoint, {
+      method: 'POST',
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please sign in.');
+      }
+      const error = await response.json().catch(() => ({ detail: 'Failed to resume bot' }));
+      throw new Error(error.detail || 'Failed to resume bot');
+    }
+    
+    // Refresh bot list to get updated status
+    const bots = await listBots({ search: '', exchange: 'All', status: 'All' });
+    const updatedBot = bots.find(b => b.bot_id === botId);
+    
+    if (!updatedBot) {
+      throw new Error('Bot not found after resuming');
+    }
+    
+    return updatedBot;
+  } catch (error: any) {
+    console.error('Error resuming bot:', error);
+    throw error;
+  }
+}
+
+// Pause a running bot
+export async function pauseBot(botId: string): Promise<Bot> {
+  try {
+    const API_BASE_URL = getApiBaseUrl();
+    const endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/pause`;
+    
+    const response = await authenticatedFetch(endpoint, {
+      method: 'POST',
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please sign in.');
+      }
+      const error = await response.json().catch(() => ({ detail: 'Failed to pause bot' }));
+      throw new Error(error.detail || 'Failed to pause bot');
+    }
+    
+    // Refresh bot list to get updated status
+    const bots = await listBots({ search: '', exchange: 'All', status: 'All' });
+    const updatedBot = bots.find(b => b.bot_id === botId);
+    
+    if (!updatedBot) {
+      throw new Error('Bot not found after pausing');
+    }
+    
+    return updatedBot;
+  } catch (error: any) {
+    console.error('Error pausing bot:', error);
+    throw error;
+  }
+}
+
+// Stop a bot
+export async function stopBot(botId: string): Promise<Bot> {
+  try {
+    const API_BASE_URL = getApiBaseUrl();
+    const endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/stop`;
+    
+    const response = await authenticatedFetch(endpoint, {
+      method: 'POST',
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please sign in.');
+      }
+      const error = await response.json().catch(() => ({ detail: 'Failed to stop bot' }));
+      throw new Error(error.detail || 'Failed to stop bot');
+    }
+    
+    // Refresh bot list to get updated status
+    const bots = await listBots({ search: '', exchange: 'All', status: 'All' });
+    const updatedBot = bots.find(b => b.bot_id === botId);
+    
+    if (!updatedBot) {
+      throw new Error('Bot not found after stopping');
+    }
+    
+    return updatedBot;
+  } catch (error: any) {
+    console.error('Error stopping bot:', error);
+    throw error;
+  }
+}
+
+// Delete a bot
+export async function deleteBot(botId: string): Promise<void> {
+  try {
+    const API_BASE_URL = getApiBaseUrl();
+    const endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}`;
+    
+    const response = await authenticatedFetch(endpoint, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please sign in.');
+      }
+      if (response.status === 404) {
+        // Bot already deleted, that's okay
+        return;
+      }
+      const error = await response.json().catch(() => ({ detail: 'Failed to delete bot' }));
+      throw new Error(error.detail || 'Failed to delete bot');
+    }
+  } catch (error: any) {
+    console.error('Error deleting bot:', error);
+    throw error;
+  }
+}
+
+// Legacy function for compatibility (maps to appropriate action)
+export async function updateBotStatus(botId: string, status: BotStatus): Promise<Bot> {
+  switch (status) {
+    case 'running':
+      // Check if bot is paused, then resume, otherwise start
+      const bots = await listBots({ search: '', exchange: 'All', status: 'All' });
+      const bot = bots.find(b => b.bot_id === botId);
+      if (bot?.status === 'paused') {
+        return resumeBot(botId);
+      } else {
+        return startBot(botId);
+      }
+    case 'paused':
+      return pauseBot(botId);
+    case 'stopped':
+      return stopBot(botId);
+    default:
+      throw new Error(`Invalid status: ${status}`);
+  }
+}
+
+// Create a new bot (this is handled by DCABot page, but kept for compatibility)
+export async function createBot(payload: CreateBotPayload): Promise<Bot> {
+  // This is a placeholder - actual bot creation is done in DCABot.tsx
+  throw new Error('Bot creation should be done through the DCA Bot page');
 }
 
 // Duplicate a bot
@@ -247,39 +376,6 @@ export async function duplicateBot(botId: string): Promise<Bot> {
     return duplicatedBot;
   } catch (error: any) {
     console.error('Error duplicating bot:', error);
-    throw error;
-  }
-}
-
-// Delete a bot
-export async function deleteBot(botId: string): Promise<void> {
-  try {
-    const API_BASE_URL = getApiBaseUrl();
-    
-    // Check if delete endpoint exists, otherwise just mark as deleted locally
-    // TODO: Implement delete endpoint in backend
-    const response = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots/${botId}`, {
-      method: 'DELETE',
-    });
-    
-    if (!response.ok && response.status !== 404) {
-      if (response.status === 401) {
-        throw new Error('Authentication required. Please sign in.');
-      }
-      // If delete endpoint doesn't exist, that's okay for now
-      if (response.status === 405) {
-        console.warn('Delete endpoint not implemented, skipping');
-        return;
-      }
-      const error = await response.json().catch(() => ({ detail: 'Failed to delete bot' }));
-      throw new Error(error.detail || 'Failed to delete bot');
-    }
-  } catch (error: any) {
-    console.error('Error deleting bot:', error);
-    // Don't throw if endpoint doesn't exist
-    if (error.message?.includes('not implemented')) {
-      return;
-    }
     throw error;
   }
 }

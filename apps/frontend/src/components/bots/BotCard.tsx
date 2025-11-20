@@ -12,6 +12,7 @@ import {
   Trash2,
   TrendingUp,
   TrendingDown,
+  RotateCw,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../ui/card';
 import { Button } from '../ui/button';
@@ -37,9 +38,12 @@ import type { Bot, BotStatus } from '../../lib/api/bots';
 
 interface BotCardProps {
   bot: Bot;
-  onStatusChange: (botId: string, status: BotStatus) => void;
-  onDuplicate: (botId: string) => void;
+  onStart: (botId: string) => void;
+  onResume: (botId: string) => void;
+  onPause: (botId: string) => void;
+  onStop: (botId: string) => void;
   onDelete: (botId: string) => void;
+  onDuplicate: (botId: string) => void;
   onEdit: (botId: string) => void;
   onView: (botId: string) => void;
 }
@@ -76,39 +80,43 @@ function Sparkline({ data, className = '' }: { data: number[]; className?: strin
 
 export default function BotCard({ 
   bot, 
-  onStatusChange, 
-  onDuplicate, 
+  onStart,
+  onResume,
+  onPause,
+  onStop,
   onDelete, 
+  onDuplicate, 
   onEdit, 
   onView 
 }: BotCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isActionLoading, setIsActionLoading] = useState(false);
 
   const getStatusConfig = (status: BotStatus) => {
     switch (status) {
       case 'running':
         return { 
           label: 'Running', 
-          color: 'bg-green-100 text-green-800 border-green-200',
+          color: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400',
           ring: 'ring-green-500/20'
         };
       case 'paused':
         return { 
           label: 'Paused', 
-          color: 'bg-amber-100 text-amber-800 border-amber-200',
+          color: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400',
           ring: 'ring-amber-500/20'
         };
       case 'stopped':
       case 'inactive':
         return { 
           label: status === 'inactive' ? 'Inactive' : 'Stopped', 
-          color: 'bg-gray-100 text-gray-800 border-gray-200',
+          color: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300',
           ring: 'ring-gray-500/20'
         };
       default:
         return { 
           label: 'Unknown', 
-          color: 'bg-gray-100 text-gray-800 border-gray-200',
+          color: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300',
           ring: 'ring-gray-500/20'
         };
     }
@@ -116,19 +124,19 @@ export default function BotCard({
 
   const getExchangeBadge = (exchange: string) => {
     const colors = {
-      Binance: 'bg-yellow-100 text-yellow-800',
-      Zerodha: 'bg-blue-100 text-blue-800',
-      KuCoin: 'bg-green-100 text-green-800',
+      Binance: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+      Zerodha: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+      KuCoin: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     };
-    return colors[exchange as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    return colors[exchange as keyof typeof colors] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
   };
 
@@ -138,9 +146,20 @@ export default function BotCard({
   };
 
   const statusConfig = getStatusConfig(bot.status);
-  const canStart = bot.status === 'paused' || bot.status === 'stopped' || bot.status === 'inactive';
+  const canStart = bot.status === 'stopped' || bot.status === 'inactive';
+  const canResume = bot.status === 'paused';
   const canPause = bot.status === 'running';
   const canStop = bot.status === 'running' || bot.status === 'paused';
+
+  const handleAction = async (action: () => Promise<void>) => {
+    if (isActionLoading) return;
+    setIsActionLoading(true);
+    try {
+      await action();
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
 
   return (
     <>
@@ -224,26 +243,53 @@ export default function BotCard({
 
             {/* Actions Footer */}
             <div className="flex items-center justify-between pt-2 border-t">
-              {/* Primary Action */}
+              {/* Primary Actions */}
               <div className="flex items-center space-x-2">
                 {canStart && (
                   <Button
                     size="sm"
-                    onClick={() => onStatusChange(bot.bot_id, 'running')}
-                    className="bg-green-600 hover:bg-green-700"
-                    data-testid="bot-play"
+                    onClick={() => handleAction(() => onStart(bot.bot_id))}
+                    disabled={isActionLoading}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    data-testid="bot-start"
                   >
-                    <Play className="h-4 w-4 mr-1" />
+                    {isActionLoading ? (
+                      <RotateCw className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Play className="h-4 w-4 mr-1" />
+                    )}
                     Start
+                  </Button>
+                )}
+                {canResume && (
+                  <Button
+                    size="sm"
+                    onClick={() => handleAction(() => onResume(bot.bot_id))}
+                    disabled={isActionLoading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    data-testid="bot-resume"
+                  >
+                    {isActionLoading ? (
+                      <RotateCw className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Play className="h-4 w-4 mr-1" />
+                    )}
+                    Resume
                   </Button>
                 )}
                 {canPause && (
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => onStatusChange(bot.bot_id, 'paused')}
+                    onClick={() => handleAction(() => onPause(bot.bot_id))}
+                    disabled={isActionLoading}
+                    data-testid="bot-pause"
                   >
-                    <Pause className="h-4 w-4 mr-1" />
+                    {isActionLoading ? (
+                      <RotateCw className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Pause className="h-4 w-4 mr-1" />
+                    )}
                     Pause
                   </Button>
                 )}
@@ -251,9 +297,15 @@ export default function BotCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => onStatusChange(bot.bot_id, 'stopped')}
+                    onClick={() => handleAction(() => onStop(bot.bot_id))}
+                    disabled={isActionLoading}
+                    data-testid="bot-stop"
                   >
-                    <Square className="h-4 w-4 mr-1" />
+                    {isActionLoading ? (
+                      <RotateCw className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Square className="h-4 w-4 mr-1" />
+                    )}
                     Stop
                   </Button>
                 )}
@@ -329,7 +381,7 @@ export default function BotCard({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                onDelete(bot.bot_id);
+                handleAction(() => onDelete(bot.bot_id));
                 setShowDeleteDialog(false);
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -342,5 +394,3 @@ export default function BotCard({
     </>
   );
 }
-
-

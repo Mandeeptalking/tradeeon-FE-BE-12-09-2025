@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Bot as BotIcon, Home, ChevronRight } from 'lucide-react';
+import { Plus, Bot as BotIcon, Home, ChevronRight, RefreshCw } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
 import { useToast } from '../hooks/use-toast';
@@ -11,14 +11,16 @@ import BotTemplates from '../components/bots/BotTemplates';
 import BotCreateSheet from '../components/bots/BotCreateSheet';
 import {
   listBots,
-  createBot,
-  updateBotStatus,
-  duplicateBot,
+  startBot,
+  resumeBot,
+  pauseBot,
+  stopBot,
   deleteBot,
+  duplicateBot,
   getKPIs,
   filterBots,
 } from '../lib/api/bots';
-import type { Bot, BotFilters as BotFiltersType, BotKPIs, BotStatus, BotType, CreateBotPayload } from '../lib/api/bots';
+import type { Bot, BotFilters as BotFiltersType, BotKPIs, BotType, CreateBotPayload } from '../lib/api/bots';
 
 export default function BotsPage() {
   const { toast } = useToast();
@@ -28,6 +30,7 @@ export default function BotsPage() {
   const [filteredBots, setFilteredBots] = useState<Bot[]>([]);
   const [kpis, setKPIs] = useState<BotKPIs | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [filters, setFilters] = useState<BotFiltersType>(() => {
     const saved = localStorage.getItem('bots.filters');
     return saved ? JSON.parse(saved) : { search: '', exchange: 'All', status: 'All' };
@@ -35,10 +38,15 @@ export default function BotsPage() {
   const [showCreateSheet, setShowCreateSheet] = useState(false);
   const [preselectedType, setPreselectedType] = useState<BotType | undefined>();
 
-  // Load bots data
-  const loadBots = async () => {
+  // Load bots data from Supabase via API
+  const loadBots = useCallback(async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) {
+        setIsLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
+      
       const botsData = await listBots(filters);
       setBots(botsData);
       setFilteredBots(filterBots(botsData, filters));
@@ -51,96 +59,132 @@ export default function BotsPage() {
       });
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, [filters, toast]);
 
   // Initial load
   useEffect(() => {
     loadBots();
-  }, []);
-
-  // Refresh bots when filters change
-  useEffect(() => {
-    loadBots();
-  }, [filters]);
+  }, [loadBots]);
 
   // Update filtered bots when filters change
   useEffect(() => {
     setFilteredBots(filterBots(bots, filters));
   }, [bots, filters]);
 
+  // Save filters to localStorage
+  useEffect(() => {
+    localStorage.setItem('bots.filters', JSON.stringify(filters));
+  }, [filters]);
+
   // Handlers
   const handleFiltersChange = (newFilters: BotFiltersType) => {
     setFilters(newFilters);
   };
 
-  const handleStatusChange = async (botId: string, status: BotStatus) => {
+  const handleStart = async (botId: string) => {
     try {
-      // Optimistic update
-      setBots(prevBots => 
-        prevBots.map(bot => 
-          bot.bot_id === botId ? { ...bot, status } : bot
-        )
-      );
-
-      await updateBotStatus(botId, status);
-      
+      await startBot(botId);
       toast({
         title: 'Success',
-        description: `Bot ${status === 'running' ? 'started' : status === 'paused' ? 'paused' : 'stopped'} successfully`,
+        description: 'Bot started successfully',
       });
-      
-      // Refresh KPIs
-      setKPIs(getKPIs(bots));
-    } catch (error) {
-      // Rollback on error
-      loadBots();
+      await loadBots(false);
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to update bot status',
+        description: error.message || 'Failed to start bot',
         variant: 'destructive',
       });
+      await loadBots(false);
+    }
+  };
+
+  const handleResume = async (botId: string) => {
+    try {
+      await resumeBot(botId);
+      toast({
+        title: 'Success',
+        description: 'Bot resumed successfully',
+      });
+      await loadBots(false);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to resume bot',
+        variant: 'destructive',
+      });
+      await loadBots(false);
+    }
+  };
+
+  const handlePause = async (botId: string) => {
+    try {
+      await pauseBot(botId);
+      toast({
+        title: 'Success',
+        description: 'Bot paused successfully',
+      });
+      await loadBots(false);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to pause bot',
+        variant: 'destructive',
+      });
+      await loadBots(false);
+    }
+  };
+
+  const handleStop = async (botId: string) => {
+    try {
+      await stopBot(botId);
+      toast({
+        title: 'Success',
+        description: 'Bot stopped successfully',
+      });
+      await loadBots(false);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to stop bot',
+        variant: 'destructive',
+      });
+      await loadBots(false);
+    }
+  };
+
+  const handleDelete = async (botId: string) => {
+    try {
+      await deleteBot(botId);
+      toast({
+        title: 'Success',
+        description: 'Bot deleted successfully',
+      });
+      await loadBots(false);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete bot',
+        variant: 'destructive',
+      });
+      await loadBots(false);
     }
   };
 
   const handleDuplicate = async (botId: string) => {
     try {
       const duplicatedBot = await duplicateBot(botId);
-      setBots(prevBots => [...prevBots, duplicatedBot]);
-      
       toast({
         title: 'Success',
         description: 'Bot duplicated successfully',
       });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to duplicate bot',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleDelete = async (botId: string) => {
-    try {
-      // Optimistic update
-      setBots(prevBots => prevBots.filter(bot => bot.bot_id !== botId));
-      
-      await deleteBot(botId);
-      
-      toast({
-        title: 'Success',
-        description: 'Bot deleted successfully',
-      });
-      
-      // Reload bots to get updated data
-      await loadBots();
+      await loadBots(false);
     } catch (error: any) {
-      // Rollback on error
-      await loadBots();
       toast({
         title: 'Error',
-        description: error.message || 'Failed to delete bot',
+        description: error.message || 'Failed to duplicate bot',
         variant: 'destructive',
       });
     }
@@ -179,6 +223,10 @@ export default function BotsPage() {
     });
   };
 
+  const handleRefresh = () => {
+    loadBots(false);
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -199,13 +247,23 @@ export default function BotsPage() {
           </p>
         </div>
 
-        <Button
-          onClick={() => setShowCreateSheet(true)}
-          className="bg-primary hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create Bot
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button
+            onClick={() => setShowCreateSheet(true)}
+            className="bg-primary hover:bg-primary/90"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create Bot
+          </Button>
+        </div>
       </div>
 
       <Separator />
@@ -233,7 +291,7 @@ export default function BotsPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">
-                Active Bots ({filteredBots.length})
+                Your Bots ({filteredBots.length})
               </h2>
             </div>
             
@@ -246,9 +304,12 @@ export default function BotsPage() {
                   <BotCard
                     key={bot.bot_id}
                     bot={bot}
-                    onStatusChange={handleStatusChange}
-                    onDuplicate={handleDuplicate}
+                    onStart={handleStart}
+                    onResume={handleResume}
+                    onPause={handlePause}
+                    onStop={handleStop}
                     onDelete={handleDelete}
+                    onDuplicate={handleDuplicate}
                     onEdit={handleEdit}
                     onView={handleView}
                   />
@@ -264,7 +325,7 @@ export default function BotsPage() {
                 <BotIcon className="h-12 w-12 text-muted-foreground" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold">No active bots</h3>
+                <h3 className="text-xl font-semibold">No bots found</h3>
                 <p className="text-muted-foreground max-w-md mx-auto">
                   Get started by creating your first trading bot. Choose from our templates or build a custom strategy.
                 </p>
@@ -299,4 +360,3 @@ export default function BotsPage() {
     </div>
   );
 }
-
