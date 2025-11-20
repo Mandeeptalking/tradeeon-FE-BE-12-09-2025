@@ -29,12 +29,22 @@ app = FastAPI(
 )
 
 # Configure CORS - get allowed origins from environment variable
-cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173")
-allowed_origins = [origin.strip() for origin in cors_origins_str.split(",")]
+cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173,https://www.tradeeon.com,https://tradeeon.com")
+allowed_origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
+
+# In production, allow all Tradeeon domains
+if os.getenv("ENVIRONMENT") == "production":
+    allowed_origins.extend([
+        "https://www.tradeeon.com",
+        "https://tradeeon.com",
+        "http://localhost:5173",  # Keep localhost for development
+    ])
+    # Remove duplicates
+    allowed_origins = list(set(allowed_origins))
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,  # Can be multiple origins: "http://localhost:5173,https://your-app.netlify.app"
+    allow_origins=allowed_origins,  # Can be multiple origins: "http://localhost:5173,https://www.tradeeon.com"
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-CSRF-Token", "Origin", "Accept", "Accept-Language"],
