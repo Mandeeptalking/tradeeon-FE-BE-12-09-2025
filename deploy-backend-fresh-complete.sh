@@ -181,9 +181,27 @@ elif [ "$BOTS_TEST" == "422" ]; then
   echo "   This means the old code is still running!"
   echo "   Checking container logs..."
   sudo docker logs tradeeon-backend --tail 50
+  echo ""
+  echo "   Checking if correct code is in container..."
+  sudo docker exec tradeeon-backend grep -A 3 "@router.get" /app/apps/api/routers/bots.py | head -5 2>/dev/null || echo "   Could not check container code"
   exit 1
+elif [ "$BOTS_TEST" == "200" ]; then
+  echo "   ⚠️  /bots/ endpoint returned 200 without auth (unexpected, but might be OK if RLS allows)"
 else
   echo "   ⚠️  Unexpected status code: $BOTS_TEST (expected 401)"
+  echo "   Response body:"
+  curl -s http://localhost:8000/bots/ | head -5
+fi
+
+# 14. Verify Supabase connection in logs
+echo "14. Checking Supabase connection status in logs..."
+SUPABASE_STATUS=$(sudo docker logs tradeeon-backend 2>&1 | grep -i "supabase" | tail -3)
+if echo "$SUPABASE_STATUS" | grep -q "initialized successfully\|connected"; then
+  echo "   ✅ Supabase client appears to be initialized"
+else
+  echo "   ⚠️  Warning: Could not verify Supabase initialization in logs"
+  echo "   Recent Supabase-related logs:"
+  echo "$SUPABASE_STATUS"
 fi
 
 echo ""
