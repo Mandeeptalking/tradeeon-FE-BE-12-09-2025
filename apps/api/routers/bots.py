@@ -140,10 +140,10 @@ async def create_dca_bot(
     user: AuthedUser = Depends(get_current_user)
 ):
     """Create a new DCA bot."""
-    try:
-        import time
-        import sys
-        import os
+        try:
+            import time
+            import sys
+            # os is already imported at module level
         
         # Add bots directory to path
         bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
@@ -232,7 +232,7 @@ async def start_dca_bot_paper(
     """Start a DCA bot in paper trading mode."""
     try:
         import sys
-        import os
+        # os is already imported at module level
         
         bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
         if bots_path not in sys.path:
@@ -301,7 +301,7 @@ async def stop_dca_bot(
     """Stop a running DCA bot."""
     try:
         import sys
-        import os
+        # os is already imported at module level
         
         bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
         if bots_path not in sys.path:
@@ -349,7 +349,7 @@ async def pause_dca_bot(
     """Pause a running DCA bot."""
     try:
         import sys
-        import os
+        # os is already imported at module level
         
         bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
         if bots_path not in sys.path:
@@ -394,7 +394,7 @@ async def resume_dca_bot(
     """Resume a paused DCA bot."""
     try:
         import sys
-        import os
+        # os is already imported at module level
         
         bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
         if bots_path not in sys.path:
@@ -439,7 +439,7 @@ async def delete_dca_bot(
     """Delete a DCA bot."""
     try:
         import sys
-        import os
+        # os is already imported at module level
         
         bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
         if bots_path not in sys.path:
