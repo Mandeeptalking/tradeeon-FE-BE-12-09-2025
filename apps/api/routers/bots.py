@@ -140,10 +140,10 @@ async def create_dca_bot(
     user: AuthedUser = Depends(get_current_user)
 ):
     """Create a new DCA bot."""
-        try:
-            import time
-            import sys
-            # os is already imported at module level
+    try:
+        import time
+        import sys
+        # os is already imported at module level
         
         # Add bots directory to path
         bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
