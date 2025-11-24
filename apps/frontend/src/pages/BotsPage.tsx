@@ -198,24 +198,46 @@ export default function BotsPage() {
         logger.info('No bots found in database');
       }
     } catch (err: any) {
-      // Extract proper error message
+      // Extract proper error message with better parsing
       let errorMessage = 'Failed to load bots';
+      let errorTitle = 'Error';
       
       if (err instanceof Error) {
         errorMessage = err.message;
+        // Extract title from message if it contains a colon
+        if (errorMessage.includes(':')) {
+          const parts = errorMessage.split(':');
+          errorTitle = parts[0].trim();
+          errorMessage = parts.slice(1).join(':').trim();
+        }
       } else if (typeof err === 'string') {
         errorMessage = err;
-      } else if (err?.message) {
-        errorMessage = err.message;
-      } else if (err?.detail) {
-        errorMessage = typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail);
-      } else {
-        errorMessage = JSON.stringify(err);
+      } else if (err && typeof err === 'object') {
+        if (err.message) {
+          errorMessage = err.message;
+        } else if (err.detail) {
+          errorMessage = typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail);
+        } else {
+          errorMessage = JSON.stringify(err);
+        }
       }
       
-      setError(errorMessage);
-      logger.error('Error fetching bots:', { error: err, message: errorMessage });
-      toast.error(errorMessage);
+      // Set error with title and message
+      const displayError = errorTitle !== 'Error' && errorMessage !== errorTitle
+        ? `${errorTitle}: ${errorMessage}`
+        : errorMessage;
+      
+      setError(displayError);
+      logger.error('Error fetching bots:', { 
+        error: err, 
+        message: errorMessage,
+        title: errorTitle,
+        displayError 
+      });
+      toast.error(displayError, {
+        duration: 5000,
+        description: errorTitle !== 'Error' ? errorMessage : undefined
+      });
     } finally {
       setIsLoading(false);
     }
