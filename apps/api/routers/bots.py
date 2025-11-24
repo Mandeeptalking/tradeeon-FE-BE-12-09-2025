@@ -94,11 +94,27 @@ async def list_bots(
                 status_code=500
             )
         
-        return {
+        # Prepare response
+        response = {
             "success": True,
             "bots": bots,
             "count": len(bots)
         }
+        
+        # Add diagnostic metadata in development mode
+        import os
+        if os.getenv("ENVIRONMENT", "").lower() != "production":
+            response["_debug"] = {
+                "user_id": user_id,
+                "user_id_type": type(user_id).__name__,
+                "status_filter": status.value if status else None,
+                "query_executed": True,
+                "result_count": len(bots),
+                "database_service_enabled": db_service.enabled if 'db_service' in locals() else False
+            }
+            logger.debug(f"Response includes debug metadata: {response['_debug']}")
+        
+        return response
     
     except HTTPException:
         # Re-raise HTTP exceptions (like 401 from auth)
