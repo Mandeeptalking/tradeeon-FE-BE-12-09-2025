@@ -23,6 +23,22 @@ class BotDatabaseService:
         self.supabase = supabase
         self.enabled = supabase is not None
         
+        # Log initialization details
+        logger.info(f"🔧 BotDatabaseService initialization:")
+        logger.debug(f"   Supabase client available: {supabase is not None}")
+        logger.debug(f"   Service enabled: {self.enabled}")
+        
+        if self.enabled:
+            # Verify service role key is being used (bypasses RLS)
+            import os
+            service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+            if service_key:
+                logger.info(f"✅ Using SUPABASE_SERVICE_ROLE_KEY (RLS bypass enabled)")
+                logger.debug(f"   Service key length: {len(service_key)}")
+                logger.debug(f"   Service key preview: {service_key[:20]}...{service_key[-10:]}")
+            else:
+                logger.warning(f"⚠️  SUPABASE_SERVICE_ROLE_KEY not found - RLS policies may block queries")
+        
         if not self.enabled:
             import os
             env = os.getenv("ENVIRONMENT", "development")
@@ -32,6 +48,7 @@ class BotDatabaseService:
                     "Please configure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables."
                 )
             logger.warning("Supabase not configured, database operations disabled. Bot data will only be stored in memory.")
+            logger.warning("   To enable: Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables")
     
     def create_bot(
         self, 
