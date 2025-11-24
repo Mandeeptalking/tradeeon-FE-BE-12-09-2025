@@ -12,7 +12,7 @@ class AuthedUser:
     def __init__(self, user_id: str):
         self.user_id = user_id
 
-def get_current_user(authorization: Optional[str] = Header(None, alias="Authorization")) -> AuthedUser:
+def get_current_user(authorization: Optional[str] = Header(None)) -> AuthedUser:
     """
     Extract and validate user from JWT token in Authorization header.
     
