@@ -46,6 +46,7 @@ async def list_bots(
             # Check if database service is enabled
             if not db_service.enabled:
                 logger.error("Database service is not enabled! Cannot fetch bots.")
+                logger.error(f"   Supabase client status: {db_service.supabase is not None if hasattr(db_service, 'supabase') else 'N/A'}")
                 raise TradeeonError(
                     "Database service is not configured",
                     "SERVICE_UNAVAILABLE",
@@ -53,20 +54,39 @@ async def list_bots(
                 )
             
             status_filter = status.value if status else None
-            logger.debug(f"Calling db_service.list_bots(user_id={user_id}, status={status_filter})")
+            logger.info(f"📋 Calling db_service.list_bots(user_id={user_id}, status={status_filter})")
+            logger.debug(f"   User ID type: {type(user_id).__name__}")
+            logger.debug(f"   User ID value: {user_id}")
+            
             bots = db_service.list_bots(user_id, status_filter)
-            logger.info(f"✅ Successfully fetched {len(bots)} bots for user {user_id}")
+            
+            logger.info(f"✅ db_service.list_bots() returned {len(bots)} bots for user {user_id}")
             
             if bots:
-                logger.debug(f"Bot details: {[{'bot_id': b.get('bot_id'), 'name': b.get('name'), 'status': b.get('status')} for b in bots]}")
+                logger.debug(f"Bot details summary:")
+                for i, bot in enumerate(bots):
+                    logger.debug(f"   Bot {i+1}: id={bot.get('bot_id')}, name={bot.get('name')}, status={bot.get('status')}")
             else:
-                logger.warning(f"⚠️  No bots found for user {user_id} in database")
+                logger.warning(f"⚠️  No bots returned for user {user_id}")
+                logger.warning(f"   This could indicate:")
+                logger.warning(f"   - User has no bots in database")
+                logger.warning(f"   - RLS policy is blocking results")
+                logger.warning(f"   - Status filter '{status_filter}' doesn't match")
+                logger.warning(f"   - Query failed silently (check db_service logs)")
+                
         except TradeeonError:
             # Re-raise TradeeonError
             raise
         except Exception as db_error:
             logger.error(f"❌ Failed to fetch bots from database: {db_error}", exc_info=True)
             logger.error(f"   Error type: {type(db_error).__name__}")
+            logger.error(f"   Error message: {str(db_error)}")
+            
+            # Log additional context
+            logger.error(f"   Context:")
+            logger.error(f"     - user_id: {user_id}")
+            logger.error(f"     - status filter: {status_filter if 'status_filter' in locals() else 'N/A'}")
+            
             # Don't return empty list on error - let the error propagate
             raise TradeeonError(
                 f"Failed to fetch bots from database: {str(db_error)}",

@@ -87,25 +87,42 @@ export default function BotsPage() {
       logger.debug('Bots API response:', data);
       console.log('🔍 Bots API response:', data);
       
+      // Log diagnostic info if available
+      if (data._debug) {
+        console.log('📊 Debug metadata:', data._debug);
+        logger.debug('Debug metadata:', data._debug);
+      }
+      
       // Handle different response formats
       let botsArray = [];
       if (Array.isArray(data)) {
         // Response is directly an array
         botsArray = data;
+        console.log('📦 Response format: Direct array');
       } else if (data.bots && Array.isArray(data.bots)) {
         // Response has bots property
         botsArray = data.bots;
+        console.log('📦 Response format: data.bots array');
       } else if (data.data && Array.isArray(data.data)) {
         // Response has data property
         botsArray = data.data;
+        console.log('📦 Response format: data.data array');
       } else {
         logger.warn('Unexpected response format:', data);
         console.warn('⚠️ Unexpected response format:', data);
+        console.warn('   Available keys:', Object.keys(data));
         setBots([]);
         return;
       }
       
       console.log(`✅ Found ${botsArray.length} bots in response`);
+      if (botsArray.length === 0 && data._debug) {
+        console.warn('⚠️ No bots found. Debug info:', data._debug);
+        console.warn('   This could indicate:');
+        console.warn('   - User has no bots in database');
+        console.warn('   - RLS policy is blocking results');
+        console.warn('   - Status filter doesn\'t match');
+      }
       
       const botsList: Bot[] = botsArray.map((bot: any) => ({
         bot_id: bot.bot_id || bot.id,

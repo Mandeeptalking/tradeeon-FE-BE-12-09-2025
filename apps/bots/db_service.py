@@ -339,38 +339,94 @@ class BotDatabaseService:
         """List all bots for a user."""
         if not self.enabled:
             logger.warning("Database service is disabled, cannot list bots")
+            logger.warning(f"   Supabase client status: {self.supabase is not None}")
             return []
         
         try:
-            logger.debug(f"Querying bots for user_id: {user_id} (type: {type(user_id).__name__}), status filter: {status}")
+            # Comprehensive logging before query
+            logger.info(f"🔍 Starting bot list query for user_id: {user_id}")
+            logger.debug(f"   User ID type: {type(user_id).__name__}")
+            logger.debug(f"   User ID value: {user_id}")
+            logger.debug(f"   Status filter: {status}")
+            logger.debug(f"   Supabase client available: {self.supabase is not None}")
             
-            # Build query
+            # Verify Supabase client
+            if not self.supabase:
+                logger.error("❌ Supabase client is None despite service being enabled!")
+                return []
+            
+            # Build query with detailed logging
+            logger.debug("Building Supabase query...")
             query = self.supabase.table("bots").select("*").eq("user_id", user_id)
+            logger.debug(f"   Base query: table('bots').select('*').eq('user_id', '{user_id}')")
+            
             if status:
                 query = query.eq("status", status)
+                logger.debug(f"   Added status filter: .eq('status', '{status}')")
             
-            logger.debug(f"Executing Supabase query: bots table, user_id={user_id}, status={status}")
+            # Log query details before execution
+            logger.info(f"📤 Executing Supabase query for user {user_id}...")
+            logger.debug(f"   Query parameters: user_id={user_id}, status={status}")
+            
+            # Execute query
             result = query.execute()
             
-            logger.debug(f"Supabase query result: {result}")
-            logger.debug(f"Result data type: {type(result.data)}, length: {len(result.data) if result.data else 0}")
+            # Comprehensive logging after query
+            logger.info(f"📥 Supabase query executed successfully")
+            logger.debug(f"   Result object type: {type(result).__name__}")
+            logger.debug(f"   Result.data type: {type(result.data).__name__}")
+            logger.debug(f"   Result.data is None: {result.data is None}")
             
-            if result.data:
-                logger.info(f"✅ Successfully fetched {len(result.data)} bots for user {user_id}")
-                logger.debug(f"Bot IDs: {[bot.get('bot_id') for bot in result.data]}")
-                return result.data
+            if result.data is not None:
+                logger.debug(f"   Result.data length: {len(result.data)}")
+                logger.debug(f"   Result.data content: {result.data}")
+                
+                if len(result.data) > 0:
+                    logger.info(f"✅ Successfully fetched {len(result.data)} bots for user {user_id}")
+                    bot_ids = [bot.get('bot_id', 'N/A') for bot in result.data]
+                    bot_names = [bot.get('name', 'N/A') for bot in result.data]
+                    logger.debug(f"   Bot IDs: {bot_ids}")
+                    logger.debug(f"   Bot names: {bot_names}")
+                    logger.debug(f"   Bot statuses: {[bot.get('status', 'N/A') for bot in result.data]}")
+                    return result.data
+                else:
+                    logger.info(f"✅ Query successful but no bots found for user {user_id}")
+                    logger.debug(f"   This could mean:")
+                    logger.debug(f"   - User has no bots in database")
+                    logger.debug(f"   - RLS policy is filtering out results")
+                    logger.debug(f"   - Status filter '{status}' doesn't match any bots")
+                    return []
             else:
-                logger.info(f"✅ Query successful but no bots found for user {user_id}")
+                logger.warning(f"⚠️  Query returned None data for user {user_id}")
+                logger.debug(f"   Result object: {result}")
                 return []
+                
         except Exception as e:
+            # Comprehensive error logging
             logger.error(f"❌ Failed to list bots for user {user_id}: {e}", exc_info=True)
             logger.error(f"   Error type: {type(e).__name__}")
+            logger.error(f"   Error message: {str(e)}")
+            
+            # Log exception attributes
             if hasattr(e, 'message'):
-                logger.error(f"   Error message: {e.message}")
+                logger.error(f"   Exception.message: {e.message}")
             if hasattr(e, 'details'):
-                logger.error(f"   Error details: {e.details}")
+                logger.error(f"   Exception.details: {e.details}")
             if hasattr(e, 'code'):
-                logger.error(f"   Error code: {e.code}")
+                logger.error(f"   Exception.code: {e.code}")
+            if hasattr(e, 'hint'):
+                logger.error(f"   Exception.hint: {e.hint}")
+            
+            # Log full traceback
+            import traceback
+            logger.error(f"   Full traceback:\n{traceback.format_exc()}")
+            
+            # Log query context for debugging
+            logger.error(f"   Query context:")
+            logger.error(f"     - user_id: {user_id} (type: {type(user_id).__name__})")
+            logger.error(f"     - status filter: {status}")
+            logger.error(f"     - Supabase client: {self.supabase is not None}")
+            
             return []
     
     def delete_bot(self, bot_id: str, user_id: str) -> bool:
