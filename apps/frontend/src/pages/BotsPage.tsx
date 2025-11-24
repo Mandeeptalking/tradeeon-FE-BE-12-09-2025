@@ -49,38 +49,94 @@ export default function BotsPage() {
       logger.debug('Response status:', response.status, response.statusText);
       
       if (!response.ok) {
-        let errorMessage = `Failed to fetch bots (${response.status})`;
+        let errorMessage = '';
+        let errorDetails = '';
         
+        // Handle specific status codes with user-friendly messages
         if (response.status === 401) {
-          errorMessage = 'Please sign in to view your bots';
+          errorMessage = 'Authentication Required';
+          errorDetails = 'Please sign in to view your bots. Your session may have expired.';
+        } else if (response.status === 403) {
+          errorMessage = 'Access Denied';
+          errorDetails = 'You do not have permission to view bots.';
+        } else if (response.status === 422) {
+          errorMessage = 'Invalid Request';
+          errorDetails = 'The request format is incorrect. This may indicate the backend needs to be updated.';
+        } else if (response.status === 500) {
+          errorMessage = 'Server Error';
+          errorDetails = 'The server encountered an error while fetching bots. Please try again later.';
+        } else if (response.status === 503) {
+          errorMessage = 'Service Unavailable';
+          errorDetails = 'The database service is not available. Please contact support.';
         } else {
-          try {
-            const errorData = await response.json();
-            logger.debug('Error response data:', errorData);
-            
-            // Handle different error formats
-            if (errorData.detail) {
-              if (Array.isArray(errorData.detail)) {
-                // FastAPI validation errors
-                errorMessage = errorData.detail.map((e: any) => e.msg || JSON.stringify(e)).join(', ');
-              } else if (typeof errorData.detail === 'string') {
-                errorMessage = errorData.detail;
+          errorMessage = `Failed to fetch bots (${response.status})`;
+        }
+        
+        // Try to parse error response for more details
+        try {
+          const errorData = await response.json();
+          logger.debug('Error response data:', errorData);
+          
+          // Handle FastAPI validation errors (422)
+          if (errorData.detail) {
+            if (Array.isArray(errorData.detail)) {
+              // FastAPI validation errors - extract field names and messages
+              const validationErrors = errorData.detail.map((e: any) => {
+                const field = e.loc && e.loc.length > 1 ? e.loc[e.loc.length - 1] : 'field';
+                const msg = e.msg || 'is required';
+                return `${field}: ${msg}`;
+              });
+              
+              if (response.status === 422) {
+                errorMessage = 'Backend Configuration Error';
+                errorDetails = `The backend is expecting a parameter that should not be required: ${validationErrors.join(', ')}. This indicates the backend code needs to be updated.`;
               } else {
-                errorMessage = JSON.stringify(errorData.detail);
+                errorDetails = validationErrors.join('; ');
               }
-            } else if (errorData.message) {
-              errorMessage = errorData.message;
-            } else if (errorData.error) {
-              errorMessage = typeof errorData.error === 'string' ? errorData.error : JSON.stringify(errorData.error);
+            } else if (typeof errorData.detail === 'string') {
+              errorDetails = errorData.detail;
+            } else if (errorData.detail.message) {
+              errorDetails = errorData.detail.message;
+            } else {
+              errorDetails = JSON.stringify(errorData.detail);
             }
-          } catch (parseError) {
-            const text = await response.text().catch(() => '');
+          } else if (errorData.message) {
+            errorDetails = errorData.message;
+          } else if (errorData.error) {
+            if (typeof errorData.error === 'string') {
+              errorDetails = errorData.error;
+            } else if (errorData.error.message) {
+              errorDetails = errorData.error.message;
+            } else {
+              errorDetails = JSON.stringify(errorData.error);
+            }
+          }
+        } catch (parseError) {
+          // If JSON parsing fails, try to get text
+          try {
+            const text = await response.text();
             logger.debug('Error response text:', text);
-            errorMessage = text || `Failed to fetch bots: ${response.status} ${response.statusText}`;
+            if (text && text.length < 200) {
+              errorDetails = text;
+            }
+          } catch (textError) {
+            logger.debug('Could not parse error response');
           }
         }
         
-        throw new Error(errorMessage);
+        // Combine message and details
+        const fullErrorMessage = errorDetails 
+          ? `${errorMessage}: ${errorDetails}`
+          : errorMessage;
+        
+        logger.error('Bot fetch error:', {
+          status: response.status,
+          statusText: response.statusText,
+          message: errorMessage,
+          details: errorDetails
+        });
+        
+        throw new Error(fullErrorMessage);
       }
       
       const data = await response.json();

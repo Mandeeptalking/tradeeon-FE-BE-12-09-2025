@@ -123,8 +123,12 @@ async def list_bots(
         raise
     except Exception as e:
         logger.error(f"Error listing bots: {e}", exc_info=True)
+        # Provide more context in error message
+        error_msg = f"Failed to list bots: {str(e)}"
+        if "user_id" in str(e).lower() or "field required" in str(e).lower():
+            error_msg = "Backend configuration error: The endpoint is expecting a parameter that should be extracted from authentication. Please ensure the backend is running the latest code."
         raise TradeeonError(
-            f"Failed to list bots: {str(e)}",
+            error_msg,
             "INTERNAL_SERVER_ERROR",
             status_code=500
         )
