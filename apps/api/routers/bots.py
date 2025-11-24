@@ -102,7 +102,7 @@ async def list_bots(
         }
         
         # Add diagnostic metadata in development mode
-        import os
+        # Note: os is already imported at module level
         if os.getenv("ENVIRONMENT", "").lower() != "production":
             response["_debug"] = {
                 "user_id": user_id,
