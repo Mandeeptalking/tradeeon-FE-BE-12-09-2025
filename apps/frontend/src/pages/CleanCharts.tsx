@@ -268,6 +268,73 @@ const CleanCharts: React.FC = () => {
     };
   }, []);
 
+  // Initialize with fallback symbols immediately
+  useEffect(() => {
+    const fallbackSymbols: SymbolInfo[] = [
+      { symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT', status: 'TRADING' },
+      { symbol: 'ETHUSDT', baseAsset: 'ETH', quoteAsset: 'USDT', status: 'TRADING' },
+      { symbol: 'ADAUSDT', baseAsset: 'ADA', quoteAsset: 'USDT', status: 'TRADING' },
+      { symbol: 'SOLUSDT', baseAsset: 'SOL', quoteAsset: 'USDT', status: 'TRADING' },
+      { symbol: 'BNBUSDT', baseAsset: 'BNB', quoteAsset: 'USDT', status: 'TRADING' },
+      { symbol: 'XRPUSDT', baseAsset: 'XRP', quoteAsset: 'USDT', status: 'TRADING' },
+      { symbol: 'DOGEUSDT', baseAsset: 'DOGE', quoteAsset: 'USDT', status: 'TRADING' },
+      { symbol: 'MATICUSDT', baseAsset: 'MATIC', quoteAsset: 'USDT', status: 'TRADING' },
+      { symbol: 'DOTUSDT', baseAsset: 'DOT', quoteAsset: 'USDT', status: 'TRADING' },
+      { symbol: 'LINKUSDT', baseAsset: 'LINK', quoteAsset: 'USDT', status: 'TRADING' },
+    ];
+    setAvailableSymbols(fallbackSymbols);
+    setFilteredSymbols(fallbackSymbols);
+  }, []);
+
+  // Fetch all available symbols on mount
+  useEffect(() => {
+    const loadSymbols = async () => {
+      setIsLoadingSymbols(true);
+      try {
+        console.log('Fetching symbols from Binance...');
+        const symbols = await fetchSymbols();
+        console.log(`Fetched ${symbols.length} symbols from Binance`);
+        
+        // Filter to only TRADING symbols and prefer USDT pairs
+        const tradingSymbols = symbols
+          .filter(s => s.status === 'TRADING')
+          .sort((a, b) => {
+            // Prioritize USDT pairs
+            if (a.quoteAsset === 'USDT' && b.quoteAsset !== 'USDT') return -1;
+            if (a.quoteAsset !== 'USDT' && b.quoteAsset === 'USDT') return 1;
+            return a.symbol.localeCompare(b.symbol);
+          });
+        
+        console.log(`Filtered to ${tradingSymbols.length} trading symbols`);
+        setAvailableSymbols(tradingSymbols);
+        setFilteredSymbols(tradingSymbols);
+        logger.info(`Loaded ${tradingSymbols.length} trading pairs`);
+      } catch (error) {
+        console.error('Failed to load symbols:', error);
+        logger.error('Failed to load symbols:', error);
+        // Keep fallback symbols that were set initially
+      } finally {
+        setIsLoadingSymbols(false);
+      }
+    };
+    loadSymbols();
+  }, []);
+
+  // Filter symbols based on search query
+  useEffect(() => {
+    if (!symbolSearchQuery.trim()) {
+      setFilteredSymbols(availableSymbols);
+    } else {
+      const query = symbolSearchQuery.toLowerCase();
+      const filtered = availableSymbols.filter(s =>
+        s.symbol.toLowerCase().includes(query) ||
+        s.baseAsset.toLowerCase().includes(query) ||
+        s.quoteAsset.toLowerCase().includes(query)
+      );
+      setFilteredSymbols(filtered);
+    }
+  }, [symbolSearchQuery, availableSymbols]);
+
   // Update indicator engine when data changes
   useEffect(() => {
     if (indicatorEngineRef.current && chartData.length > 0) {
