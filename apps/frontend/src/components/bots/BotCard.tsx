@@ -169,10 +169,10 @@ export default function BotCard({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         whileHover={{ y: -2, transition: { duration: 0.2 } }}
-        className="group"
+        className="group h-full"
         data-testid="bot-card"
       >
-        <Card className={`relative overflow-hidden transition-all duration-200 hover:shadow-lg ${statusConfig.ring} ring-1`}>
+        <Card className={`relative overflow-visible transition-all duration-200 hover:shadow-xl ${statusConfig.ring} ring-1 bg-gray-800/95 backdrop-blur-sm border-gray-700 shadow-lg h-full flex flex-col`}>
           <CardHeader className="pb-3">
             {/* Header Row */}
             <div className="flex items-center justify-between">
@@ -183,7 +183,7 @@ export default function BotCard({
                 </Badge>
                 
                 {/* Pair */}
-                <span className="font-mono text-sm font-semibold text-foreground">
+                <span className="font-mono text-sm font-semibold text-white">
                   {bot.pair}
                 </span>
               </div>
@@ -196,32 +196,32 @@ export default function BotCard({
 
             {/* Bot Name */}
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">
+              <h3 className="font-semibold text-lg text-white group-hover:text-blue-400 transition-colors">
                 {bot.name}
               </h3>
-              <span className="text-xs text-muted-foreground capitalize">
+              <span className="text-xs text-gray-400 capitalize">
                 {bot.bot_type} bot
               </span>
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 flex-1 flex flex-col">
             {/* Mini Metrics */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Invested</p>
-                <p className="font-semibold text-sm">{formatCurrency(bot.invested)}</p>
+                <p className="text-xs text-gray-400">Invested</p>
+                <p className="font-semibold text-sm text-white">{formatCurrency(bot.invested)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Orders</p>
-                <p className="font-semibold text-sm">{bot.orders_count}</p>
+                <p className="text-xs text-gray-400">Orders</p>
+                <p className="font-semibold text-sm text-white">{bot.orders_count}</p>
               </div>
             </div>
 
             {/* P&L Section */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">24h P&L</span>
+                <span className="text-xs text-gray-400">24h P&L</span>
                 <div className="flex items-center space-x-2">
                   {bot.sparkline && <Sparkline data={bot.sparkline} />}
                   {bot.pnl_24h >= 0 ? (
@@ -242,7 +242,7 @@ export default function BotCard({
             </div>
 
             {/* Actions Footer */}
-            <div className="flex items-center justify-between pt-2 border-t">
+            <div className="flex items-center justify-between pt-3 mt-auto border-t border-gray-700">
               {/* Primary Actions */}
               <div className="flex items-center space-x-2">
                 {canStart && (
@@ -318,6 +318,7 @@ export default function BotCard({
                   variant="ghost"
                   onClick={() => onView(bot.bot_id)}
                   title="View Details"
+                  className="text-gray-400 hover:text-white hover:bg-gray-700/50 border border-transparent hover:border-gray-600"
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
@@ -326,6 +327,7 @@ export default function BotCard({
                   variant="ghost"
                   onClick={() => onEdit(bot.bot_id)}
                   title="Edit Bot"
+                  className="text-gray-400 hover:text-white hover:bg-gray-700/50 border border-transparent hover:border-gray-600"
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -335,6 +337,7 @@ export default function BotCard({
                   onClick={() => onDuplicate(bot.bot_id)}
                   title="Duplicate Bot"
                   data-testid="bot-duplicate"
+                  className="text-gray-400 hover:text-white hover:bg-gray-700/50 border border-transparent hover:border-gray-600"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -342,19 +345,26 @@ export default function BotCard({
                 {/* More Actions Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button size="sm" variant="ghost">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      className="text-gray-400 hover:text-white hover:bg-gray-700/50 border border-transparent hover:border-gray-600"
+                    >
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onView(bot.bot_id)}>
+                  <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
+                    <DropdownMenuItem 
+                      onClick={() => onView(bot.bot_id)}
+                      className="text-white hover:bg-gray-700 focus:bg-gray-700"
+                    >
                       <FileText className="h-4 w-4 mr-2" />
                       View Logs
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    <DropdownMenuSeparator className="bg-gray-700" />
                     <DropdownMenuItem 
                       onClick={() => setShowDeleteDialog(true)}
-                      className="text-destructive focus:text-destructive"
+                      className="text-red-400 hover:bg-red-900/20 focus:bg-red-900/20"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete Bot

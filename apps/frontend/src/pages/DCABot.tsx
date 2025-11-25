@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Settings, TrendingUp, TrendingDown, ChevronDown, ChevronUp, Check, X, Info, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import Tooltip from '../components/Tooltip';
 import { logger } from '../utils/logger';
 import { authenticatedFetch } from '../lib/api/auth';
@@ -44,6 +45,7 @@ const fetchBinancePairs = async (): Promise<string[]> => {
 };
 
 export default function DCABot() {
+  const navigate = useNavigate();
   // Trading mode: test (paper trading) or live (real trading)
   const [tradingMode, setTradingMode] = useState<'test' | 'live'>('test');
   // Modal state for live trading confirmation
@@ -666,6 +668,18 @@ export default function DCABot() {
     logger.debug('Bot config:', botConfig);
     
     try {
+      // Verify session before making request
+      const { supabase } = await import('../lib/supabase');
+      const { data: { session: preSession }, error: preSessionError } = await supabase.auth.getSession();
+      
+      if (preSessionError || !preSession) {
+        logger.error('No valid session before bot creation:', preSessionError);
+        toast.error('Your session has expired. Please sign in again.');
+        return;
+      }
+      
+      logger.debug('Session verified before bot creation request');
+      
       // Send to backend API
       const API_BASE_URL = getApiBaseUrl();
       const response = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots`, {
@@ -673,13 +687,29 @@ export default function DCABot() {
         body: JSON.stringify(botConfig)
       });
       
+      // Verify session is still valid after request
+      const { data: { session: postSession }, error: postSessionError } = await supabase.auth.getSession();
+      if (postSessionError || !postSession) {
+        logger.error('Session lost during bot creation request:', postSessionError);
+        toast.error('Your session expired during the request. Please sign in again.');
+        return;
+      }
+      
       if (!response.ok) {
-        const error = await response.json();
+        // Handle authentication errors
+        if (response.status === 401) {
+          logger.error('Authentication failed during bot creation (401 response)');
+          toast.error('Your session has expired. Please sign in again.');
+          return;
+        }
+        
+        const error = await response.json().catch(() => ({ detail: 'Failed to create bot' }));
+        logger.error('Bot creation failed:', error);
         throw new Error(error.detail || 'Failed to create bot');
       }
       
       const result = await response.json();
-      logger.debug('Bot created:', result);
+      logger.debug('Bot created successfully:', result);
       
       const createdBotId = result.bot?.bot_id || result.bot_id;
       setBotId(createdBotId);
@@ -688,10 +718,55 @@ export default function DCABot() {
         toast.success('DCA Bot created successfully! You can start it from the Bots page.');
         logger.debug('Bot created:', result);
         
-        // Navigate to Bots page after a short delay
-        setTimeout(() => {
-          window.location.href = '/bots';
-        }, 1500);
+        // Verify session and auth state before navigating
+        try {
+          const { supabase } = await import('../lib/supabase');
+          const { useAuthStore } = await import('../store/auth');
+          
+          // Check Supabase session
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) {
+            logger.error('Session error after bot creation:', sessionError);
+            toast.error('Session error. Please refresh the page.');
+            return;
+          }
+          
+          if (!session) {
+            logger.error('No session found after bot creation');
+            toast.error('Your session expired. Please sign in again.');
+            return;
+          }
+          
+          // Verify auth store state
+          const authState = useAuthStore.getState();
+          if (!authState.isAuthenticated || !authState.user) {
+            logger.warn('Auth store not authenticated, updating from session');
+            // Update auth store from session
+            useAuthStore.getState().setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.user_metadata?.first_name || session.user.email?.split('@')[0] || ''
+            });
+          }
+          
+          logger.debug('Session and auth state verified, navigating to bots page');
+          
+          // Small delay to ensure state is updated, then navigate
+          setTimeout(() => {
+            // Double-check auth state before navigation
+            const currentAuthState = useAuthStore.getState();
+            if (currentAuthState.isAuthenticated) {
+              navigate('/app/bots', { replace: true });
+            } else {
+              logger.error('Auth state lost before navigation');
+              toast.error('Authentication lost. Please sign in again.');
+            }
+          }, 1000);
+        } catch (sessionCheckError) {
+          logger.error('Error checking session before navigation:', sessionCheckError);
+          toast.error('Unable to verify session. Please refresh the page.');
+        }
       } else {
         toast.success('DCA Bot created successfully with Phase 1 features!');
       }

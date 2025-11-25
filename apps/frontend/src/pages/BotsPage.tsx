@@ -1,9 +1,39 @@
-import { useState, useEffect } from 'react';
-import { Plus, Bot as BotIcon, RefreshCw, Play, Pause, Square, Trash2 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Plus, 
+  Bot as BotIcon, 
+  RefreshCw, 
+  Search,
+  Filter,
+  X,
+  AlertCircle,
+  TrendingUp,
+  DollarSign,
+  Activity,
+  Grid3x3,
+  List,
+  SortAsc,
+} from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Badge } from '../components/ui/badge';
+import { Skeleton } from '../components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import { toast } from 'sonner';
 import { authenticatedFetch } from '../lib/api/auth';
 import { logger } from '../utils/logger';
+import BotCard from '../components/bots/BotCard';
+import { StatCard } from '../components/dashboard/StatCard';
+import EmptyState from '../components/EmptyState';
+import type { Bot, BotStatus, Exchange, BotType } from '../lib/api/bots';
+import { getKPIs, filterBots } from '../lib/api/bots';
 
 // Helper to get API base URL
 function getApiBaseUrl(): string {
@@ -17,23 +47,33 @@ function getApiBaseUrl(): string {
   return apiUrl || 'http://localhost:8000';
 }
 
-// Bot interface
-interface Bot {
-  bot_id: string;
-  name: string;
-  bot_type: string;
-  exchange: string;
-  symbol: string;
-  status: 'running' | 'paused' | 'stopped' | 'inactive';
-  created_at: string;
-  updated_at: string;
+// Extended bot interface for internal use
+interface ExtendedBot extends Bot {
+  symbol?: string; // For backward compatibility
 }
 
 export default function BotsPage() {
-  const [bots, setBots] = useState<Bot[]>([]);
+  const [bots, setBots] = useState<ExtendedBot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ title: string; details: string; tips?: string[] } | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('All');
+  const [exchangeFilter, setExchangeFilter] = useState<string>('All');
+  const [botTypeFilter, setBotTypeFilter] = useState<string>('All');
+  const [sortBy, setSortBy] = useState<'name' | 'status' | 'created' | 'pnl'>('created');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Debounced search
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Fetch bots from API
   const fetchBots = async () => {
@@ -49,27 +89,33 @@ export default function BotsPage() {
       logger.debug('Response status:', response.status, response.statusText);
       
       if (!response.ok) {
-        let errorMessage = '';
+        let errorTitle = '';
         let errorDetails = '';
+        let errorTips: string[] = [];
         
         // Handle specific status codes with user-friendly messages
         if (response.status === 401) {
-          errorMessage = 'Authentication Required';
+          errorTitle = 'Authentication Required';
           errorDetails = 'Please sign in to view your bots. Your session may have expired.';
+          errorTips = ['Ensure you are logged in.', 'Try logging out and logging back in.'];
         } else if (response.status === 403) {
-          errorMessage = 'Access Denied';
+          errorTitle = 'Access Denied';
           errorDetails = 'You do not have permission to view bots.';
+          errorTips = ['Contact support if you believe this is an error.'];
         } else if (response.status === 422) {
-          errorMessage = 'Invalid Request';
+          errorTitle = 'Invalid Request';
           errorDetails = 'The request format is incorrect. This may indicate the backend needs to be updated.';
+          errorTips = ['Ensure the backend is running the latest code.', 'Check backend logs for validation errors.'];
         } else if (response.status === 500) {
-          errorMessage = 'Server Error';
+          errorTitle = 'Server Error';
           errorDetails = 'The server encountered an error while fetching bots. Please try again later.';
+          errorTips = ['Check backend logs for detailed error messages.', 'Try refreshing the page.'];
         } else if (response.status === 503) {
-          errorMessage = 'Service Unavailable';
+          errorTitle = 'Service Unavailable';
           errorDetails = 'The database service is not available. Please contact support.';
+          errorTips = ['Verify Supabase connection in backend logs.', 'Ensure Supabase credentials are correct.'];
         } else {
-          errorMessage = `Failed to fetch bots (${response.status})`;
+          errorTitle = `Failed to fetch bots (${response.status})`;
         }
         
         // Try to parse error response for more details
@@ -77,10 +123,8 @@ export default function BotsPage() {
           const errorData = await response.json();
           logger.debug('Error response data:', errorData);
           
-          // Handle FastAPI validation errors (422)
           if (errorData.detail) {
             if (Array.isArray(errorData.detail)) {
-              // FastAPI validation errors - extract field names and messages
               const validationErrors = errorData.detail.map((e: any) => {
                 const field = e.loc && e.loc.length > 1 ? e.loc[e.loc.length - 1] : 'field';
                 const msg = e.msg || 'is required';
@@ -88,28 +132,19 @@ export default function BotsPage() {
               });
               
               if (response.status === 422) {
-                errorMessage = 'Backend Configuration Error';
+                errorTitle = 'Backend Configuration Error';
                 errorDetails = `The backend is expecting a parameter that should not be required: ${validationErrors.join(', ')}. This indicates the backend code needs to be updated.`;
+                errorTips = ['Deploy the latest backend code to Lightsail.', 'Ensure the backend Docker image is rebuilt without cache.'];
               } else {
                 errorDetails = validationErrors.join('; ');
               }
             } else if (typeof errorData.detail === 'string') {
               errorDetails = errorData.detail;
-            } else if (errorData.detail.message) {
-              errorDetails = errorData.detail.message;
             } else {
               errorDetails = JSON.stringify(errorData.detail);
             }
           } else if (errorData.message) {
             errorDetails = errorData.message;
-          } else if (errorData.error) {
-            if (typeof errorData.error === 'string') {
-              errorDetails = errorData.error;
-            } else if (errorData.error.message) {
-              errorDetails = errorData.error.message;
-            } else {
-              errorDetails = JSON.stringify(errorData.error);
-            }
           }
         } catch (parseError) {
           // If JSON parsing fails, try to get text
@@ -124,71 +159,46 @@ export default function BotsPage() {
           }
         }
         
-        // Combine message and details
-        const fullErrorMessage = errorDetails 
-          ? `${errorMessage}: ${errorDetails}`
-          : errorMessage;
-        
-        logger.error('Bot fetch error:', {
-          status: response.status,
-          statusText: response.statusText,
-          message: errorMessage,
-          details: errorDetails
-        });
-        
-        throw new Error(fullErrorMessage);
+        setError({ title: errorTitle, details: errorDetails, tips: errorTips });
+        logger.error('Bot fetch error:', { status: response.status, title: errorTitle, details: errorDetails });
+        toast.error(errorTitle, { description: errorDetails });
+        return;
       }
       
       const data = await response.json();
       logger.debug('Bots API response:', data);
-      console.log('🔍 Bots API response:', data);
-      
-      // Log diagnostic info if available
-      if (data._debug) {
-        console.log('📊 Debug metadata:', data._debug);
-        logger.debug('Debug metadata:', data._debug);
-      }
       
       // Handle different response formats
       let botsArray = [];
       if (Array.isArray(data)) {
-        // Response is directly an array
         botsArray = data;
-        console.log('📦 Response format: Direct array');
       } else if (data.bots && Array.isArray(data.bots)) {
-        // Response has bots property
         botsArray = data.bots;
-        console.log('📦 Response format: data.bots array');
       } else if (data.data && Array.isArray(data.data)) {
-        // Response has data property
         botsArray = data.data;
-        console.log('📦 Response format: data.data array');
       } else {
         logger.warn('Unexpected response format:', data);
-        console.warn('⚠️ Unexpected response format:', data);
-        console.warn('   Available keys:', Object.keys(data));
         setBots([]);
         return;
       }
       
-      console.log(`✅ Found ${botsArray.length} bots in response`);
-      if (botsArray.length === 0 && data._debug) {
-        console.warn('⚠️ No bots found. Debug info:', data._debug);
-        console.warn('   This could indicate:');
-        console.warn('   - User has no bots in database');
-        console.warn('   - RLS policy is blocking results');
-        console.warn('   - Status filter doesn\'t match');
-      }
-      
-      const botsList: Bot[] = botsArray.map((bot: any) => ({
+      // Map bot data to BotCard interface with defaults for missing fields
+      const botsList: ExtendedBot[] = botsArray.map((bot: any) => ({
         bot_id: bot.bot_id || bot.id,
         name: bot.name || 'Unnamed Bot',
-        bot_type: bot.bot_type || 'dca',
-        exchange: bot.exchange || 'Binance',
-        symbol: bot.symbol || bot.pair || '',
-        status: (bot.status || 'inactive') as Bot['status'],
+        bot_type: (bot.bot_type || 'dca') as BotType,
+        exchange: (bot.exchange || 'Binance') as Exchange,
+        pair: bot.symbol || bot.pair || '',
+        symbol: bot.symbol || bot.pair || '', // Keep for backward compatibility
+        status: (bot.status || 'inactive') as BotStatus,
+        invested: bot.invested || bot.required_capital || 0,
+        pnl_24h: bot.pnl_24h || 0,
+        pnl_24h_pct: bot.pnl_24h_pct || 0,
+        pnl_realized_mtd: bot.pnl_realized_mtd || 0,
+        orders_count: bot.orders_count || 0,
         created_at: bot.created_at || new Date().toISOString(),
         updated_at: bot.updated_at || new Date().toISOString(),
+        sparkline: bot.sparkline || Array(12).fill(0),
       }));
       
       logger.debug('Parsed bots:', botsList);
@@ -198,46 +208,30 @@ export default function BotsPage() {
         logger.info('No bots found in database');
       }
     } catch (err: any) {
-      // Extract proper error message with better parsing
-      let errorMessage = 'Failed to load bots';
-      let errorTitle = 'Error';
-      
+      let errorTitle = 'Failed to load bots';
+      let errorDetails = 'An unexpected error occurred.';
+      let errorTips: string[] = [];
+
       if (err instanceof Error) {
-        errorMessage = err.message;
-        // Extract title from message if it contains a colon
-        if (errorMessage.includes(':')) {
-          const parts = errorMessage.split(':');
+        errorDetails = err.message;
+        if (errorDetails.includes(':')) {
+          const parts = errorDetails.split(':');
           errorTitle = parts[0].trim();
-          errorMessage = parts.slice(1).join(':').trim();
+          errorDetails = parts.slice(1).join(':').trim();
         }
       } else if (typeof err === 'string') {
-        errorMessage = err;
+        errorDetails = err;
       } else if (err && typeof err === 'object') {
         if (err.message) {
-          errorMessage = err.message;
+          errorDetails = err.message;
         } else if (err.detail) {
-          errorMessage = typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail);
-        } else {
-          errorMessage = JSON.stringify(err);
+          errorDetails = typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail);
         }
       }
       
-      // Set error with title and message
-      const displayError = errorTitle !== 'Error' && errorMessage !== errorTitle
-        ? `${errorTitle}: ${errorMessage}`
-        : errorMessage;
-      
-      setError(displayError);
-      logger.error('Error fetching bots:', { 
-        error: err, 
-        message: errorMessage,
-        title: errorTitle,
-        displayError 
-      });
-      toast.error(displayError, {
-        duration: 5000,
-        description: errorTitle !== 'Error' ? errorMessage : undefined
-      });
+      setError({ title: errorTitle, details: errorDetails, tips: errorTips });
+      logger.error('Error fetching bots:', { error: err, title: errorTitle, details: errorDetails });
+      toast.error(errorTitle, { description: errorDetails });
     } finally {
       setIsLoading(false);
     }
@@ -299,47 +293,122 @@ export default function BotsPage() {
     }
   };
 
+  // View/Edit/Duplicate handlers
+  const handleView = (botId: string) => {
+    // Navigate to bot details page or show modal
+    toast.info('View bot details', { description: 'Bot details view coming soon' });
+    // TODO: Implement bot details view
+  };
+
+  const handleEdit = (botId: string) => {
+    // Navigate to bot configuration page with pre-filled data
+    toast.info('Edit bot', { description: 'Bot editing coming soon' });
+    // TODO: Navigate to bot edit page with botId
+  };
+
+  const handleDuplicate = async (botId: string) => {
+    try {
+      const bot = filteredAndSortedBots.find(b => b.bot_id === botId);
+      if (!bot) {
+        toast.error('Bot not found');
+        return;
+      }
+      
+      // For now, just show a message
+      toast.info('Duplicate bot', { description: 'Bot duplication coming soon. This will create a copy of the bot configuration.' });
+      // TODO: Implement bot duplication via API
+    } catch (err: any) {
+      logger.error('Error duplicating bot:', err);
+      toast.error('Failed to duplicate bot', { description: err.message });
+    }
+  };
+
+  // Filter and sort bots
+  const filteredAndSortedBots = useMemo(() => {
+    let filtered = bots.filter(bot => {
+      const matchesSearch = !debouncedSearch || 
+        bot.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        bot.pair.toLowerCase().includes(debouncedSearch.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'All' || bot.status === statusFilter;
+      const matchesExchange = exchangeFilter === 'All' || bot.exchange === exchangeFilter;
+      const matchesBotType = botTypeFilter === 'All' || bot.bot_type === botTypeFilter;
+      
+      return matchesSearch && matchesStatus && matchesExchange && matchesBotType;
+    });
+
+    // Sort bots
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'status':
+          return a.status.localeCompare(b.status);
+        case 'created':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'pnl':
+          return (b.pnl_24h || 0) - (a.pnl_24h || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [bots, debouncedSearch, statusFilter, exchangeFilter, botTypeFilter, sortBy]);
+
+  // Calculate KPIs
+  const kpis = useMemo(() => getKPIs(bots), [bots]);
+
+  // Count active filters
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (debouncedSearch) count++;
+    if (statusFilter !== 'All') count++;
+    if (exchangeFilter !== 'All') count++;
+    if (botTypeFilter !== 'All') count++;
+    return count;
+  }, [debouncedSearch, statusFilter, exchangeFilter, botTypeFilter]);
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('All');
+    setExchangeFilter('All');
+    setBotTypeFilter('All');
+  };
+
   // Initial load
   useEffect(() => {
     fetchBots();
   }, []);
 
-  const getStatusColor = (status: Bot['status']) => {
-    switch (status) {
-      case 'running':
-        return 'bg-green-500';
-      case 'paused':
-        return 'bg-yellow-500';
-      case 'stopped':
-      case 'inactive':
-        return 'bg-gray-500';
-      default:
-        return 'bg-gray-500';
-    }
+  // Format currency
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
   };
 
-  const getStatusLabel = (status: Bot['status']) => {
-    switch (status) {
-      case 'running':
-        return 'Running';
-      case 'paused':
-        return 'Paused';
-      case 'stopped':
-        return 'Stopped';
-      case 'inactive':
-        return 'Inactive';
-      default:
-        return status;
-    }
+  // Format percentage
+  const formatPercentage = (pct: number) => {
+    const sign = pct >= 0 ? '+' : '';
+    return `${sign}${pct.toFixed(2)}%`;
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
         <div>
-          <h1 className="text-2xl font-bold text-white">Trading Bots</h1>
-          <p className="text-gray-400 mt-1">Manage your automated trading strategies</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Trading Bots</h1>
+          <p className="text-gray-400">Manage your automated trading strategies</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -359,15 +428,218 @@ export default function BotsPage() {
             Create Bot
           </Button>
         </div>
-      </div>
+      </motion.div>
+
+      {/* Stats Summary */}
+      {!isLoading && !error && bots.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+        >
+          <StatCard
+            title="Total Bots"
+            value={bots.length}
+            subtitle={`${kpis.activeBots} active`}
+            icon={BotIcon}
+            iconColor="text-blue-400"
+            iconBgColor="bg-blue-500/10"
+            gradientFrom="from-blue-500"
+            gradientTo="to-blue-600"
+            progress={(kpis.activeBots / Math.max(bots.length, 1)) * 100}
+            delay={0.1}
+          />
+          <StatCard
+            title="Active Bots"
+            value={kpis.activeBots}
+            subtitle="Currently running"
+            icon={Activity}
+            iconColor="text-green-400"
+            iconBgColor="bg-green-500/10"
+            gradientFrom="from-green-500"
+            gradientTo="to-green-600"
+            delay={0.2}
+          />
+          <StatCard
+            title="24h P&L"
+            value={formatCurrency(kpis.pnl24h)}
+            subtitle={formatPercentage(kpis.pnl24hPct)}
+            icon={TrendingUp}
+            iconColor={kpis.pnl24h >= 0 ? "text-green-400" : "text-red-400"}
+            iconBgColor={kpis.pnl24h >= 0 ? "bg-green-500/10" : "bg-red-500/10"}
+            gradientFrom={kpis.pnl24h >= 0 ? "from-green-500" : "from-red-500"}
+            gradientTo={kpis.pnl24h >= 0 ? "to-green-600" : "to-red-600"}
+            delay={0.3}
+          />
+          <StatCard
+            title="Capital Deployed"
+            value={formatCurrency(kpis.totalCapitalDeployed)}
+            subtitle="Total invested"
+            icon={DollarSign}
+            iconColor="text-purple-400"
+            iconBgColor="bg-purple-500/10"
+            gradientFrom="from-purple-500"
+            gradientTo="to-purple-600"
+            delay={0.4}
+          />
+        </motion.div>
+      )}
+
+      {/* Filters and Search */}
+      {!isLoading && !error && bots.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 space-y-4"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-400" />
+              <span className="text-sm font-medium text-white">Filters</span>
+              {activeFilterCount > 0 && (
+                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                  {activeFilterCount} active
+                </Badge>
+              )}
+            </div>
+            {activeFilterCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear All
+              </Button>
+            )}
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Search */}
+            <div className="lg:col-span-2 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search bots..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+              />
+            </div>
+            
+            {/* Status Filter */}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Status</SelectItem>
+                <SelectItem value="running">Running</SelectItem>
+                <SelectItem value="paused">Paused</SelectItem>
+                <SelectItem value="stopped">Stopped</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {/* Exchange Filter */}
+            <Select value={exchangeFilter} onValueChange={setExchangeFilter}>
+              <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                <SelectValue placeholder="Exchange" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Exchanges</SelectItem>
+                <SelectItem value="Binance">Binance</SelectItem>
+                <SelectItem value="Zerodha">Zerodha</SelectItem>
+                <SelectItem value="KuCoin">KuCoin</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {/* Bot Type Filter */}
+            <Select value={botTypeFilter} onValueChange={setBotTypeFilter}>
+              <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                <SelectValue placeholder="Bot Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Types</SelectItem>
+                <SelectItem value="dca">DCA</SelectItem>
+                <SelectItem value="grid">Grid</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Sort and View Toggle */}
+          <div className="flex items-center justify-between pt-2 border-t border-white/10">
+            <div className="flex items-center gap-2">
+              <SortAsc className="h-4 w-4 text-gray-400" />
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                <SelectTrigger className="w-[180px] bg-white/5 border-white/10 text-white">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="created">Newest First</SelectItem>
+                  <SelectItem value="name">Name (A-Z)</SelectItem>
+                  <SelectItem value="status">Status</SelectItem>
+                  <SelectItem value="pnl">P&L (High to Low)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className={viewMode === 'grid' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:text-white'}
+              >
+                <Grid3x3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className={viewMode === 'list' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-400 hover:text-white'}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Error Display */}
       {error && (
-        <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-900/20 border border-red-500/50 rounded-xl p-6"
+        >
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-red-400 font-medium mb-1">Error loading bots</p>
-              <p className="text-red-300 text-sm">{error}</p>
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="h-5 w-5 text-red-400" />
+                <p className="text-red-400 font-medium">{error.title}</p>
+              </div>
+              <p className="text-red-300 text-sm mb-3">{error.details}</p>
+              {error.tips && error.tips.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-red-400 text-sm font-medium mb-2">Tips:</p>
+                  <ul className="list-disc list-inside text-red-300 text-sm space-y-1">
+                    {error.tips.map((tip, index) => (
+                      <li key={index}>{tip}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <Button
+                onClick={fetchBots}
+                className="mt-4 bg-red-600 hover:bg-red-700 text-white"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
             </div>
             <Button
               size="sm"
@@ -375,133 +647,103 @@ export default function BotsPage() {
               onClick={() => setError(null)}
               className="text-red-400 hover:text-red-300"
             >
-              ×
+              <X className="h-4 w-4" />
             </Button>
           </div>
-        </div>
+        </motion.div>
       )}
 
-      {/* Loading State */}
+      {/* Loading State with Skeletons */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <div className="space-y-6">
+          {/* Stats Skeletons */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 space-y-4">
+                <Skeleton className="h-12 w-12 rounded-lg" />
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            ))}
+          </div>
+          
+          {/* Bot Card Skeletons */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-6 w-20" />
+                </div>
+                <Skeleton className="h-4 w-24" />
+                <div className="grid grid-cols-2 gap-4">
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                </div>
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Bots List */}
       {!isLoading && !error && (
         <>
-          {bots.length === 0 ? (
-            <div className="text-center py-12">
-              <BotIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">No bots found</h3>
-              <p className="text-gray-400 mb-4">Create your first trading bot to get started</p>
-              <Button
-                onClick={() => window.location.href = '/app/dca-bot'}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Your First Bot
-              </Button>
-            </div>
+          {filteredAndSortedBots.length === 0 ? (
+            <EmptyState
+              icon={BotIcon}
+              title={bots.length === 0 ? "No bots found" : "No bots match your filters"}
+              description={
+                bots.length === 0
+                  ? "Create your first trading bot to get started with automated trading strategies."
+                  : "Try adjusting your search or filter criteria to find what you're looking for."
+              }
+              actionLabel={bots.length === 0 ? "Create Your First Bot" : "Clear Filters"}
+              onAction={bots.length === 0 ? () => window.location.href = '/app/dca-bot' : clearFilters}
+              tips={
+                bots.length === 0
+                  ? [
+                      "DCA bots help you buy assets at regular intervals",
+                      "Start with paper trading to test your strategies",
+                      "Monitor your bots' performance regularly"
+                    ]
+                  : [
+                      "Try removing some filters",
+                      "Check your search query spelling",
+                      "Make sure at least one bot matches your criteria"
+                    ]
+              }
+            />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {bots.map((bot) => (
-                <div
-                  key={bot.bot_id}
-                  className="bg-gray-800 border border-gray-700 rounded-lg p-4 space-y-4"
-                >
-                  {/* Bot Header */}
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">{bot.name}</h3>
-                      <p className="text-sm text-gray-400">{bot.symbol} • {bot.exchange}</p>
-                    </div>
-                    <span className={`px-2 py-1 rounded text-xs font-medium text-white ${getStatusColor(bot.status)}`}>
-                      {getStatusLabel(bot.status)}
-                    </span>
-                  </div>
-
-                  {/* Bot Info */}
-                  <div className="text-sm text-gray-400">
-                    <p>Type: {bot.bot_type.toUpperCase()}</p>
-                    <p>Created: {new Date(bot.created_at).toLocaleDateString()}</p>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 pt-2 border-t border-gray-700">
-                    {(bot.status === 'inactive' || bot.status === 'stopped') && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleBotAction(bot.bot_id, 'start')}
-                        disabled={actionLoading === bot.bot_id}
-                        className="bg-green-600 hover:bg-green-700 text-white flex-1"
-                      >
-                        <Play className="h-4 w-4 mr-1" />
-                        Start
-                      </Button>
-                    )}
-                    {bot.status === 'paused' && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleBotAction(bot.bot_id, 'resume')}
-                        disabled={actionLoading === bot.bot_id}
-                        className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
-                      >
-                        <Play className="h-4 w-4 mr-1" />
-                        Resume
-                      </Button>
-                    )}
-                    {bot.status === 'running' && (
-                      <>
-                        <Button
-                          size="sm"
-                          onClick={() => handleBotAction(bot.bot_id, 'pause')}
-                          disabled={actionLoading === bot.bot_id}
-                          className="bg-yellow-600 hover:bg-yellow-700 text-white flex-1"
-                        >
-                          <Pause className="h-4 w-4 mr-1" />
-                          Pause
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleBotAction(bot.bot_id, 'stop')}
-                          disabled={actionLoading === bot.bot_id}
-                          className="bg-red-600 hover:bg-red-700 text-white flex-1"
-                        >
-                          <Square className="h-4 w-4 mr-1" />
-                          Stop
-                        </Button>
-                      </>
-                    )}
-                    {(bot.status === 'paused' || bot.status === 'stopped') && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleBotAction(bot.bot_id, 'stop')}
-                        disabled={actionLoading === bot.bot_id}
-                        className="bg-red-600 hover:bg-red-700 text-white"
-                      >
-                        <Square className="h-4 w-4 mr-1" />
-                        Stop
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        if (confirm(`Are you sure you want to delete ${bot.name}?`)) {
-                          handleBotAction(bot.bot_id, 'delete');
-                        }
-                      }}
-                      disabled={actionLoading === bot.bot_id}
-                      className="border-red-600 text-red-400 hover:bg-red-900/20"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={viewMode}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className={
+                  viewMode === 'grid'
+                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6"
+                    : "space-y-4 pb-6"
+                }
+              >
+                {filteredAndSortedBots.map((bot) => (
+                  <BotCard
+                    key={bot.bot_id}
+                    bot={bot}
+                    onStart={() => handleBotAction(bot.bot_id, 'start')}
+                    onResume={() => handleBotAction(bot.bot_id, 'resume')}
+                    onPause={() => handleBotAction(bot.bot_id, 'pause')}
+                    onStop={() => handleBotAction(bot.bot_id, 'stop')}
+                    onDelete={() => handleBotAction(bot.bot_id, 'delete')}
+                    onDuplicate={handleDuplicate}
+                    onEdit={handleEdit}
+                    onView={handleView}
+                  />
+                ))}
+              </motion.div>
+            </AnimatePresence>
           )}
         </>
       )}

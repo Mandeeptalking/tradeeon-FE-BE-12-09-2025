@@ -161,9 +161,20 @@ class BotExecutionService:
             if bot_id in self.execution_intervals:
                 del self.execution_intervals[bot_id]
             
-            # Update status in database
+            # Only update status to "stopped" if bot was actually running/paused
+            # Don't change status if bot was "inactive" or already "stopped"
             if db_service:
-                db_service.update_bot_status(bot_id, "stopped")
+                try:
+                    bot_data = db_service.get_bot(bot_id)
+                    current_status = bot_data.get("status") if bot_data else None
+                    # Only update to stopped if bot was running or paused
+                    if current_status in ["running", "paused"]:
+                        db_service.update_bot_status(bot_id, "stopped")
+                        logger.info(f"Updated bot {bot_id} status from {current_status} to stopped (execution loop ended)")
+                    else:
+                        logger.debug(f"Bot {bot_id} status is {current_status}, not updating to stopped")
+                except Exception as status_error:
+                    logger.error(f"Failed to check/update bot status in finally block: {status_error}")
             
             logger.info(f"Execution loop for bot {bot_id} stopped")
     

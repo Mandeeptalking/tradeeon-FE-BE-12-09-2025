@@ -245,7 +245,34 @@ async def start_dca_bot_paper(
         if not bot_data:
             raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
         
+        current_status = bot_data.get("status", "inactive")
+        
+        # Validate that bot can be started (must be inactive or stopped)
+        if current_status not in ["inactive", "stopped"]:
+            if current_status == "running":
+                return {
+                    "success": True,
+                    "message": "Bot is already running",
+                    "bot_id": bot_id,
+                    "status": "running"
+                }
+            elif current_status == "paused":
+                raise TradeeonError(
+                    "Bot is paused. Please resume it instead of starting it.",
+                    "INVALID_STATUS_TRANSITION",
+                    status_code=400
+                )
+            else:
+                raise TradeeonError(
+                    f"Cannot start bot with status: {current_status}. Bot must be inactive or stopped.",
+                    "INVALID_STATUS_TRANSITION",
+                    status_code=400
+                )
+        
         if bot_execution_service.is_running(bot_id):
+            # Bot is running in memory but status might be out of sync
+            logger.warning(f"Bot {bot_id} is running in memory but status is {current_status}. Updating status to running.")
+            db_service.update_bot_status(bot_id, "running")
             return {
                 "success": True,
                 "message": "Bot is already running",
@@ -270,7 +297,9 @@ async def start_dca_bot_paper(
         if not started:
             raise TradeeonError("Failed to start bot", "INTERNAL_SERVER_ERROR", status_code=500)
         
+        # Update bot status to running
         db_service.update_bot_status(bot_id, "running")
+        # Create bot run record
         run_id = db_service.create_bot_run(bot_id=bot_id, user_id=user.user_id, status="running")
         
         logger.info(f"✅ DCA bot {bot_id} started in paper trading mode")
@@ -314,9 +343,31 @@ async def stop_dca_bot(
         if not bot_data:
             raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
         
+        current_status = bot_data.get("status", "inactive")
+        
+        # Validate that bot can be stopped (must be running or paused)
+        if current_status not in ["running", "paused"]:
+            if current_status in ["inactive", "stopped"]:
+                return {
+                    "success": True,
+                    "message": "Bot is already stopped",
+                    "bot_id": bot_id,
+                    "status": "stopped"
+                }
+            else:
+                raise TradeeonError(
+                    f"Cannot stop bot with status: {current_status}. Bot must be running or paused.",
+                    "INVALID_STATUS_TRANSITION",
+                    status_code=400
+                )
+        
+        # Stop the bot execution service
         stopped = await bot_execution_service.stop_bot(bot_id)
+        
+        # Update bot status to stopped
         db_service.update_bot_status(bot_id, "stopped")
         
+        # Update all active bot runs to stopped
         try:
             active_runs = db_service.supabase.table("bot_runs").select("*").eq("bot_id", bot_id).eq("status", "running").execute()
             if active_runs.data:
@@ -362,11 +413,35 @@ async def pause_dca_bot(
         if not bot_data:
             raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
         
+        current_status = bot_data.get("status", "inactive")
+        
+        # Validate that bot can be paused (must be running)
+        if current_status != "running":
+            if current_status == "paused":
+                return {
+                    "success": True,
+                    "message": "Bot is already paused",
+                    "bot_id": bot_id,
+                    "status": "paused"
+                }
+            else:
+                raise TradeeonError(
+                    f"Cannot pause bot with status: {current_status}. Bot must be running.",
+                    "INVALID_STATUS_TRANSITION",
+                    status_code=400
+                )
+        
         paused = await bot_execution_service.pause_bot(bot_id)
-        db_service.update_bot_status(bot_id, "paused")
         
         if not paused:
-            raise HTTPException(status_code=400, detail="Bot is not running. Cannot pause.")
+            raise TradeeonError(
+                "Bot is not running. Cannot pause.",
+                "INVALID_STATUS_TRANSITION",
+                status_code=400
+            )
+        
+        # Update bot status to paused
+        db_service.update_bot_status(bot_id, "paused")
         
         logger.info(f"✅ DCA bot {bot_id} paused successfully")
         
@@ -407,11 +482,35 @@ async def resume_dca_bot(
         if not bot_data:
             raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
         
+        current_status = bot_data.get("status", "inactive")
+        
+        # Validate that bot can be resumed (must be paused)
+        if current_status != "paused":
+            if current_status == "running":
+                return {
+                    "success": True,
+                    "message": "Bot is already running",
+                    "bot_id": bot_id,
+                    "status": "running"
+                }
+            else:
+                raise TradeeonError(
+                    f"Cannot resume bot with status: {current_status}. Bot must be paused.",
+                    "INVALID_STATUS_TRANSITION",
+                    status_code=400
+                )
+        
         resumed = await bot_execution_service.resume_bot(bot_id)
-        db_service.update_bot_status(bot_id, "running")
         
         if not resumed:
-            raise HTTPException(status_code=400, detail="Bot is not paused. Cannot resume.")
+            raise TradeeonError(
+                "Bot is not paused. Cannot resume.",
+                "INVALID_STATUS_TRANSITION",
+                status_code=400
+            )
+        
+        # Update bot status to running
+        db_service.update_bot_status(bot_id, "running")
         
         logger.info(f"✅ DCA bot {bot_id} resumed successfully")
         
@@ -452,9 +551,17 @@ async def delete_dca_bot(
         if not bot_data:
             raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
         
-        if bot_execution_service.is_running(bot_id):
-            await bot_execution_service.stop_bot(bot_id)
+        current_status = bot_data.get("status", "inactive")
         
+        # If bot is running or paused, stop it first
+        if current_status in ["running", "paused"]:
+            if bot_execution_service.is_running(bot_id):
+                logger.info(f"Stopping bot {bot_id} before deletion (status: {current_status})")
+                await bot_execution_service.stop_bot(bot_id)
+            # Update status to stopped before deletion
+            db_service.update_bot_status(bot_id, "stopped")
+        
+        # Delete the bot
         deleted = db_service.delete_bot(bot_id, user_id=user.user_id)
         
         if not deleted:
