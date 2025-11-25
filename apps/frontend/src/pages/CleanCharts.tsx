@@ -6,12 +6,14 @@ import {
   INDICATOR_TYPES 
 } from '../lib/indicator_engine';
 import { Button } from '../components/ui/button';
-import { Plus, Bell, PlusCircle } from 'lucide-react';
+import { Plus, Bell, PlusCircle, Search, ChevronDown } from 'lucide-react';
 import AlertBuilder from '../components/alerts/AlertBuilder';
 import AlertList from '../components/alerts/AlertList';
 import TriggerHistoryPanel from '../components/alerts/TriggerHistoryPanel';
 import { useAlertMarkers } from '../hooks/useAlertMarkers';
 import { logger } from '../utils/logger';
+import { fetchSymbols, type SymbolInfo } from '../lib/binance';
+import { INTERVALS, INTERVAL_LABELS } from '../lib/timeframes';
 
 // Extend CandlestickData to include volume
 interface CandlestickData extends LWCandlestickData {
@@ -27,6 +29,12 @@ const CleanCharts: React.FC = () => {
   const [symbol, setSymbol] = useState('BTCUSDT');
   const [interval, setInterval] = useState('1m');
   const [chartData, setChartData] = useState<CandlestickData[]>([]);
+  const [availableSymbols, setAvailableSymbols] = useState<SymbolInfo[]>([]);
+  const [filteredSymbols, setFilteredSymbols] = useState<SymbolInfo[]>([]);
+  const [symbolSearchQuery, setSymbolSearchQuery] = useState('');
+  const [isSymbolDropdownOpen, setIsSymbolDropdownOpen] = useState(false);
+  const [isIntervalDropdownOpen, setIsIntervalDropdownOpen] = useState(false);
+  const [isLoadingSymbols, setIsLoadingSymbols] = useState(false);
   const [showIndicatorModal, setShowIndicatorModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showAlertBuilder, setShowAlertBuilder] = useState(false);
@@ -815,6 +823,23 @@ const CleanCharts: React.FC = () => {
   // Use alert markers hook
   useAlertMarkers(symbol, interval);
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // Check if click is outside both dropdowns
+      if (!target.closest('[data-dropdown="symbol"]') && !target.closest('[data-dropdown="interval"]')) {
+        setIsSymbolDropdownOpen(false);
+        setIsIntervalDropdownOpen(false);
+      }
+    };
+
+    if (isSymbolDropdownOpen || isIntervalDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isSymbolDropdownOpen, isIntervalDropdownOpen]);
+
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
@@ -887,31 +912,104 @@ const CleanCharts: React.FC = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
+            {/* Symbol Selector with Search */}
+            <div className="flex items-center space-x-2 relative">
               <label className="text-sm font-medium text-gray-700">Symbol:</label>
-              <select
-                value={symbol}
-                onChange={(e) => setSymbol(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-              >
-                <option value="BTCUSDT">BTCUSDT</option>
-                <option value="ETHUSDT">ETHUSDT</option>
-                <option value="ADAUSDT">ADAUSDT</option>
-              </select>
+              <div className="relative" data-dropdown="symbol">
+                <button
+                  type="button"
+                  onClick={() => setIsSymbolDropdownOpen(!isSymbolDropdownOpen)}
+                  className="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[120px] text-left flex items-center justify-between"
+                >
+                  <span>{symbol}</span>
+                  <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${isSymbolDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isSymbolDropdownOpen && (
+                  <div className="absolute z-50 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-96 w-64 overflow-hidden">
+                    <div className="p-2 border-b border-gray-200">
+                      <div className="relative">
+                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search pairs..."
+                          value={symbolSearchQuery}
+                          onChange={(e) => setSymbolSearchQuery(e.target.value)}
+                          className="w-full pl-8 pr-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                    <div className="overflow-y-auto max-h-80">
+                      {isLoadingSymbols ? (
+                        <div className="p-4 text-center text-sm text-gray-500">Loading symbols...</div>
+                      ) : filteredSymbols.length === 0 ? (
+                        <div className="p-4 text-center text-sm text-gray-500">No symbols found</div>
+                      ) : (
+                        filteredSymbols.map((sym) => (
+                          <button
+                            key={sym.symbol}
+                            type="button"
+                            onClick={() => {
+                              setSymbol(sym.symbol);
+                              setIsSymbolDropdownOpen(false);
+                              setSymbolSearchQuery('');
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-blue-50 ${
+                              symbol === sym.symbol ? 'bg-blue-100 font-medium' : ''
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span>{sym.symbol}</span>
+                              <span className="text-xs text-gray-500">{sym.baseAsset}/{sym.quoteAsset}</span>
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                    {filteredSymbols.length > 0 && (
+                      <div className="p-2 border-t border-gray-200 text-xs text-gray-500 text-center">
+                        {filteredSymbols.length} of {availableSymbols.length} pairs
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             
-            <div className="flex items-center space-x-2">
+            {/* Interval Selector */}
+            <div className="flex items-center space-x-2 relative">
               <label className="text-sm font-medium text-gray-700">Interval:</label>
-              <select
-                value={interval}
-                onChange={(e) => setInterval(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-              >
-                <option value="1m">1m</option>
-                <option value="5m">5m</option>
-                <option value="15m">15m</option>
-                <option value="1h">1h</option>
-              </select>
+              <div className="relative" data-dropdown="interval">
+                <button
+                  type="button"
+                  onClick={() => setIsIntervalDropdownOpen(!isIntervalDropdownOpen)}
+                  className="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[80px] text-left flex items-center justify-between"
+                >
+                  <span>{interval}</span>
+                  <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${isIntervalDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isIntervalDropdownOpen && (
+                  <div className="absolute z-50 mt-1 bg-white border border-gray-300 rounded-md shadow-lg overflow-hidden">
+                    {INTERVALS.map((int) => (
+                      <button
+                        key={int}
+                        type="button"
+                        onClick={() => {
+                          setInterval(int);
+                          setIsIntervalDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2 text-left text-sm hover:bg-blue-50 ${
+                          interval === int ? 'bg-blue-100 font-medium' : ''
+                        }`}
+                      >
+                        {int} - {INTERVAL_LABELS[int]}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             
             <Button
