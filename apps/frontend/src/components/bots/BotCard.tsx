@@ -394,7 +394,7 @@ export default function BotCard({
                 handleAction(() => onDelete(bot.bot_id));
                 setShowDeleteDialog(false);
               }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-red-600 text-white hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-red-500"
             >
               Delete Bot
             </AlertDialogAction>

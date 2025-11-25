@@ -60,7 +60,7 @@ export function AlertDialog({ open, onOpenChange, children }: AlertDialogProps) 
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50" 
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm" 
         onClick={() => onOpenChange?.(false)}
       />
       {children}
@@ -73,7 +73,8 @@ export const AlertDialogContent = React.forwardRef<HTMLDivElement, AlertDialogCo
     <div
       ref={ref}
       className={cn(
-        "relative z-50 w-full max-w-lg bg-background p-6 shadow-lg rounded-lg border",
+        "relative z-50 w-full max-w-lg bg-gray-800 border border-gray-700 p-6 shadow-2xl rounded-lg",
+        "backdrop-blur-sm",
         className
       )}
       {...props}
@@ -101,7 +102,7 @@ export const AlertDialogTitle = React.forwardRef<HTMLHeadingElement, AlertDialog
   ({ className, children, ...props }, ref) => (
     <h2
       ref={ref}
-      className={cn("text-lg font-semibold", className)}
+      className={cn("text-lg font-semibold text-white", className)}
       {...props}
     >
       {children}
@@ -114,7 +115,7 @@ export const AlertDialogDescription = React.forwardRef<HTMLParagraphElement, Ale
   ({ className, children, ...props }, ref) => (
     <p
       ref={ref}
-      className={cn("text-sm text-muted-foreground", className)}
+      className={cn("text-sm text-gray-300", className)}
       {...props}
     >
       {children}
@@ -157,7 +158,7 @@ export const AlertDialogCancel = React.forwardRef<HTMLButtonElement, AlertDialog
     <button
       ref={ref}
       className={cn(
-        "mt-2 inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 sm:mt-0",
+        "mt-2 inline-flex h-9 items-center justify-center rounded-md border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 disabled:pointer-events-none disabled:opacity-50 sm:mt-0",
         className
       )}
       {...props}
