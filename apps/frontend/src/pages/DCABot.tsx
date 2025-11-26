@@ -461,60 +461,6 @@ export default function DCABot() {
     setBotType(newType);
   };
 
-  const handleStartBot = () => {
-    // Show summary modal first instead of creating bot directly
-    // Prepare bot config for summary display
-    let conditionConfig: any = null;
-    
-    if (showPlaybookBuilder && conditionPlaybook.length > 0) {
-      conditionConfig = {
-        mode: 'playbook',
-        gateLogic: playbookGateLogic,
-        conditions: conditionPlaybook.filter(c => c.enabled).length
-      };
-    } else if (tradeStartCondition && conditionType) {
-      conditionConfig = {
-        mode: 'simple',
-        conditionType: conditionType
-      };
-    }
-
-    const dcaRulesConfig: any = {
-      ruleType: dcaRuleType,
-      maxDcaPerPosition: dcaRules.maxDcaPerPosition,
-      dcaCooldownValue: dcaRules.dcaCooldownValue,
-      dcaCooldownUnit: dcaRules.dcaCooldownUnit
-    };
-
-    const phase1Config = {
-      marketRegime: marketRegimeConfig.enabled,
-      dynamicScaling: dynamicScalingConfig.enabled,
-      profitStrategy: profitStrategyConfig.enabled,
-      emergencyBrake: emergencyBrakeConfig.enabled
-    };
-
-    const configForSummary = {
-      botName,
-      direction,
-      pair: botType === 'single' ? pair : `${selectedPairs.length} pairs`,
-      selectedPairs,
-      exchange,
-      botType,
-      profitCurrency,
-      baseOrderSize,
-      baseOrderCurrency,
-      startOrderType,
-      tradeStartCondition,
-      conditionConfig,
-      dcaRules: dcaRulesConfig,
-      phase1Features: phase1Config,
-      tradingMode
-    };
-
-    setPendingBotConfig(configForSummary);
-    setShowBotSummaryModal(true);
-  };
-
   // Validation function
   const validateBotConfig = (): { valid: boolean; errors: string[] } => {
     const errors: string[] = [];
@@ -597,10 +543,83 @@ export default function DCABot() {
     };
   };
 
+  const handleStartBot = () => {
+    // Validate bot configuration first
+    const validation = validateBotConfig();
+    if (!validation.valid) {
+      toast.error('Please fix the following errors:', {
+        description: validation.errors.join('\n'),
+        duration: 5000
+      });
+      return;
+    }
+    
+    // Show summary modal first instead of creating bot directly
+    // Prepare bot config for summary display
+    let conditionConfig: any = null;
+    
+    // Only set conditionConfig if Start Mode is "Wait for Signal" (tradeStartCondition = true)
+    if (tradeStartCondition) {
+      if (showPlaybookBuilder && conditionPlaybook.length > 0) {
+        conditionConfig = {
+          mode: 'playbook',
+          gateLogic: playbookGateLogic,
+          conditions: conditionPlaybook.filter(c => c.enabled).length
+        };
+      } else if (conditionType) {
+        conditionConfig = {
+          mode: 'simple',
+          conditionType: conditionType,
+          condition: {
+            ...entryCondition,
+            operator: entryCondition.operator,
+            value: entryCondition.value,
+            period: entryCondition.period
+          }
+        };
+      }
+    }
+
+    const dcaRulesConfig: any = {
+      ruleType: dcaRuleType,
+      maxDcaPerPosition: dcaRules.maxDcaPerPosition,
+      dcaCooldownValue: dcaRules.dcaCooldownValue,
+      dcaCooldownUnit: dcaRules.dcaCooldownUnit
+    };
+
+    const phase1Config = {
+      marketRegime: marketRegimeConfig.enabled,
+      dynamicScaling: dynamicScalingConfig.enabled,
+      profitStrategy: profitStrategyConfig.enabled,
+      emergencyBrake: emergencyBrakeConfig.enabled
+    };
+
+    const configForSummary = {
+      botName,
+      direction,
+      pair: botType === 'single' ? pair : `${selectedPairs.length} pairs`,
+      selectedPairs,
+      exchange,
+      botType,
+      profitCurrency,
+      baseOrderSize,
+      baseOrderCurrency,
+      startOrderType,
+      tradeStartCondition,
+      conditionConfig,
+      dcaRules: dcaRulesConfig,
+      phase1Features: phase1Config,
+      tradingMode
+    };
+
+    setPendingBotConfig(configForSummary);
+    setShowBotSummaryModal(true);
+  };
+
   const handleConfirmBotCreation = async () => {
     if (!pendingBotConfig) return;
     
-    // Validate bot configuration before creating
+    // Validate again before creating (double-check)
     const validation = validateBotConfig();
     if (!validation.valid) {
       toast.error('Please fix the following errors:', {
@@ -5676,7 +5695,9 @@ export default function DCABot() {
                         <span className="font-medium text-gray-900 dark:text-white">
                           {pendingBotConfig.conditionConfig.mode === 'playbook' 
                             ? `Playbook (${pendingBotConfig.conditionConfig.conditions?.length || 0} conditions)`
-                            : 'Simple'}
+                            : pendingBotConfig.conditionConfig.conditionType === 'RSI Conditions' && pendingBotConfig.conditionConfig.condition
+                            ? `RSI(${pendingBotConfig.conditionConfig.condition.period || 14}) ${pendingBotConfig.conditionConfig.condition.operator?.replace('_', ' ') || ''} ${pendingBotConfig.conditionConfig.condition.value || ''}`
+                            : pendingBotConfig.conditionConfig.conditionType || 'Simple'}
                         </span>
                       </div>
                     )}
