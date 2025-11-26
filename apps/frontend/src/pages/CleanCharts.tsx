@@ -456,11 +456,15 @@ const CleanCharts: React.FC = () => {
           params.append('startTime', startTime.toString());
         }
         
+        // Fetch from Binance Public API
         const response = await fetch(
           `https://api.binance.com/api/v3/klines?${params.toString()}`
         );
         
-        if (!response.ok) break;
+        if (!response.ok) {
+          logger.error(`Binance API error: ${response.status} ${response.statusText}`);
+          break;
+        }
         
         const data = await response.json();
         if (data.length === 0) break;
@@ -554,11 +558,16 @@ const CleanCharts: React.FC = () => {
           priceFormat: priceFormat
         });
         
-        // Update right price scale format
+        // Update right price scale format and ensure time scale is visible
         chartRef.current.applyOptions({
           rightPriceScale: {
             borderColor: '#e5e7eb',
             ...priceFormat
+          },
+          timeScale: {
+            timeVisible: true,
+            secondsVisible: false,
+            borderColor: '#e5e7eb',
           }
         });
         
@@ -566,6 +575,16 @@ const CleanCharts: React.FC = () => {
         seriesRef.current.setData(formattedData);
       } else if (seriesRef.current) {
         seriesRef.current.setData(formattedData);
+        // Ensure time scale is visible even if chart options weren't updated
+        if (chartRef.current) {
+          chartRef.current.applyOptions({
+            timeScale: {
+              timeVisible: true,
+              secondsVisible: false,
+              borderColor: '#e5e7eb',
+            }
+          });
+        }
       }
     } catch (err) {
       logger.error('Failed to load historical data:', err);
@@ -1267,6 +1286,8 @@ const CleanCharts: React.FC = () => {
                     if (!e.target.checked) {
                       setStartDate('');
                       setEndDate('');
+                      // Reload recent data when disabling date range
+                      setTimeout(() => loadHistoricalData(), 100);
                     }
                   }}
                   className="rounded"
@@ -1299,6 +1320,9 @@ const CleanCharts: React.FC = () => {
                   >
                     {isLoadingHistorical ? 'Loading...' : 'Load'}
                   </Button>
+                  <span className="text-xs text-gray-500 ml-2" title="Data source: Binance Public API">
+                    📊 Binance API
+                  </span>
                 </>
               )}
             </div>
