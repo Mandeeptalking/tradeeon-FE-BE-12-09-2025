@@ -286,23 +286,29 @@ async def start_dca_bot_paper(
         initial_balance = start_config.get("initial_balance", 10000.0)
         interval_seconds = start_config.get("interval_seconds", 60)
         
+        # Create bot run record FIRST (before starting bot so we can pass run_id)
+        run_id = db_service.create_bot_run(bot_id=bot_id, user_id=user.user_id, status="running")
+        
+        # Start bot with run_id
         started = await bot_execution_service.start_bot(
             bot_id=bot_id,
             bot_config=bot_config,
             mode="paper",
             initial_balance=initial_balance,
-            interval_seconds=interval_seconds
+            interval_seconds=interval_seconds,
+            run_id=run_id  # Pass run_id to executor
         )
         
         if not started:
+            # If bot failed to start, update run status
+            if run_id and db_service:
+                db_service.update_bot_run(run_id, status="error")
             raise TradeeonError("Failed to start bot", "INTERNAL_SERVER_ERROR", status_code=500)
         
         # Update bot status to running
         db_service.update_bot_status(bot_id, "running")
-        # Create bot run record
-        run_id = db_service.create_bot_run(bot_id=bot_id, user_id=user.user_id, status="running")
         
-        logger.info(f"✅ DCA bot {bot_id} started in paper trading mode")
+        logger.info(f"✅ DCA bot {bot_id} started in paper trading mode with run_id {run_id}")
         
         return {
             "success": True,

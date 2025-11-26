@@ -224,6 +224,25 @@ class PaperTradingEngine:
             
             logger.info(f"Paper trade BUY: {pair} {quantity} @ {price} = {cost}")
             
+            # Log buy event
+            if self.bot_id and self.user_id and db_service:
+                db_service.log_event(
+                    bot_id=self.bot_id,
+                    run_id=self.run_id,
+                    user_id=self.user_id,
+                    event_type="order_executed",
+                    event_category="execution",
+                    message=f"Buy order executed for {pair}: {quantity} @ {price} = {cost}",
+                    symbol=pair,
+                    details={
+                        "side": "buy",
+                        "quantity": float(quantity),
+                        "price": float(price),
+                        "cost": float(cost),
+                        "order_id": order_id
+                    }
+                )
+            
             return {
                 "success": True,
                 "order_id": order_id,
@@ -353,6 +372,27 @@ class PaperTradingEngine:
                 )
             
             logger.info(f"Paper trade SELL: {pair} {quantity} @ {price} = {proceeds} (P&L: {pnl})")
+            
+            # Log sell event
+            if self.bot_id and self.user_id and db_service:
+                db_service.log_event(
+                    bot_id=self.bot_id,
+                    run_id=self.run_id,
+                    user_id=self.user_id,
+                    event_type="order_executed",
+                    event_category="execution",
+                    message=f"Sell order executed for {pair}: {quantity} @ {price} = {proceeds} (P&L: {pnl:.2f})",
+                    symbol=pair,
+                    details={
+                        "side": "sell",
+                        "quantity": float(quantity),
+                        "price": float(price),
+                        "proceeds": float(proceeds),
+                        "pnl": float(pnl),
+                        "reason": reason,
+                        "order_id": order_id
+                    }
+                )
             
             return {
                 "success": True,

@@ -48,7 +48,8 @@ class BotExecutionService:
         bot_config: Dict[str, Any],
         mode: str = "paper",
         initial_balance: float = 10000.0,
-        interval_seconds: int = 60
+        interval_seconds: int = 60,
+        run_id: Optional[str] = None
     ) -> bool:
         """
         Start a bot in paper or live mode.
@@ -89,9 +90,14 @@ class BotExecutionService:
                 initial_balance=initial_balance
             )
             
-            # Set bot_id and user_id if available
+            # Set bot_id, user_id, and run_id if available
             executor.bot_id = bot_id
             executor.user_id = bot_config.get("user_id")
+            executor.run_id = run_id  # Set run_id on executor
+            
+            # Update paper trading engine with run_id
+            if executor.trading_engine:
+                executor.trading_engine.run_id = run_id
             
             # Initialize executor
             await executor.initialize()
@@ -134,10 +140,36 @@ class BotExecutionService:
         logger.info(f"Starting execution loop for bot {bot_id} (interval: {interval_seconds}s)")
         
         try:
+            iteration_count = 0
             while bot_id in self.running_bots:
                 try:
+                    iteration_count += 1
+                    # Log iteration start
+                    if db_service and executor.bot_id and executor.user_id:
+                        db_service.log_event(
+                            bot_id=executor.bot_id,
+                            run_id=getattr(executor, 'run_id', None),
+                            user_id=executor.user_id,
+                            event_type="iteration_start",
+                            event_category="system",
+                            message=f"Bot execution iteration #{iteration_count}",
+                            details={"iteration": iteration_count, "interval_seconds": interval_seconds}
+                        )
+                    
                     # Execute one iteration
                     await executor.execute_once()
+                    
+                    # Log iteration complete
+                    if db_service and executor.bot_id and executor.user_id:
+                        db_service.log_event(
+                            bot_id=executor.bot_id,
+                            run_id=getattr(executor, 'run_id', None),
+                            user_id=executor.user_id,
+                            event_type="iteration_complete",
+                            event_category="system",
+                            message=f"Bot execution iteration #{iteration_count} completed",
+                            details={"iteration": iteration_count}
+                        )
                     
                     # Wait for next iteration
                     await asyncio.sleep(interval_seconds)

@@ -465,6 +465,59 @@ class BotDatabaseService:
         except Exception as e:
             logger.error(f"❌ Failed to delete bot {bot_id} from database: {e}", exc_info=True)
             return False
+    
+    def log_event(
+        self,
+        bot_id: str,
+        run_id: Optional[str],
+        user_id: str,
+        event_type: str,
+        event_category: str,
+        message: str,
+        symbol: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None
+    ) -> bool:
+        """
+        Log a bot event to the database.
+        
+        Args:
+            bot_id: Bot identifier
+            run_id: Optional run identifier
+            user_id: User identifier
+            event_type: Type of event (e.g., 'entry_condition', 'dca_triggered', 'order_executed')
+            event_category: Category ('condition', 'execution', 'risk', 'system', 'position')
+            message: Human-readable message
+            symbol: Optional trading symbol
+            details: Optional JSON details about the event
+            
+        Returns:
+            True if logged successfully, False otherwise
+        """
+        if not self.enabled:
+            logger.debug(f"Database disabled, skipping event log: {event_type} - {message}")
+            return False
+        
+        try:
+            event_data = {
+                "bot_id": bot_id,
+                "user_id": user_id,
+                "event_type": event_type,
+                "event_category": event_category,
+                "message": message,
+                "details": details or {}
+            }
+            
+            if run_id:
+                event_data["run_id"] = run_id
+            if symbol:
+                event_data["symbol"] = symbol
+            
+            self.supabase.table("bot_events").insert(event_data).execute()
+            logger.debug(f"Logged event: {event_type} - {message}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to log event: {e}")
+            return False
 
 
 # Global instance

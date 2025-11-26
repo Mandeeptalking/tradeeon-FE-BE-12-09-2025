@@ -24,6 +24,7 @@ if alerts_path not in sys.path:
 
 from market_data import MarketDataService
 from paper_trading import PaperTradingEngine
+from db_service import db_service
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,7 @@ class DCABotExecutor:
         self.config = bot_config
         self.bot_id = None
         self.user_id = None
+        self.run_id = None
         self.status = "inactive"
         self.paper_trading = paper_trading
         
@@ -53,7 +55,7 @@ class DCABotExecutor:
             self.trading_engine = PaperTradingEngine(
                 initial_balance=initial_balance,
                 bot_id=self.bot_id,
-                run_id=getattr(self, 'run_id', None),
+                run_id=self.run_id,
                 user_id=self.user_id
             )
         else:
@@ -67,14 +69,45 @@ class DCABotExecutor:
         
     async def initialize(self):
         """Initialize bot executor."""
-        logger.info(f"Initializing DCA bot: {self.config.get('botName')} (Paper Trading: {self.paper_trading})")
+        bot_name = self.config.get('botName', 'Unknown')
+        logger.info(f"Initializing DCA bot: {bot_name} (Paper Trading: {self.paper_trading})")
+        
+        # Log initialization event
+        if self.bot_id and self.user_id and db_service:
+            db_service.log_event(
+                bot_id=self.bot_id,
+                run_id=getattr(self, 'run_id', None),
+                user_id=self.user_id,
+                event_type="bot_initialized",
+                event_category="system",
+                message=f"DCA bot '{bot_name}' initialized in {'paper trading' if self.paper_trading else 'live trading'} mode",
+                details={
+                    "bot_name": bot_name,
+                    "paper_trading": self.paper_trading,
+                    "pairs": self.config.get("selectedPairs", []),
+                    "interval": self.config.get("interval", "1h")
+                }
+            )
         
         # Initialize market data service
         await self.market_data.initialize()
         
         # Initialize trading engine if paper trading
         if self.paper_trading:
-            logger.info(f"Paper trading initialized with balance: {self.trading_engine.get_balance()}")
+            balance = self.trading_engine.get_balance()
+            logger.info(f"Paper trading initialized with balance: {balance}")
+            
+            # Log balance initialization
+            if self.bot_id and self.user_id and db_service:
+                db_service.log_event(
+                    bot_id=self.bot_id,
+                    run_id=getattr(self, 'run_id', None),
+                    user_id=self.user_id,
+                    event_type="balance_initialized",
+                    event_category="system",
+                    message=f"Paper trading balance initialized: ${balance:.2f}",
+                    details={"initial_balance": balance}
+                )
         
         self.status = "running"
         
@@ -82,6 +115,17 @@ class DCABotExecutor:
         """Execute one iteration of the bot."""
         if self.paused:
             logger.info("Bot is paused by market regime detection")
+            # Log pause event
+            if self.bot_id and self.user_id and db_service:
+                db_service.log_event(
+                    bot_id=self.bot_id,
+                    run_id=getattr(self, 'run_id', None),
+                    user_id=self.user_id,
+                    event_type="bot_paused",
+                    event_category="system",
+                    message="Bot execution paused by market regime detection",
+                    details={"reason": "market_regime"}
+                )
             return
             
         # Process each pair
@@ -127,18 +171,58 @@ class DCABotExecutor:
                 if regime_result.get("should_pause"):
                     if allow_override and entry_would_trigger:
                         logger.info(f"⚠️ Market regime wants to pause, but entry condition overrides for {pair}")
+                        # Log override
+                        if self.bot_id and self.user_id and db_service:
+                            db_service.log_event(
+                                bot_id=self.bot_id,
+                                run_id=getattr(self, 'run_id', None),
+                                user_id=self.user_id,
+                                event_type="market_regime_override",
+                                event_category="risk",
+                                message=f"Market regime pause overridden by entry condition for {pair}",
+                                symbol=pair,
+                                details={"reason": regime_result.get('reason'), "override_reason": "entry_condition_triggered"}
+                            )
                         # Don't pause - entry condition takes precedence
                     else:
                         self.paused = True
-                        logger.info(f"⏸️ Market regime pause for {pair}: {regime_result.get('reason')}")
+                        reason = regime_result.get('reason', 'Unknown')
+                        logger.info(f"⏸️ Market regime pause for {pair}: {reason}")
+                        # Log pause
+                        if self.bot_id and self.user_id and db_service:
+                            db_service.log_event(
+                                bot_id=self.bot_id,
+                                run_id=getattr(self, 'run_id', None),
+                                user_id=self.user_id,
+                                event_type="market_regime_pause",
+                                event_category="risk",
+                                message=f"Market regime pause for {pair}: {reason}",
+                                symbol=pair,
+                                details={"reason": reason}
+                            )
                         continue
                 elif regime_result.get("should_resume"):
                     self.paused = False
-                    logger.info(f"▶️ Market regime resume for {pair}: {regime_result.get('reason')}")
+                    reason = regime_result.get('reason', 'Unknown')
+                    logger.info(f"▶️ Market regime resume for {pair}: {reason}")
+                    # Log resume
+                    if self.bot_id and self.user_id and db_service:
+                        db_service.log_event(
+                            bot_id=self.bot_id,
+                            run_id=getattr(self, 'run_id', None),
+                            user_id=self.user_id,
+                            event_type="market_regime_resume",
+                            event_category="risk",
+                            message=f"Market regime resume for {pair}: {reason}",
+                            symbol=pair,
+                            details={"reason": reason}
+                        )
             
             # Check emergency brake
-            if await self._check_emergency_brake(pair, current_price, market_data_dict):
+            emergency_brake_triggered = await self._check_emergency_brake(pair, current_price, market_data_dict)
+            if emergency_brake_triggered:
                 logger.warning(f"Emergency brake triggered for {pair} - skipping")
+                # Emergency brake logging is done in _check_emergency_brake method
                 continue
             
             # Check profit targets before new DCA
@@ -158,10 +242,47 @@ class DCABotExecutor:
         
         # Execute DCA order
         if self.paper_trading and self.trading_engine:
+            # Log DCA trigger event
+            if self.bot_id and self.user_id and db_service:
+                db_service.log_event(
+                    bot_id=self.bot_id,
+                    run_id=getattr(self, 'run_id', None),
+                    user_id=self.user_id,
+                    event_type="dca_triggered",
+                    event_category="execution",
+                    message=f"DCA triggered for {pair}: ${scaled_amount:.2f} @ ${current_price:.2f}",
+                    symbol=pair,
+                    details={
+                        "amount": scaled_amount,
+                        "price": current_price,
+                        "base_amount": self.config.get("baseOrderSize", 100),
+                        "scaled": scaled_amount != self.config.get("baseOrderSize", 100)
+                    }
+                )
+            
             result = await self.trading_engine.execute_buy(pair, scaled_amount, current_price)
             if result.get("success"):
                 logger.info(f"✅ Paper DCA executed for {pair}: {result['quantity']:.6f} @ ${current_price:.2f} = ${scaled_amount:.2f}")
                 self.last_dca_time[pair] = datetime.now()
+                
+                # Log successful DCA execution
+                if self.bot_id and self.user_id and db_service:
+                    db_service.log_event(
+                        bot_id=self.bot_id,
+                        run_id=getattr(self, 'run_id', None),
+                        user_id=self.user_id,
+                        event_type="dca_executed",
+                        event_category="execution",
+                        message=f"DCA executed successfully for {pair}: {result['quantity']:.6f} @ ${current_price:.2f}",
+                        symbol=pair,
+                        details={
+                            "order_id": result.get("order_id"),
+                            "quantity": result['quantity'],
+                            "price": current_price,
+                            "cost": scaled_amount,
+                            "timestamp": result.get("timestamp").isoformat() if result.get("timestamp") else None
+                        }
+                    )
                 
                 # Update position state
                 self.position_states[pair] = {
@@ -170,7 +291,21 @@ class DCABotExecutor:
                     "total_entries": len(self.trading_engine.positions.get(pair, {}).get("entries", []))
                 }
             else:
-                logger.error(f"❌ DCA failed for {pair}: {result.get('error')}")
+                error_msg = result.get('error', 'Unknown error')
+                logger.error(f"❌ DCA failed for {pair}: {error_msg}")
+                
+                # Log DCA failure
+                if self.bot_id and self.user_id and db_service:
+                    db_service.log_event(
+                        bot_id=self.bot_id,
+                        run_id=getattr(self, 'run_id', None),
+                        user_id=self.user_id,
+                        event_type="dca_failed",
+                        event_category="execution",
+                        message=f"DCA execution failed for {pair}: {error_msg}",
+                        symbol=pair,
+                        details={"error": error_msg, "amount": scaled_amount, "price": current_price}
+                    )
         else:
             logger.info(f"Would execute DCA for {pair}: ${scaled_amount} @ ${current_price:.2f}")
             # TODO: Real exchange integration
@@ -200,11 +335,55 @@ class DCABotExecutor:
                 
         # Check DCA rules
         dca_rules = self.config.get("dcaRules", {})
-        if not await self._evaluate_dca_rules(pair, dca_rules, current_price):
+        dca_rule_result = await self._evaluate_dca_rules(pair, dca_rules, current_price)
+        if not dca_rule_result:
+            # Log DCA rule failure
+            if self.bot_id and self.user_id and db_service:
+                db_service.log_event(
+                    bot_id=self.bot_id,
+                    run_id=getattr(self, 'run_id', None),
+                    user_id=self.user_id,
+                    event_type="dca_rule_failed",
+                    event_category="condition",
+                    message=f"DCA rule not met for {pair}",
+                    symbol=pair,
+                    details={"rule_type": dca_rules.get("ruleType"), "current_price": current_price}
+                )
             return False
+        else:
+            # Log DCA rule pass
+            if self.bot_id and self.user_id and db_service:
+                db_service.log_event(
+                    bot_id=self.bot_id,
+                    run_id=getattr(self, 'run_id', None),
+                    user_id=self.user_id,
+                    event_type="dca_rule_passed",
+                    event_category="condition",
+                    message=f"DCA rule met for {pair}",
+                    symbol=pair,
+                    details={"rule_type": dca_rules.get("ruleType"), "current_price": current_price}
+                )
             
         # Check cooldown
-        if not await self._check_dca_cooldown(pair, dca_rules):
+        cooldown_result = await self._check_dca_cooldown(pair, dca_rules)
+        if not cooldown_result:
+            # Log cooldown active
+            if self.bot_id and self.user_id and db_service:
+                last_dca = self.last_dca_time.get(pair)
+                db_service.log_event(
+                    bot_id=self.bot_id,
+                    run_id=getattr(self, 'run_id', None),
+                    user_id=self.user_id,
+                    event_type="cooldown_active",
+                    event_category="system",
+                    message=f"DCA cooldown active for {pair}",
+                    symbol=pair,
+                    details={
+                        "last_dca_time": last_dca.isoformat() if last_dca else None,
+                        "cooldown_value": dca_rules.get("dcaCooldownValue", 0),
+                        "cooldown_unit": dca_rules.get("dcaCooldownUnit", "minutes")
+                    }
+                )
             return False
             
         return True
@@ -353,8 +532,32 @@ class DCABotExecutor:
                 
                 if triggered:
                     logger.info(f"✅ Entry conditions met for {pair} (playbook mode, {gate_logic} logic)")
+                    # Log entry condition pass
+                    if self.bot_id and self.user_id and db_service:
+                        db_service.log_event(
+                            bot_id=self.bot_id,
+                            run_id=getattr(self, 'run_id', None),
+                            user_id=self.user_id,
+                            event_type="entry_condition_passed",
+                            event_category="condition",
+                            message=f"Entry conditions met for {pair} (playbook mode, {gate_logic} logic)",
+                            symbol=pair,
+                            details={"mode": "playbook", "gate_logic": gate_logic, "conditions_count": len(playbook_conditions)}
+                        )
                 else:
                     logger.debug(f"❌ Entry conditions not met for {pair} (playbook mode)")
+                    # Log entry condition fail
+                    if self.bot_id and self.user_id and db_service:
+                        db_service.log_event(
+                            bot_id=self.bot_id,
+                            run_id=getattr(self, 'run_id', None),
+                            user_id=self.user_id,
+                            event_type="entry_condition_failed",
+                            event_category="condition",
+                            message=f"Entry conditions not met for {pair} (playbook mode)",
+                            symbol=pair,
+                            details={"mode": "playbook", "gate_logic": gate_logic}
+                        )
                 
                 return triggered
             
@@ -408,8 +611,32 @@ class DCABotExecutor:
                 
                 if result:
                     logger.info(f"✅ Entry condition met for {pair} (simple mode)")
+                    # Log entry condition pass
+                    if self.bot_id and self.user_id and db_service:
+                        db_service.log_event(
+                            bot_id=self.bot_id,
+                            run_id=getattr(self, 'run_id', None),
+                            user_id=self.user_id,
+                            event_type="entry_condition_passed",
+                            event_category="condition",
+                            message=f"Entry condition met for {pair} (simple mode)",
+                            symbol=pair,
+                            details={"mode": "simple", "condition": condition}
+                        )
                 else:
                     logger.debug(f"❌ Entry condition not met for {pair} (simple mode)")
+                    # Log entry condition fail
+                    if self.bot_id and self.user_id and db_service:
+                        db_service.log_event(
+                            bot_id=self.bot_id,
+                            run_id=getattr(self, 'run_id', None),
+                            user_id=self.user_id,
+                            event_type="entry_condition_failed",
+                            event_category="condition",
+                            message=f"Entry condition not met for {pair} (simple mode)",
+                            symbol=pair,
+                            details={"mode": "simple"}
+                        )
                 
                 return result
                 
@@ -716,7 +943,21 @@ class DCABotExecutor:
         
         if result["should_pause"]:
             self.paused = True
-            logger.warning(f"🚨 Emergency brake triggered for {pair}: {result['reason']}")
+            reason = result.get('reason', 'Unknown')
+            logger.warning(f"🚨 Emergency brake triggered for {pair}: {reason}")
+            
+            # Log emergency brake trigger
+            if self.bot_id and self.user_id and db_service:
+                db_service.log_event(
+                    bot_id=self.bot_id,
+                    run_id=getattr(self, 'run_id', None),
+                    user_id=self.user_id,
+                    event_type="emergency_brake_triggered",
+                    event_category="risk",
+                    message=f"Emergency brake triggered for {pair}: {reason}",
+                    symbol=pair,
+                    details={"reason": reason, "current_price": current_price}
+                )
             
         return result["should_pause"]
         
@@ -744,20 +985,43 @@ class DCABotExecutor:
         
         # Execute sell actions
         for action in actions:
-            if action["action"] == "sell_partial":
+            action_type = action["action"]
+            reason = action.get("reason", "")
+            
+            # Log profit target hit
+            if self.bot_id and self.user_id and db_service:
+                db_service.log_event(
+                    bot_id=self.bot_id,
+                    run_id=getattr(self, 'run_id', None),
+                    user_id=self.user_id,
+                    event_type="profit_target_hit",
+                    event_category="execution",
+                    message=f"Profit target hit for {pair}: {action_type} - {reason}",
+                    symbol=pair,
+                    details={
+                        "action": action_type,
+                        "reason": reason,
+                        "current_price": current_price,
+                        "entry_price": entry_price,
+                        "pnl_percent": position_pnl.get("pnl_percent", 0),
+                        "pnl_amount": position_pnl.get("pnl_amount", 0)
+                    }
+                )
+            
+            if action_type == "sell_partial":
                 await self.trading_engine.execute_sell(
                     pair, action["amount"], current_price,
-                    reason=action["reason"]
+                    reason=reason
                 )
-            elif action["action"] == "sell_all":
+            elif action_type == "sell_all":
                 await self.trading_engine.execute_sell(
                     pair, position_pnl["total_qty"], current_price,
-                    reason=action["reason"]
+                    reason=reason
                 )
-            elif action["action"] == "close_and_restart":
+            elif action_type == "close_and_restart":
                 await self.trading_engine.execute_sell(
                     pair, position_pnl["total_qty"], current_price,
-                    reason=action["reason"]
+                    reason=reason
                 )
                 # TODO: Restart bot with original capital
         
