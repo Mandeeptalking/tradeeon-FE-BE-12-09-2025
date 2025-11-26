@@ -598,36 +598,62 @@ const CleanCharts: React.FC = () => {
         // Set the data FIRST
         seriesRef.current.setData(formattedData);
         
-        // THEN ensure time scale is visible after data is set
+        // THEN configure and update time scale after data is set
         // Use requestAnimationFrame to ensure chart has rendered
         requestAnimationFrame(() => {
-          if (chartRef.current) {
+          if (chartRef.current && formattedData.length > 0) {
+            // Configure time scale based on interval
+            const timeScaleOptions: any = {
+              timeVisible: true,
+              borderColor: '#e5e7eb',
+            };
+            
+            // Show seconds only for very short intervals
+            if (interval === '1m' || interval === '3m') {
+              timeScaleOptions.secondsVisible = true;
+            } else {
+              timeScaleOptions.secondsVisible = false;
+            }
+            
+            // Apply time scale configuration
             chartRef.current.applyOptions({
-              timeScale: {
-                timeVisible: true,
-                secondsVisible: false,
-                borderColor: '#e5e7eb',
-              }
+              timeScale: timeScaleOptions
             });
-            // Force chart to update
+            
+            // Fit content to show all data and update time axis
             chartRef.current.timeScale().fitContent();
+            
+            logger.debug(`Time scale configured for interval ${interval} with ${formattedData.length} candles`);
           }
         });
       } else if (seriesRef.current) {
         seriesRef.current.setData(formattedData);
-        // Ensure time scale is visible after data is set
+        // Configure and update time scale after data is set
         // Use requestAnimationFrame to ensure chart has rendered
         requestAnimationFrame(() => {
-          if (chartRef.current) {
+          if (chartRef.current && formattedData.length > 0) {
+            // Configure time scale based on interval
+            const timeScaleOptions: any = {
+              timeVisible: true,
+              borderColor: '#e5e7eb',
+            };
+            
+            // Show seconds only for very short intervals
+            if (interval === '1m' || interval === '3m') {
+              timeScaleOptions.secondsVisible = true;
+            } else {
+              timeScaleOptions.secondsVisible = false;
+            }
+            
+            // Apply time scale configuration
             chartRef.current.applyOptions({
-              timeScale: {
-                timeVisible: true,
-                secondsVisible: false,
-                borderColor: '#e5e7eb',
-              }
+              timeScale: timeScaleOptions
             });
-            // Force chart to update
+            
+            // Fit content to show all data and update time axis
             chartRef.current.timeScale().fitContent();
+            
+            logger.debug(`Time scale configured for interval ${interval} with ${formattedData.length} candles`);
           }
         });
       }
