@@ -562,33 +562,49 @@ const CleanCharts: React.FC = () => {
           priceFormat: priceFormat
         });
         
-        // Update right price scale format and ensure time scale is visible
+        // Update right price scale format
         chartRef.current.applyOptions({
           rightPriceScale: {
             borderColor: '#e5e7eb',
             ...priceFormat
-          },
-          timeScale: {
-            timeVisible: true,
-            secondsVisible: false,
-            borderColor: '#e5e7eb',
           }
         });
         
-        // Set the data
+        // Set the data FIRST
         seriesRef.current.setData(formattedData);
+        
+        // THEN ensure time scale is visible after data is set
+        // Use requestAnimationFrame to ensure chart has rendered
+        requestAnimationFrame(() => {
+          if (chartRef.current) {
+            chartRef.current.applyOptions({
+              timeScale: {
+                timeVisible: true,
+                secondsVisible: false,
+                borderColor: '#e5e7eb',
+              }
+            });
+            // Force chart to update
+            chartRef.current.timeScale().fitContent();
+          }
+        });
       } else if (seriesRef.current) {
         seriesRef.current.setData(formattedData);
-        // Ensure time scale is visible even if chart options weren't updated
-        if (chartRef.current) {
-          chartRef.current.applyOptions({
-            timeScale: {
-              timeVisible: true,
-              secondsVisible: false,
-              borderColor: '#e5e7eb',
-            }
-          });
-        }
+        // Ensure time scale is visible after data is set
+        // Use requestAnimationFrame to ensure chart has rendered
+        requestAnimationFrame(() => {
+          if (chartRef.current) {
+            chartRef.current.applyOptions({
+              timeScale: {
+                timeVisible: true,
+                secondsVisible: false,
+                borderColor: '#e5e7eb',
+              }
+            });
+            // Force chart to update
+            chartRef.current.timeScale().fitContent();
+          }
+        });
       }
     } catch (err) {
       logger.error('Failed to load historical data:', err);
