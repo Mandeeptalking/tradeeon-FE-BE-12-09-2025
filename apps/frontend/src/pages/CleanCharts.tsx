@@ -407,6 +407,20 @@ const CleanCharts: React.FC = () => {
     };
   }, []);
 
+  // Ensure time scale is always visible
+  useEffect(() => {
+    if (chartRef.current) {
+      // Always ensure time scale is visible, especially when state changes
+      chartRef.current.applyOptions({
+        timeScale: {
+          timeVisible: true,
+          secondsVisible: false,
+          borderColor: '#e5e7eb',
+        }
+      });
+    }
+  }, [useDateRange, startDate, endDate]);
+
   // Handle symbol/interval changes
   useEffect(() => {
     if (wsRef.current) {
@@ -417,6 +431,17 @@ const CleanCharts: React.FC = () => {
     // Only auto-load if not using date range
     if (!useDateRange) {
       loadHistoricalData();
+    } else {
+      // When date range is enabled, ensure time scale is visible
+      if (chartRef.current) {
+        chartRef.current.applyOptions({
+          timeScale: {
+            timeVisible: true,
+            secondsVisible: false,
+            borderColor: '#e5e7eb',
+          }
+        });
+      }
     }
   }, [symbol, interval, useDateRange]);
 
@@ -1302,13 +1327,26 @@ const CleanCharts: React.FC = () => {
                   type="checkbox"
                   checked={useDateRange}
                   onChange={(e) => {
-                    setUseDateRange(e.target.checked);
-                    if (!e.target.checked) {
+                    const checked = e.target.checked;
+                    setUseDateRange(checked);
+                    if (!checked) {
                       setStartDate('');
                       setEndDate('');
                       // Reload recent data when disabling date range
                       setTimeout(() => loadHistoricalData(), 100);
                     }
+                    // Immediately ensure time scale is visible
+                    requestAnimationFrame(() => {
+                      if (chartRef.current) {
+                        chartRef.current.applyOptions({
+                          timeScale: {
+                            timeVisible: true,
+                            secondsVisible: false,
+                            borderColor: '#e5e7eb',
+                          }
+                        });
+                      }
+                    });
                   }}
                   className="rounded"
                 />
