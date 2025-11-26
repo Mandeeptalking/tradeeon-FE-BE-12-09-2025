@@ -196,6 +196,53 @@ const CleanCharts: React.FC = () => {
   
   const indicatorEngineRef = useRef<IndicatorEngine | null>(null);
 
+  // Calculate appropriate price format based on price range
+  const calculatePriceFormat = (prices: number[]): { type: 'price'; precision: number; minMove: number } => {
+    if (prices.length === 0) {
+      return { type: 'price', precision: 2, minMove: 0.01 };
+    }
+
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const avgPrice = (minPrice + maxPrice) / 2;
+
+    // Determine precision and minMove based on price magnitude
+    if (avgPrice >= 1000) {
+      // Large prices: 2 decimal places
+      return { type: 'price', precision: 2, minMove: 0.01 };
+    } else if (avgPrice >= 1) {
+      // Medium prices: 4 decimal places
+      return { type: 'price', precision: 4, minMove: 0.0001 };
+    } else if (avgPrice >= 0.01) {
+      // Small prices: 6 decimal places
+      return { type: 'price', precision: 6, minMove: 0.000001 };
+    } else if (avgPrice >= 0.0001) {
+      // Very small prices: 8 decimal places
+      return { type: 'price', precision: 8, minMove: 0.00000001 };
+    } else {
+      // Extremely small prices (like 0.00005)
+      // Calculate precision based on the first significant digit
+      const absPrice = Math.abs(avgPrice);
+      if (absPrice === 0) {
+        return { type: 'price', precision: 8, minMove: 0.00000001 };
+      }
+      
+      // Find the order of magnitude
+      const orderOfMagnitude = Math.floor(Math.log10(absPrice));
+      // Add 2 more decimal places for precision
+      const precision = Math.abs(orderOfMagnitude) + 2;
+      // minMove should be 10^-precision
+      const minMove = Math.pow(10, -precision);
+      
+      // Cap precision at 12 to avoid issues
+      return { 
+        type: 'price', 
+        precision: Math.min(precision, 12), 
+        minMove: Math.max(minMove, Math.pow(10, -12))
+      };
+    }
+  };
+
   // Initialize chart
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -218,6 +265,7 @@ const CleanCharts: React.FC = () => {
       },
       rightPriceScale: {
         borderColor: '#e5e7eb',
+        // Will be updated dynamically based on price range
       },
     });
 
@@ -229,6 +277,7 @@ const CleanCharts: React.FC = () => {
       borderVisible: false,
       wickUpColor: '#26a69a',
       wickDownColor: '#ef5350',
+      // Price format will be set after data is loaded
     });
 
     chartRef.current = chart;
@@ -389,7 +438,37 @@ const CleanCharts: React.FC = () => {
       }));
 
       setChartData(formattedData);
-      seriesRef.current?.setData(formattedData);
+      
+      // Calculate and apply appropriate price format based on price range
+      if (formattedData.length > 0 && seriesRef.current && chartRef.current) {
+        // Extract all prices (open, high, low, close) to determine range
+        const allPrices = formattedData.flatMap(candle => [
+          candle.open,
+          candle.high,
+          candle.low,
+          candle.close
+        ]);
+        
+        const priceFormat = calculatePriceFormat(allPrices);
+        
+        // Update candlestick series price format
+        seriesRef.current.applyOptions({
+          priceFormat: priceFormat
+        });
+        
+        // Update right price scale format
+        chartRef.current.applyOptions({
+          rightPriceScale: {
+            borderColor: '#e5e7eb',
+            ...priceFormat
+          }
+        });
+        
+        // Set the data
+        seriesRef.current.setData(formattedData);
+      } else if (seriesRef.current) {
+        seriesRef.current.setData(formattedData);
+      }
     } catch (err) {
       logger.error('Failed to load historical data:', err);
     }
