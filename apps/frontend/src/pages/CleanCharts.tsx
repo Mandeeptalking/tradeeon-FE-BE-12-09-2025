@@ -253,7 +253,7 @@ const CleanCharts: React.FC = () => {
 
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
-      height: chartContainerRef.current.clientHeight,
+      height: Math.max(400, chartContainerRef.current.clientHeight),
       layout: {
         background: { color: 'white' },
         textColor: '#131722',
@@ -304,7 +304,7 @@ const CleanCharts: React.FC = () => {
       if (chartContainerRef.current && chartRef.current) {
         chartRef.current.applyOptions({
           width: chartContainerRef.current.clientWidth,
-          height: chartContainerRef.current.clientHeight
+          height: Math.max(400, chartContainerRef.current.clientHeight)
         });
       }
     };
