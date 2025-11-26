@@ -328,6 +328,108 @@ async def start_dca_bot_paper(
         raise TradeeonError(f"Failed to start bot: {str(e)}", "INTERNAL_SERVER_ERROR", status_code=500)
 
 
+@router.get("/dca-bots/{bot_id}/status")
+async def get_bot_status(
+    bot_id: str = Path(..., description="Bot ID"),
+    user: AuthedUser = Depends(get_current_user)
+):
+    """Get comprehensive status information for a bot."""
+    try:
+        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
+        if bots_path not in sys.path:
+            sys.path.insert(0, bots_path)
+        
+        from db_service import db_service
+        from bot_execution_service import bot_execution_service
+        
+        # Verify bot belongs to user
+        bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
+        if not bot_data:
+            raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
+        
+        # Get database status
+        db_status = bot_data.get("status", "inactive")
+        created_at = bot_data.get("created_at")
+        updated_at = bot_data.get("updated_at")
+        
+        # Get in-memory status
+        is_running_in_memory = bot_execution_service.is_running(bot_id)
+        memory_status = None
+        if is_running_in_memory:
+            memory_status = await bot_execution_service.get_bot_status_info(bot_id)
+        
+        # Get latest run info
+        latest_run = None
+        if db_service.enabled and db_service.supabase:
+            try:
+                runs_result = db_service.supabase.table("bot_runs").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id).order("started_at", desc=True).limit(1).execute()
+                if runs_result.data and len(runs_result.data) > 0:
+                    latest_run = runs_result.data[0]
+            except Exception as e:
+                logger.warning(f"Failed to get latest run: {e}")
+        
+        # Get recent activity (last 5 events)
+        recent_events = []
+        if db_service.enabled and db_service.supabase:
+            try:
+                events_result = db_service.supabase.table("bot_events").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id).order("created_at", desc=True).limit(5).execute()
+                if events_result.data:
+                    recent_events = events_result.data
+            except Exception as e:
+                logger.warning(f"Failed to get recent events: {e}")
+        
+        # Determine overall status
+        overall_status = "unknown"
+        status_details = []
+        
+        if is_running_in_memory and memory_status:
+            if memory_status.get("paused"):
+                overall_status = "paused"
+                status_details.append("Bot is paused")
+            elif memory_status.get("is_healthy", True):
+                overall_status = "running"
+                status_details.append("Bot is actively running")
+            else:
+                overall_status = "running_unhealthy"
+                status_details.append("Bot is running but may be stuck")
+        elif db_status == "running":
+            overall_status = "database_running_not_in_memory"
+            status_details.append("Database shows running but bot not in memory (may have crashed)")
+        else:
+            overall_status = db_status
+            status_details.append(f"Bot status: {db_status}")
+        
+        # Build response
+        response = {
+            "success": True,
+            "bot_id": bot_id,
+            "overall_status": overall_status,
+            "status_details": status_details,
+            "database": {
+                "status": db_status,
+                "created_at": created_at,
+                "updated_at": updated_at
+            },
+            "memory": {
+                "running_in_memory": is_running_in_memory,
+                "status": memory_status
+            },
+            "latest_run": latest_run,
+            "recent_activity": {
+                "events_count": len(recent_events),
+                "events": recent_events
+            }
+        }
+        
+        return response
+        
+    except NotFoundError:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting bot status: {e}", exc_info=True)
+        raise TradeeonError(f"Failed to get bot status: {str(e)}", "INTERNAL_SERVER_ERROR", status_code=500)
+
+
 @router.get("/dca-bots/{bot_id}/events")
 async def get_bot_events(
     bot_id: str = Path(..., description="Bot ID"),
