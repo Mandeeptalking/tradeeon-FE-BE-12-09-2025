@@ -320,6 +320,64 @@ class BotExecutionService:
     def is_running(self, bot_id: str) -> bool:
         """Check if a bot is currently running."""
         return bot_id in self.running_bots
+    
+    async def get_bot_status_info(self, bot_id: str) -> Optional[Dict[str, Any]]:
+        """Get detailed status information for a bot."""
+        if bot_id not in self.running_bots:
+            return None
+        
+        executor = self.running_bots.get(bot_id)
+        if not executor:
+            return None
+        
+        interval_seconds = self.execution_intervals.get(bot_id, 60)
+        
+        # Get execution times
+        last_execution = getattr(executor, 'last_execution_time', None)
+        next_execution = getattr(executor, 'next_execution_time', None)
+        iteration_count = getattr(executor, 'iteration_count', 0)
+        
+        # Get executor statistics
+        stats = {}
+        try:
+            if hasattr(executor, 'get_statistics'):
+                if asyncio.iscoroutinefunction(executor.get_statistics):
+                    stats = await executor.get_statistics()
+                else:
+                    stats = executor.get_statistics()
+        except Exception as e:
+            logger.error(f"Error getting bot statistics: {e}")
+            stats = {}
+        
+        # Calculate time until next execution
+        time_until_next = None
+        if next_execution:
+            time_until_next = max(0, (next_execution - datetime.now()).total_seconds())
+        
+        # Check if bot is healthy (has executed recently)
+        is_healthy = True
+        if last_execution:
+            time_since_last = (datetime.now() - last_execution).total_seconds()
+            # Consider unhealthy if no execution in 3x the interval
+            if time_since_last > (interval_seconds * 3):
+                is_healthy = False
+        
+        return {
+            "running_in_memory": True,
+            "executor_status": executor.status if hasattr(executor, 'status') else "unknown",
+            "paused": executor.paused if hasattr(executor, 'paused') else False,
+            "interval_seconds": interval_seconds,
+            "iteration_count": iteration_count,
+            "last_execution_time": last_execution.isoformat() if last_execution else None,
+            "next_execution_time": next_execution.isoformat() if next_execution else None,
+            "time_until_next_seconds": time_until_next,
+            "is_healthy": is_healthy,
+            "statistics": stats,
+            "last_dca_times": {
+                pair: dt.isoformat() if dt else None
+                for pair, dt in (executor.last_dca_time.items() if hasattr(executor, 'last_dca_time') else {})
+            }
+        }
 
 
 # Global instance
