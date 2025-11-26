@@ -4,8 +4,8 @@ Bot Execution Service - Manages running bot executors.
 
 import asyncio
 import logging
-from typing import Dict, Optional, Any
-from datetime import datetime
+from typing import Dict, Optional, Any, List
+from datetime import datetime, timedelta
 import sys
 import os
 
@@ -141,9 +141,14 @@ class BotExecutionService:
         
         try:
             iteration_count = 0
+            last_execution_time = None
+            next_execution_time = None
+            
             while bot_id in self.running_bots:
                 try:
                     iteration_count += 1
+                    last_execution_time = datetime.now()
+                    
                     # Log iteration start
                     if db_service and executor.bot_id and executor.user_id:
                         db_service.log_event(
@@ -170,6 +175,14 @@ class BotExecutionService:
                             message=f"Bot execution iteration #{iteration_count} completed",
                             details={"iteration": iteration_count}
                         )
+                    
+                    # Calculate next execution time
+                    next_execution_time = last_execution_time + timedelta(seconds=interval_seconds)
+                    
+                    # Store execution times on executor for status queries
+                    executor.last_execution_time = last_execution_time
+                    executor.next_execution_time = next_execution_time
+                    executor.iteration_count = iteration_count
                     
                     # Wait for next iteration
                     await asyncio.sleep(interval_seconds)
