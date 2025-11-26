@@ -328,6 +328,226 @@ async def start_dca_bot_paper(
         raise TradeeonError(f"Failed to start bot: {str(e)}", "INTERNAL_SERVER_ERROR", status_code=500)
 
 
+@router.get("/dca-bots/{bot_id}/events")
+async def get_bot_events(
+    bot_id: str = Path(..., description="Bot ID"),
+    run_id: Optional[str] = Query(None, description="Filter by run ID"),
+    event_type: Optional[str] = Query(None, description="Filter by event type"),
+    limit: int = Query(100, ge=1, le=1000, description="Number of events to retrieve"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    user: AuthedUser = Depends(get_current_user)
+):
+    """Get bot events/logs."""
+    try:
+        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
+        if bots_path not in sys.path:
+            sys.path.insert(0, bots_path)
+        
+        from db_service import db_service
+        
+        # Verify bot belongs to user
+        bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
+        if not bot_data:
+            raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
+        
+        # Query events from database
+        if not db_service.enabled or not db_service.supabase:
+            return {
+                "success": True,
+                "events": [],
+                "total": 0,
+                "message": "Database service not available"
+            }
+        
+        try:
+            query = db_service.supabase.table("bot_events").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
+            
+            if run_id:
+                query = query.eq("run_id", run_id)
+            if event_type:
+                query = query.eq("event_type", event_type)
+            
+            # Get total count
+            count_result = query.execute()
+            total = len(count_result.data) if count_result.data else 0
+            
+            # Get paginated results
+            query = query.order("created_at", desc=True).range(offset, offset + limit - 1)
+            result = query.execute()
+            
+            events = result.data if result.data else []
+            
+            return {
+                "success": True,
+                "events": events,
+                "total": total,
+                "limit": limit,
+                "offset": offset
+            }
+        except Exception as e:
+            logger.error(f"Error fetching bot events: {e}", exc_info=True)
+            raise TradeeonError(f"Failed to fetch bot events: {str(e)}", "DATABASE_ERROR", status_code=500)
+            
+    except NotFoundError:
+        raise
+    except TradeeonError:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting bot events: {e}", exc_info=True)
+        raise TradeeonError(f"Failed to get bot events: {str(e)}", "INTERNAL_SERVER_ERROR", status_code=500)
+
+
+@router.get("/dca-bots/{bot_id}/orders")
+async def get_bot_orders(
+    bot_id: str = Path(..., description="Bot ID"),
+    run_id: Optional[str] = Query(None, description="Filter by run ID"),
+    side: Optional[str] = Query(None, description="Filter by side (buy/sell)"),
+    limit: int = Query(100, ge=1, le=1000, description="Number of orders to retrieve"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    user: AuthedUser = Depends(get_current_user)
+):
+    """Get bot order history."""
+    try:
+        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
+        if bots_path not in sys.path:
+            sys.path.insert(0, bots_path)
+        
+        from db_service import db_service
+        
+        # Verify bot belongs to user
+        bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
+        if not bot_data:
+            raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
+        
+        # Query orders from database
+        if not db_service.enabled or not db_service.supabase:
+            return {
+                "success": True,
+                "orders": [],
+                "total": 0,
+                "message": "Database service not available"
+            }
+        
+        try:
+            query = db_service.supabase.table("order_logs").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
+            
+            if run_id:
+                query = query.eq("run_id", run_id)
+            if side:
+                query = query.eq("side", side)
+            
+            # Get total count
+            count_result = query.execute()
+            total = len(count_result.data) if count_result.data else 0
+            
+            # Get paginated results
+            query = query.order("created_at", desc=True).range(offset, offset + limit - 1)
+            result = query.execute()
+            
+            orders = result.data if result.data else []
+            
+            return {
+                "success": True,
+                "orders": orders,
+                "total": total,
+                "limit": limit,
+                "offset": offset
+            }
+        except Exception as e:
+            logger.error(f"Error fetching bot orders: {e}", exc_info=True)
+            raise TradeeonError(f"Failed to fetch bot orders: {str(e)}", "DATABASE_ERROR", status_code=500)
+            
+    except NotFoundError:
+        raise
+    except TradeeonError:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting bot orders: {e}", exc_info=True)
+        raise TradeeonError(f"Failed to get bot orders: {str(e)}", "INTERNAL_SERVER_ERROR", status_code=500)
+
+
+@router.get("/dca-bots/{bot_id}/timeline")
+async def get_bot_timeline(
+    bot_id: str = Path(..., description="Bot ID"),
+    run_id: Optional[str] = Query(None, description="Filter by run ID"),
+    limit: int = Query(200, ge=1, le=1000, description="Number of events to retrieve"),
+    user: AuthedUser = Depends(get_current_user)
+):
+    """Get chronological timeline of bot events and orders."""
+    try:
+        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
+        if bots_path not in sys.path:
+            sys.path.insert(0, bots_path)
+        
+        from db_service import db_service
+        
+        # Verify bot belongs to user
+        bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
+        if not bot_data:
+            raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
+        
+        if not db_service.enabled or not db_service.supabase:
+            return {
+                "success": True,
+                "timeline": [],
+                "message": "Database service not available"
+            }
+        
+        try:
+            timeline = []
+            
+            # Get events
+            events_query = db_service.supabase.table("bot_events").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
+            if run_id:
+                events_query = events_query.eq("run_id", run_id)
+            events_result = events_query.order("created_at", desc=True).limit(limit).execute()
+            
+            if events_result.data:
+                for event in events_result.data:
+                    timeline.append({
+                        "type": "event",
+                        "timestamp": event.get("created_at"),
+                        "data": event
+                    })
+            
+            # Get orders
+            orders_query = db_service.supabase.table("order_logs").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
+            if run_id:
+                orders_query = orders_query.eq("run_id", run_id)
+            orders_result = orders_query.order("created_at", desc=True).limit(limit).execute()
+            
+            if orders_result.data:
+                for order in orders_result.data:
+                    timeline.append({
+                        "type": "order",
+                        "timestamp": order.get("created_at"),
+                        "data": order
+                    })
+            
+            # Sort by timestamp (newest first)
+            timeline.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+            
+            # Limit to requested number
+            timeline = timeline[:limit]
+            
+            return {
+                "success": True,
+                "timeline": timeline,
+                "total": len(timeline)
+            }
+        except Exception as e:
+            logger.error(f"Error fetching bot timeline: {e}", exc_info=True)
+            raise TradeeonError(f"Failed to fetch bot timeline: {str(e)}", "DATABASE_ERROR", status_code=500)
+            
+    except NotFoundError:
+        raise
+    except TradeeonError:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting bot timeline: {e}", exc_info=True)
+        raise TradeeonError(f"Failed to get bot timeline: {str(e)}", "INTERNAL_SERVER_ERROR", status_code=500)
+
+
 @router.post("/dca-bots/{bot_id}/stop")
 async def stop_dca_bot(
     bot_id: str = Path(..., description="Bot ID"),
