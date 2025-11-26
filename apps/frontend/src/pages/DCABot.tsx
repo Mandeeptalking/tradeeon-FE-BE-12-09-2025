@@ -4025,6 +4025,24 @@ export default function DCABot() {
                         >
                           + Add Target
                         </button>
+                        {/* Show total percentage */}
+                        <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600 dark:text-gray-400">Total Sell %:</span>
+                            <span className={`font-semibold ${
+                              Math.abs(profitStrategyConfig.partialTargets.reduce((sum, t) => sum + (t.sellPercent || 0), 0) - 100) < 0.01
+                                ? 'text-green-600 dark:text-green-400'
+                                : 'text-red-600 dark:text-red-400'
+                            }`}>
+                              {profitStrategyConfig.partialTargets.reduce((sum, t) => sum + (t.sellPercent || 0), 0).toFixed(2)}%
+                            </span>
+                          </div>
+                          {Math.abs(profitStrategyConfig.partialTargets.reduce((sum, t) => sum + (t.sellPercent || 0), 0) - 100) >= 0.01 && (
+                            <div className="text-red-600 dark:text-red-400 text-xs mt-1">
+                              ⚠️ Total must equal 100%
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -5560,12 +5578,12 @@ export default function DCABot() {
                         {pendingBotConfig.tradeStartCondition ? '⏳ Wait for Signal' : '⚡ Immediate'}
                       </span>
                     </div>
-                    {pendingBotConfig.conditionConfig && (
+                    {pendingBotConfig.tradeStartCondition && pendingBotConfig.conditionConfig && (
                       <div className="flex justify-between">
                         <span className="text-gray-600 dark:text-gray-400">Entry Conditions:</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           {pendingBotConfig.conditionConfig.mode === 'playbook' 
-                            ? `Playbook (${pendingBotConfig.conditionConfig.conditions} conditions)`
+                            ? `Playbook (${pendingBotConfig.conditionConfig.conditions?.length || 0} conditions)`
                             : 'Simple'}
                         </span>
                       </div>
