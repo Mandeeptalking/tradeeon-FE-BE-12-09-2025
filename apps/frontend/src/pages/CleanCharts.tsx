@@ -35,6 +35,10 @@ const CleanCharts: React.FC = () => {
   const [isSymbolDropdownOpen, setIsSymbolDropdownOpen] = useState(false);
   const [isIntervalDropdownOpen, setIsIntervalDropdownOpen] = useState(false);
   const [isLoadingSymbols, setIsLoadingSymbols] = useState(false);
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [isLoadingHistorical, setIsLoadingHistorical] = useState(false);
+  const [useDateRange, setUseDateRange] = useState(false);
   const [showIndicatorModal, setShowIndicatorModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showAlertBuilder, setShowAlertBuilder] = useState(false);
@@ -410,8 +414,11 @@ const CleanCharts: React.FC = () => {
       wsRef.current = null;
     }
     
-    loadHistoricalData();
-  }, [symbol, interval]);
+    // Only auto-load if not using date range
+    if (!useDateRange) {
+      loadHistoricalData();
+    }
+  }, [symbol, interval, useDateRange]);
 
   // Start WebSocket after data is loaded
   useEffect(() => {
@@ -420,22 +427,113 @@ const CleanCharts: React.FC = () => {
     }
   }, [chartData]);
 
+  // Fetch historical data with date range
+  const fetchHistoricalDataWithRange = async (
+    symbol: string,
+    interval: string,
+    startTime?: number,
+    endTime?: number
+  ): Promise<CandlestickData[]> => {
+    const allData: CandlestickData[] = [];
+    const limit = 1000; // Binance max per request
+    let currentEndTime = endTime || Date.now();
+    
+    try {
+      setIsLoadingHistorical(true);
+      
+      while (true) {
+        const params = new URLSearchParams({
+          symbol,
+          interval,
+          limit: limit.toString(),
+        });
+        
+        if (currentEndTime) {
+          params.append('endTime', currentEndTime.toString());
+        }
+        
+        if (startTime) {
+          params.append('startTime', startTime.toString());
+        }
+        
+        const response = await fetch(
+          `https://api.binance.com/api/v3/klines?${params.toString()}`
+        );
+        
+        if (!response.ok) break;
+        
+        const data = await response.json();
+        if (data.length === 0) break;
+        
+        const formattedData = data.map((kline: any[]) => ({
+          time: (kline[0] / 1000) as Time,
+          open: parseFloat(kline[1]),
+          high: parseFloat(kline[2]),
+          low: parseFloat(kline[3]),
+          close: parseFloat(kline[4]),
+          volume: parseFloat(kline[5] || 0),
+        }));
+        
+        allData.unshift(...formattedData); // Add to beginning (oldest first)
+        
+        // Check if we've reached the start time
+        if (startTime && formattedData[0].time * 1000 <= startTime) {
+          // Filter to only include data within range
+          const filtered = allData.filter(c => 
+            c.time * 1000 >= startTime && c.time * 1000 <= (endTime || Date.now())
+          );
+          return filtered;
+        }
+        
+        // Update endTime for next batch (go back in time)
+        currentEndTime = data[0][0] - 1;
+        
+        // Rate limiting - wait a bit between requests
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      // Filter final data if we have a start time
+      if (startTime) {
+        return allData.filter(c => 
+          c.time * 1000 >= startTime && c.time * 1000 <= (endTime || Date.now())
+        );
+      }
+      
+      return allData;
+    } catch (error) {
+      logger.error('Failed to fetch historical data with range:', error);
+      throw error;
+    } finally {
+      setIsLoadingHistorical(false);
+    }
+  };
+
   // Load historical data
   const loadHistoricalData = async () => {
     try {
-      const response = await fetch(
-        `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=1000`
-      );
-      const data = await response.json();
+      let formattedData: CandlestickData[];
       
-      const formattedData = data.map((kline: any[]) => ({
-        time: (kline[0] / 1000) as Time,
-        open: parseFloat(kline[1]),
-        high: parseFloat(kline[2]),
-        low: parseFloat(kline[3]),
-        close: parseFloat(kline[4]),
-        volume: parseFloat(kline[5] || 0),
-      }));
+      if (useDateRange && startDate && endDate) {
+        // Use date range
+        const startTime = new Date(startDate).getTime();
+        const endTime = new Date(endDate).getTime();
+        formattedData = await fetchHistoricalDataWithRange(symbol, interval, startTime, endTime);
+      } else {
+        // Use recent data (default behavior)
+        const response = await fetch(
+          `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=1000`
+        );
+        const data = await response.json();
+        
+        formattedData = data.map((kline: any[]) => ({
+          time: (kline[0] / 1000) as Time,
+          open: parseFloat(kline[1]),
+          high: parseFloat(kline[2]),
+          low: parseFloat(kline[3]),
+          close: parseFloat(kline[4]),
+          volume: parseFloat(kline[5] || 0),
+        }));
+      }
 
       setChartData(formattedData);
       
@@ -1156,6 +1254,53 @@ const CleanCharts: React.FC = () => {
                   </div>
                 )}
               </div>
+            </div>
+            
+            {/* Date Range Selector */}
+            <div className="flex items-center space-x-2">
+              <label className="flex items-center space-x-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={useDateRange}
+                  onChange={(e) => {
+                    setUseDateRange(e.target.checked);
+                    if (!e.target.checked) {
+                      setStartDate('');
+                      setEndDate('');
+                    }
+                  }}
+                  className="rounded"
+                />
+                <span className="text-gray-700">Date Range</span>
+              </label>
+              {useDateRange && (
+                <>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="px-2 py-1 border border-gray-300 rounded-md text-sm"
+                    max={endDate || new Date().toISOString().split('T')[0]}
+                  />
+                  <span className="text-gray-500">to</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="px-2 py-1 border border-gray-300 rounded-md text-sm"
+                    min={startDate}
+                    max={new Date().toISOString().split('T')[0]}
+                  />
+                  <Button
+                    onClick={loadHistoricalData}
+                    disabled={isLoadingHistorical || !startDate || !endDate}
+                    className="px-3 py-1 text-sm"
+                    size="sm"
+                  >
+                    {isLoadingHistorical ? 'Loading...' : 'Load'}
+                  </Button>
+                </>
+              )}
             </div>
             
             <Button
