@@ -407,19 +407,35 @@ const CleanCharts: React.FC = () => {
     };
   }, []);
 
-  // Ensure time scale is always visible
+  // Ensure time scale is properly configured when state changes
   useEffect(() => {
-    if (chartRef.current) {
-      // Always ensure time scale is visible, especially when state changes
+    if (chartRef.current && chartData.length > 0) {
+      // Configure time scale based on current interval
+      const timeScaleOptions: any = {
+        timeVisible: true,
+        borderColor: '#e5e7eb',
+      };
+      
+      // Show seconds only for very short intervals
+      if (interval === '1m' || interval === '3m') {
+        timeScaleOptions.secondsVisible = true;
+      } else {
+        timeScaleOptions.secondsVisible = false;
+      }
+      
+      // Apply time scale configuration
       chartRef.current.applyOptions({
-        timeScale: {
-          timeVisible: true,
-          secondsVisible: false,
-          borderColor: '#e5e7eb',
+        timeScale: timeScaleOptions
+      });
+      
+      // Ensure time axis is updated with current data
+      requestAnimationFrame(() => {
+        if (chartRef.current) {
+          chartRef.current.timeScale().fitContent();
         }
       });
     }
-  }, [useDateRange, startDate, endDate]);
+  }, [useDateRange, startDate, endDate, interval, chartData.length]);
 
   // Handle symbol/interval changes
   useEffect(() => {
