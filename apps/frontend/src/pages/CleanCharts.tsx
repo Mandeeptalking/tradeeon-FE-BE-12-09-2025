@@ -523,10 +523,14 @@ const CleanCharts: React.FC = () => {
         const endTime = new Date(endDate).getTime();
         formattedData = await fetchHistoricalDataWithRange(symbol, interval, startTime, endTime);
       } else {
-        // Use recent data (default behavior)
+        // Use recent data (default behavior) - Data source: Binance Public API
+        // API endpoint: https://api.binance.com/api/v3/klines
         const response = await fetch(
           `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=1000`
         );
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data from Binance API: ${response.statusText}`);
+        }
         const data = await response.json();
         
         formattedData = data.map((kline: any[]) => ({
