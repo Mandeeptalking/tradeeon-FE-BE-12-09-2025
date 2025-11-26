@@ -515,8 +515,100 @@ export default function DCABot() {
     setShowBotSummaryModal(true);
   };
 
+  // Validation function
+  const validateBotConfig = (): { valid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    
+    // Validate base order size
+    if (!baseOrderSize || baseOrderSize <= 0) {
+      errors.push('Base order size must be greater than 0');
+    }
+    if (baseOrderSize < 1) {
+      errors.push('Base order size must be at least 1');
+    }
+    
+    // Validate DCA amount
+    if (dcaAmountType === 'percentage') {
+      if (!dcaAmountPercentage || dcaAmountPercentage <= 0 || dcaAmountPercentage > 100) {
+        errors.push('DCA amount percentage must be between 1% and 100%');
+      }
+    } else {
+      if (!dcaAmount || dcaAmount <= 0) {
+        errors.push('DCA fixed amount must be greater than 0');
+      }
+    }
+    
+    // Validate max total investment
+    if (dcaRules.maxTotalInvestmentPerPosition <= 0) {
+      errors.push('Max total investment per position must be greater than 0');
+    }
+    
+    // Validate Take Profit Strategy
+    if (profitStrategyConfig.enabled) {
+      // Check if at least one TP target is configured
+      const hasPartialTargets = profitStrategyConfig.partialTargets && 
+        profitStrategyConfig.partialTargets.length > 0 &&
+        profitStrategyConfig.partialTargets.some(t => t.profitPercent > 0 && t.sellPercent > 0);
+      
+      const hasTrailingStop = profitStrategyConfig.trailingStop.enabled;
+      const hasTakeProfitRestart = profitStrategyConfig.takeProfitAndRestart.enabled;
+      const hasTimeBasedExit = profitStrategyConfig.timeBasedExit.enabled;
+      
+      if (!hasPartialTargets && !hasTrailingStop && !hasTakeProfitRestart && !hasTimeBasedExit) {
+        errors.push('Take Profit Strategy is enabled but no profit targets are configured. Please add at least one profit target.');
+      }
+      
+      // Validate partial targets percentages sum to 100%
+      if (hasPartialTargets) {
+        const totalSellPercent = profitStrategyConfig.partialTargets.reduce(
+          (sum, target) => sum + (target.sellPercent || 0), 
+          0
+        );
+        
+        if (Math.abs(totalSellPercent - 100) > 0.01) { // Allow small floating point differences
+          errors.push(`Take Profit sell percentages must total 100%. Current total: ${totalSellPercent.toFixed(2)}%`);
+        }
+        
+        // Validate individual targets
+        profitStrategyConfig.partialTargets.forEach((target, index) => {
+          if (target.profitPercent <= 0) {
+            errors.push(`Take Profit Target ${index + 1}: Profit % must be greater than 0`);
+          }
+          if (target.sellPercent <= 0 || target.sellPercent > 100) {
+            errors.push(`Take Profit Target ${index + 1}: Sell % must be between 1% and 100%`);
+          }
+        });
+      }
+    }
+    
+    // Validate selected pairs
+    if (selectedPairs.length === 0) {
+      errors.push('At least one trading pair must be selected');
+    }
+    
+    // Validate bot name
+    if (!botName || botName.trim().length === 0) {
+      errors.push('Bot name is required');
+    }
+    
+    return {
+      valid: errors.length === 0,
+      errors
+    };
+  };
+
   const handleConfirmBotCreation = async () => {
     if (!pendingBotConfig) return;
+    
+    // Validate bot configuration before creating
+    const validation = validateBotConfig();
+    if (!validation.valid) {
+      toast.error('Please fix the following errors:', {
+        description: validation.errors.join('\n'),
+        duration: 5000
+      });
+      return;
+    }
     
     // Close modal
     setShowBotSummaryModal(false);
