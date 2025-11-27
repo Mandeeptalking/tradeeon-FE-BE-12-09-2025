@@ -491,7 +491,7 @@ export default function DCABot() {
     
     // Validate Take Profit Strategy - REQUIRED (must be enabled and configured)
     if (!profitStrategyConfig.enabled) {
-      errors.push('❌ Intelligent Profit Taking Strategy is not enabled.\n\nThis strategy is mandatory for all bots to ensure proper risk management and profit-taking.\n\nPlease:\n1. Enable "Intelligent Profit Taking Strategy" toggle\n2. Configure at least one profit target (Partial Targets, Trailing Stop, Take Profit & Restart, or Time-Based Exit)');
+      errors.push('Intelligent Profit Taking Strategy is not enabled. This strategy is mandatory for all bots to ensure proper risk management and profit-taking. Please enable "Intelligent Profit Taking Strategy" toggle and configure at least one profit target (Partial Targets, Trailing Stop, Take Profit & Restart, or Time-Based Exit).');
     } else {
       // Check if at least one TP target is configured
       const hasPartialTargets = profitStrategyConfig.partialTargets && 
