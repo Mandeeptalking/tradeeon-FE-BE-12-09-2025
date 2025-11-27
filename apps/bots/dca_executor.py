@@ -324,11 +324,13 @@ class DCABotExecutor:
         condition_config = self.config.get("conditionConfig")
         trade_start_condition = self.config.get("tradeStartCondition", False)
         
-        # For first trade: if "Open Immediately" mode, skip condition check AND DCA rules
+        # For first trade: if "Open Immediately" mode, skip condition check, DCA rules, and cooldown
         if is_first_trade and not trade_start_condition:
-            # Open immediately - skip condition check and DCA rules for first trade
-            logger.info(f"First trade for {pair}: Opening immediately (no condition check, no DCA rules)")
-            # Skip to execution - don't check DCA rules for immediate first trade
+            # Open immediately - skip all checks for first trade
+            logger.info(f"First trade for {pair}: Opening immediately (no condition check, no DCA rules, no cooldown)")
+            # Skip to execution - don't check anything for immediate first trade
+            # Return True to proceed with order execution
+            return True
         else:
             # Check entry conditions for subsequent trades or if "Wait for Signal" mode
             if condition_config:
@@ -366,9 +368,10 @@ class DCABotExecutor:
                         details={"rule_type": dca_rules.get("ruleType"), "current_price": current_price}
                     )
             
-        # Check cooldown
-        cooldown_result = await self._check_dca_cooldown(pair, dca_rules)
-        if not cooldown_result:
+            # Check cooldown (only for subsequent trades or if "Wait for Signal" mode)
+            dca_rules = self.config.get("dcaRules", {})
+            cooldown_result = await self._check_dca_cooldown(pair, dca_rules)
+            if not cooldown_result:
             # Log cooldown active
             if self.bot_id and self.user_id and db_service:
                 last_dca = self.last_dca_time.get(pair)
