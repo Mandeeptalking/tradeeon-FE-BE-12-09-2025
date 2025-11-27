@@ -642,13 +642,20 @@ export default function DCABot() {
       const hasTpError = validation.errors.some(err => 
         err.includes('Intelligent Profit Taking Strategy') || 
         err.includes('Take Profit') ||
-        err.includes('profit target')
+        err.includes('profit target') ||
+        err.includes('Profit Taking Strategy')
       );
       
       if (hasTpError) {
+        // Format error message for better readability
+        const formattedErrors = validation.errors.map(err => {
+          // Replace newlines with spaces for toast display
+          return err.replace(/\n/g, ' ').trim();
+        }).join('\n\n');
+        
         toast.error('⚠️ Profit Taking Strategy Required', {
-          description: validation.errors.join('\n\n') + '\n\n💡 Why is this required?\nThe Intelligent Profit Taking Strategy is mandatory to ensure your bot has a proper exit strategy. Without it, your bot would hold positions indefinitely without taking profits, which increases risk.',
-          duration: 8000
+          description: formattedErrors + '\n\n💡 Why is this required?\nThe Intelligent Profit Taking Strategy is mandatory to ensure your bot has a proper exit strategy. Without it, your bot would hold positions indefinitely without taking profits, which increases risk.',
+          duration: 10000
         });
       } else {
         toast.error('Please fix the following errors:', {
