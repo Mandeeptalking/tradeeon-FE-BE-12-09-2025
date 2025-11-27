@@ -491,7 +491,7 @@ export default function DCABot() {
     
     // Validate Take Profit Strategy - REQUIRED (must be enabled and configured)
     if (!profitStrategyConfig.enabled) {
-      errors.push('Intelligent Profit Taking Strategy must be enabled before creating a bot. Please enable it and configure at least one profit target.');
+      errors.push('❌ Intelligent Profit Taking Strategy is not enabled.\n\nThis strategy is mandatory for all bots to ensure proper risk management and profit-taking.\n\nPlease:\n1. Enable "Intelligent Profit Taking Strategy" toggle\n2. Configure at least one profit target (Partial Targets, Trailing Stop, Take Profit & Restart, or Time-Based Exit)');
     } else {
       // Check if at least one TP target is configured
       const hasPartialTargets = profitStrategyConfig.partialTargets && 
@@ -549,10 +549,24 @@ export default function DCABot() {
     // Validate bot configuration first
     const validation = validateBotConfig();
     if (!validation.valid) {
-      toast.error('Please fix the following errors:', {
-        description: validation.errors.join('\n'),
-        duration: 5000
-      });
+      // Check if the error is about TP strategy
+      const hasTpError = validation.errors.some(err => 
+        err.includes('Intelligent Profit Taking Strategy') || 
+        err.includes('Take Profit') ||
+        err.includes('profit target')
+      );
+      
+      if (hasTpError) {
+        toast.error('⚠️ Profit Taking Strategy Required', {
+          description: validation.errors.join('\n\n') + '\n\n💡 Why is this required?\nThe Intelligent Profit Taking Strategy is mandatory to ensure your bot has a proper exit strategy. Without it, your bot would hold positions indefinitely without taking profits, which increases risk.',
+          duration: 8000
+        });
+      } else {
+        toast.error('Please fix the following errors:', {
+          description: validation.errors.join('\n'),
+          duration: 5000
+        });
+      }
       return;
     }
     
@@ -624,10 +638,24 @@ export default function DCABot() {
     // Validate again before creating (double-check)
     const validation = validateBotConfig();
     if (!validation.valid) {
-      toast.error('Please fix the following errors:', {
-        description: validation.errors.join('\n'),
-        duration: 5000
-      });
+      // Check if the error is about TP strategy
+      const hasTpError = validation.errors.some(err => 
+        err.includes('Intelligent Profit Taking Strategy') || 
+        err.includes('Take Profit') ||
+        err.includes('profit target')
+      );
+      
+      if (hasTpError) {
+        toast.error('⚠️ Profit Taking Strategy Required', {
+          description: validation.errors.join('\n\n') + '\n\n💡 Why is this required?\nThe Intelligent Profit Taking Strategy is mandatory to ensure your bot has a proper exit strategy. Without it, your bot would hold positions indefinitely without taking profits, which increases risk.',
+          duration: 8000
+        });
+      } else {
+        toast.error('Please fix the following errors:', {
+          description: validation.errors.join('\n'),
+          duration: 5000
+        });
+      }
       return;
     }
     
