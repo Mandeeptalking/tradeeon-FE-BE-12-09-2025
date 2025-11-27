@@ -324,45 +324,47 @@ class DCABotExecutor:
         condition_config = self.config.get("conditionConfig")
         trade_start_condition = self.config.get("tradeStartCondition", False)
         
-        # For first trade: if "Open Immediately" mode, skip condition check
+        # For first trade: if "Open Immediately" mode, skip condition check AND DCA rules
         if is_first_trade and not trade_start_condition:
-            # Open immediately - skip condition check for first trade
-            logger.info(f"First trade for {pair}: Opening immediately (no condition check)")
-        elif condition_config:
-            # Check conditions for subsequent trades or if "Wait for Signal" mode
-            if not await self._evaluate_entry_conditions(pair, condition_config, market_df):
-                return False
-                
-        # Check DCA rules
-        dca_rules = self.config.get("dcaRules", {})
-        dca_rule_result = await self._evaluate_dca_rules(pair, dca_rules, current_price)
-        if not dca_rule_result:
-            # Log DCA rule failure
-            if self.bot_id and self.user_id and db_service:
-                db_service.log_event(
-                    bot_id=self.bot_id,
-                    run_id=getattr(self, 'run_id', None),
-                    user_id=self.user_id,
-                    event_type="dca_rule_failed",
-                    event_category="condition",
-                    message=f"DCA rule not met for {pair}",
-                    symbol=pair,
-                    details={"rule_type": dca_rules.get("ruleType"), "current_price": current_price}
-                )
-            return False
+            # Open immediately - skip condition check and DCA rules for first trade
+            logger.info(f"First trade for {pair}: Opening immediately (no condition check, no DCA rules)")
+            # Skip to execution - don't check DCA rules for immediate first trade
         else:
-            # Log DCA rule pass
-            if self.bot_id and self.user_id and db_service:
-                db_service.log_event(
-                    bot_id=self.bot_id,
-                    run_id=getattr(self, 'run_id', None),
-                    user_id=self.user_id,
-                    event_type="dca_rule_passed",
-                    event_category="condition",
-                    message=f"DCA rule met for {pair}",
-                    symbol=pair,
-                    details={"rule_type": dca_rules.get("ruleType"), "current_price": current_price}
-                )
+            # Check entry conditions for subsequent trades or if "Wait for Signal" mode
+            if condition_config:
+                if not await self._evaluate_entry_conditions(pair, condition_config, market_df):
+                    return False
+                    
+            # Check DCA rules (only for subsequent trades or if "Wait for Signal" mode)
+            dca_rules = self.config.get("dcaRules", {})
+            dca_rule_result = await self._evaluate_dca_rules(pair, dca_rules, current_price)
+            if not dca_rule_result:
+                # Log DCA rule failure
+                if self.bot_id and self.user_id and db_service:
+                    db_service.log_event(
+                        bot_id=self.bot_id,
+                        run_id=getattr(self, 'run_id', None),
+                        user_id=self.user_id,
+                        event_type="dca_rule_failed",
+                        event_category="condition",
+                        message=f"DCA rule not met for {pair}",
+                        symbol=pair,
+                        details={"rule_type": dca_rules.get("ruleType"), "current_price": current_price}
+                    )
+                return False
+            else:
+                # Log DCA rule pass
+                if self.bot_id and self.user_id and db_service:
+                    db_service.log_event(
+                        bot_id=self.bot_id,
+                        run_id=getattr(self, 'run_id', None),
+                        user_id=self.user_id,
+                        event_type="dca_rule_passed",
+                        event_category="condition",
+                        message=f"DCA rule met for {pair}",
+                        symbol=pair,
+                        details={"rule_type": dca_rules.get("ruleType"), "current_price": current_price}
+                    )
             
         # Check cooldown
         cooldown_result = await self._check_dca_cooldown(pair, dca_rules)

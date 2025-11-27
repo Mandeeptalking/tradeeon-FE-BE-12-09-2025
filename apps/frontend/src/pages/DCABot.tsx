@@ -489,22 +489,22 @@ export default function DCABot() {
       errors.push('Max total investment per position must be greater than 0');
     }
     
-    // Validate Take Profit Strategy
+    // Validate Take Profit Strategy - REQUIRED when enabled
     if (profitStrategyConfig.enabled) {
       // Check if at least one TP target is configured
       const hasPartialTargets = profitStrategyConfig.partialTargets && 
         profitStrategyConfig.partialTargets.length > 0 &&
         profitStrategyConfig.partialTargets.some(t => t.profitPercent > 0 && t.sellPercent > 0);
       
-      const hasTrailingStop = profitStrategyConfig.trailingStop.enabled;
-      const hasTakeProfitRestart = profitStrategyConfig.takeProfitAndRestart.enabled;
-      const hasTimeBasedExit = profitStrategyConfig.timeBasedExit.enabled;
+      const hasTrailingStop = profitStrategyConfig.trailingStop && profitStrategyConfig.trailingStop.enabled;
+      const hasTakeProfitRestart = profitStrategyConfig.takeProfitAndRestart && profitStrategyConfig.takeProfitAndRestart.enabled;
+      const hasTimeBasedExit = profitStrategyConfig.timeBasedExit && profitStrategyConfig.timeBasedExit.enabled;
       
       if (!hasPartialTargets && !hasTrailingStop && !hasTakeProfitRestart && !hasTimeBasedExit) {
-        errors.push('Take Profit Strategy is enabled but no profit targets are configured. Please add at least one profit target.');
+        errors.push('Take Profit Strategy is enabled but no profit targets are configured. Please configure at least one profit target (Partial Targets, Trailing Stop, Take Profit & Restart, or Time-Based Exit) before creating the bot.');
       }
       
-      // Validate partial targets percentages sum to 100%
+      // Validate partial targets percentages sum to 100% if partial targets are configured
       if (hasPartialTargets) {
         const totalSellPercent = profitStrategyConfig.partialTargets.reduce(
           (sum, target) => sum + (target.sellPercent || 0), 
@@ -512,7 +512,7 @@ export default function DCABot() {
         );
         
         if (Math.abs(totalSellPercent - 100) > 0.01) { // Allow small floating point differences
-          errors.push(`Take Profit sell percentages must total 100%. Current total: ${totalSellPercent.toFixed(2)}%`);
+          errors.push(`Take Profit sell percentages must total 100%. Current total: ${totalSellPercent.toFixed(2)}%. Please adjust your targets so they sum to exactly 100%.`);
         }
         
         // Validate individual targets
