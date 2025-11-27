@@ -489,8 +489,10 @@ export default function DCABot() {
       errors.push('Max total investment per position must be greater than 0');
     }
     
-    // Validate Take Profit Strategy - REQUIRED when enabled
-    if (profitStrategyConfig.enabled) {
+    // Validate Take Profit Strategy - REQUIRED (must be enabled and configured)
+    if (!profitStrategyConfig.enabled) {
+      errors.push('Intelligent Profit Taking Strategy must be enabled before creating a bot. Please enable it and configure at least one profit target.');
+    } else {
       // Check if at least one TP target is configured
       const hasPartialTargets = profitStrategyConfig.partialTargets && 
         profitStrategyConfig.partialTargets.length > 0 &&
@@ -501,7 +503,7 @@ export default function DCABot() {
       const hasTimeBasedExit = profitStrategyConfig.timeBasedExit && profitStrategyConfig.timeBasedExit.enabled;
       
       if (!hasPartialTargets && !hasTrailingStop && !hasTakeProfitRestart && !hasTimeBasedExit) {
-        errors.push('Take Profit Strategy is enabled but no profit targets are configured. Please configure at least one profit target (Partial Targets, Trailing Stop, Take Profit & Restart, or Time-Based Exit) before creating the bot.');
+        errors.push('Intelligent Profit Taking Strategy is enabled but no profit targets are configured. Please configure at least one profit target (Partial Targets, Trailing Stop, Take Profit & Restart, or Time-Based Exit) before creating the bot.');
       }
       
       // Validate partial targets percentages sum to 100% if partial targets are configured
