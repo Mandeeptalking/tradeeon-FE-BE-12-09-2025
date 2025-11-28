@@ -263,7 +263,9 @@ class DCABotExecutor:
                     }
                 )
             
+            logger.info(f"🔄 Attempting to execute DCA order for {pair}: ${scaled_amount:.2f} @ ${current_price:.2f}")
             result = await self.trading_engine.execute_buy(pair, scaled_amount, current_price)
+            logger.info(f"📊 DCA execution result for {pair}: {result}")
             if result.get("success"):
                 logger.info(f"✅ Paper DCA executed for {pair}: {result['quantity']:.6f} @ ${current_price:.2f} = ${scaled_amount:.2f}")
                 self.last_dca_time[pair] = datetime.now()
