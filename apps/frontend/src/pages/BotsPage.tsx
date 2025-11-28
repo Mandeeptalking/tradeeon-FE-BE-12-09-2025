@@ -749,6 +749,16 @@ export default function BotsPage() {
           )}
         </>
       )}
+
+      {/* Bot Logs Modal */}
+      {selectedBotForLogs && (
+        <BotLogsModal
+          botId={selectedBotForLogs.id}
+          botName={selectedBotForLogs.name}
+          isOpen={!!selectedBotForLogs}
+          onClose={() => setSelectedBotForLogs(null)}
+        />
+      )}
     </div>
   );
 }
