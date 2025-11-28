@@ -130,6 +130,10 @@ export default function BotLogsModal({ botId, botName, isOpen, onClose }: BotLog
   };
 
   const fetchOrders = async () => {
+    if (!botId) {
+      console.log('⚠️ fetchOrders: No botId provided');
+      return;
+    }
     try {
       const API_BASE_URL = getApiBaseUrl();
       const response = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots/${botId}/orders?limit=50`);
@@ -146,6 +150,10 @@ export default function BotLogsModal({ botId, botName, isOpen, onClose }: BotLog
   };
 
   const fetchTimeline = async () => {
+    if (!botId) {
+      console.log('⚠️ fetchTimeline: No botId provided');
+      return;
+    }
     try {
       const API_BASE_URL = getApiBaseUrl();
       const response = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots/${botId}/timeline?limit=100`);
@@ -159,6 +167,10 @@ export default function BotLogsModal({ botId, botName, isOpen, onClose }: BotLog
   };
 
   const fetchAll = async () => {
+    if (!botId) {
+      console.log('⚠️ fetchAll: No botId provided');
+      return;
+    }
     setIsLoading(true);
     try {
       await Promise.all([
