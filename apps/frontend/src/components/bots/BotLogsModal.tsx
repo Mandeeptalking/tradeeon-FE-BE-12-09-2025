@@ -186,7 +186,10 @@ export default function BotLogsModal({ botId, botName, isOpen, onClose }: BotLog
 
   useEffect(() => {
     if (isOpen && botId) {
+      console.log('🔍 Fetching bot logs data', { botId, botName });
       fetchAll();
+    } else {
+      console.log('⚠️ Skipping fetch - isOpen:', isOpen, 'botId:', botId);
     }
   }, [isOpen, botId]);
 
