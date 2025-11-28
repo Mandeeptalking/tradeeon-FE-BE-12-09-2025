@@ -111,24 +111,55 @@ export default function BotLogsPage() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch bot details
+  // Fetch bot details - get from bots list and find matching bot
   const fetchBotDetails = async () => {
     if (!botId) return;
     
     try {
       const API_BASE_URL = getApiBaseUrl();
-      const response = await authenticatedFetch(`${API_BASE_URL}/bots/${botId}`);
+      // Fetch all bots and find the one matching botId
+      const response = await authenticatedFetch(`${API_BASE_URL}/bots/`);
       if (response.ok) {
         const data = await response.json();
-        setBotDetails(data.bot || data);
-      } else if (response.status === 404) {
-        setError('Bot not found');
-        toast.error('Bot not found', { description: 'The bot you are looking for does not exist.' });
-        setTimeout(() => navigate('/app/bots'), 2000);
+        const botsArray = Array.isArray(data) ? data : (data.bots || []);
+        const bot = botsArray.find((b: any) => (b.bot_id || b.id) === botId);
+        
+        if (bot) {
+          setBotDetails({
+            bot_id: botId,
+            name: bot.name || `Bot ${botId}`,
+            bot_type: bot.bot_type || 'dca',
+            exchange: bot.exchange || 'Binance',
+            status: bot.status || 'inactive',
+            created_at: bot.created_at || new Date().toISOString(),
+            updated_at: bot.updated_at || new Date().toISOString()
+          });
+        } else {
+          // Bot not found in list, try to get basic info from status endpoint
+          const statusResponse = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots/${botId}/status`);
+          if (statusResponse.ok) {
+            const statusData = await statusResponse.json();
+            if (statusData.database) {
+              setBotDetails({
+                bot_id: botId,
+                name: `Bot ${botId}`,
+                bot_type: 'dca',
+                exchange: 'Binance',
+                status: statusData.database.status,
+                created_at: statusData.database.created_at,
+                updated_at: statusData.database.updated_at
+              });
+            }
+          } else if (statusResponse.status === 404) {
+            setError('Bot not found');
+            toast.error('Bot not found', { description: 'The bot you are looking for does not exist.' });
+            setTimeout(() => navigate('/app/bots'), 2000);
+          }
+        }
       }
     } catch (error: any) {
       logger.error('Error fetching bot details:', error);
-      setError('Failed to load bot details');
+      // Don't set error here, let status fetch handle it
     }
   };
 
