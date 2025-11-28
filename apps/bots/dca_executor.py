@@ -131,13 +131,22 @@ class DCABotExecutor:
         # Process each pair
         pairs = self.config.get("selectedPairs", [])
         
+        # Normalize pair format (ETH/USDT -> ETHUSDT)
+        def normalize_pair(pair: str) -> str:
+            """Normalize pair format for API calls."""
+            return pair.replace('/', '').replace('-', '').upper()
+        
         # Fetch current prices for all pairs
         current_prices = {}
         market_data_dict = {}
         
         for pair in pairs:
+            # Normalize pair for API calls
+            normalized_pair = normalize_pair(pair)
+            logger.debug(f"Processing pair: {pair} (normalized: {normalized_pair})")
+            
             # Get current price
-            price = await self.market_data.get_current_price(pair)
+            price = await self.market_data.get_current_price(normalized_pair)
             if price > 0:
                 current_prices[pair] = price
                 
@@ -150,11 +159,12 @@ class DCABotExecutor:
         
         # Process each pair with real market data
         for pair in pairs:
-            if pair not in current_prices or current_prices[pair] <= 0:
-                logger.warning(f"Could not fetch price for {pair}, skipping")
+            normalized_pair = normalize_pair(pair)
+            if normalized_pair not in current_prices or current_prices[normalized_pair] <= 0:
+                logger.warning(f"Could not fetch price for {pair} (normalized: {normalized_pair}), skipping")
                 continue
                 
-            current_price = current_prices[pair]
+            current_price = current_prices[normalized_pair]
             
             # Check market regime detection (but allow override if entry condition triggers)
             if self.market_regime and market_data_dict.get(pair) is not None:
