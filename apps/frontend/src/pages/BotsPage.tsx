@@ -297,28 +297,8 @@ export default function BotsPage() {
 
   // View/Edit/Duplicate handlers
   const handleView = (botId: string) => {
-    console.log('🔍 handleView called with botId:', botId);
-    console.log('🔍 Available bots:', bots.map(b => b.bot_id));
-    logger.debug('handleView called with botId:', botId);
-    
-    // Show toast to confirm click is working
-    toast.info('Opening bot logs...', { description: `Bot ID: ${botId}` });
-    
-    const bot = bots.find(b => b.bot_id === botId);
-    console.log('🔍 Found bot:', bot);
-    logger.debug('Found bot:', bot);
-    
-    if (bot) {
-      const logData = { id: botId, name: bot.name || bot.bot_id };
-      console.log('✅ Setting selectedBotForLogs:', logData);
-      logger.debug('Setting selectedBotForLogs:', logData);
-      setSelectedBotForLogs(logData);
-      console.log('✅ State updated, selectedBotForLogs should be:', logData);
-    } else {
-      console.error('❌ Bot not found for botId:', botId);
-      logger.warn('Bot not found for botId:', botId);
-      toast.error('Bot not found', { description: `Could not find bot with ID: ${botId}` });
-    }
+    logger.debug('Navigating to bot logs:', botId);
+    navigate(`/app/bots/${botId}/logs`);
   };
 
   const handleEdit = (botId: string) => {
