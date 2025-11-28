@@ -572,9 +572,11 @@ export default function DCABot() {
     
     // Show summary modal first instead of creating bot directly
     // Prepare bot config for summary display
+    // IMPORTANT: conditionConfig must be null when tradeStartCondition is false (Immediate mode)
     let conditionConfig: any = null;
     
     // Only set conditionConfig if Start Mode is "Wait for Signal" (tradeStartCondition = true)
+    // When Immediate mode, conditionConfig stays null - no entry conditions needed
     if (tradeStartCondition) {
       if (showPlaybookBuilder && conditionPlaybook.length > 0) {
         conditionConfig = {
@@ -594,6 +596,9 @@ export default function DCABot() {
           }
         };
       }
+    } else {
+      // Explicitly set to null for Immediate mode to ensure no conditions are shown
+      conditionConfig = null;
     }
 
     const dcaRulesConfig: any = {
@@ -675,9 +680,13 @@ export default function DCABot() {
 
   const createBotWithConfig = async () => {
     // Prepare condition data based on mode (full config for API)
+    // IMPORTANT: conditionConfig must be null when tradeStartCondition is false (Immediate mode)
     let conditionConfig: any = null;
     
-    if (showPlaybookBuilder && conditionPlaybook.length > 0) {
+    // Only set conditionConfig if Start Mode is "Wait for Signal" (tradeStartCondition = true)
+    // When Immediate mode, conditionConfig stays null - bot will place orders immediately
+    if (tradeStartCondition) {
+      if (showPlaybookBuilder && conditionPlaybook.length > 0) {
       // Playbook mode
       conditionConfig = {
         mode: 'playbook',
