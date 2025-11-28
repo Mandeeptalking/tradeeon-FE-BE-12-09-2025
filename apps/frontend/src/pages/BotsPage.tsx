@@ -768,18 +768,16 @@ export default function BotsPage() {
         </>
       )}
 
-      {/* Bot Logs Modal - Only render when selectedBotForLogs exists */}
-      {selectedBotForLogs && (
-        <BotLogsModal
-          botId={selectedBotForLogs.id}
-          botName={selectedBotForLogs.name}
-          isOpen={true}
-          onClose={() => {
-            console.log('🔍 Closing BotLogsModal from BotsPage');
-            setSelectedBotForLogs(null);
-          }}
-        />
-      )}
+      {/* Bot Logs Modal - Always render, control visibility with isOpen */}
+      <BotLogsModal
+        botId={selectedBotForLogs?.id || ''}
+        botName={selectedBotForLogs?.name || ''}
+        isOpen={!!selectedBotForLogs}
+        onClose={() => {
+          console.log('🔍 Closing BotLogsModal from BotsPage');
+          setSelectedBotForLogs(null);
+        }}
+      />
     </div>
   );
 }

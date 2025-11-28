@@ -85,12 +85,11 @@ export default function BotLogsModal({ botId, botName, isOpen, onClose }: BotLog
   const [isLoading, setIsLoading] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
-  // Don't render if no botId
-  if (!botId) {
-    return null;
-  }
-
   const fetchBotStatus = async () => {
+    if (!botId) {
+      console.log('⚠️ fetchBotStatus: No botId provided');
+      return;
+    }
     try {
       const API_BASE_URL = getApiBaseUrl();
       logger.debug('Fetching bot status', { botId, url: `${API_BASE_URL}/bots/dca-bots/${botId}/status` });
@@ -111,6 +110,10 @@ export default function BotLogsModal({ botId, botName, isOpen, onClose }: BotLog
   };
 
   const fetchEvents = async () => {
+    if (!botId) {
+      console.log('⚠️ fetchEvents: No botId provided');
+      return;
+    }
     try {
       const API_BASE_URL = getApiBaseUrl();
       const response = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots/${botId}/events?limit=50`);
