@@ -719,7 +719,7 @@ export default function DCABot() {
           }))
       };
     } else if (tradeStartCondition && conditionType) {
-      // Simple mode
+      // Simple mode - only set if tradeStartCondition is true
       conditionConfig = {
         mode: 'simple',
         conditionType: conditionType,
@@ -738,6 +738,10 @@ export default function DCABot() {
           compareValue: entryCondition.value, // Map 'value' to 'compareValue'
         }
       };
+    } else {
+      // Explicitly set to null for Immediate mode (tradeStartCondition = false)
+      // This ensures no entry conditions are sent to backend
+      conditionConfig = null;
     }
 
     // Prepare DCA Rules config
