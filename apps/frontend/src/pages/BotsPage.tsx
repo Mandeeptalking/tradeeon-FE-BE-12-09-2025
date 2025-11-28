@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
@@ -30,7 +31,6 @@ import { toast } from 'sonner';
 import { authenticatedFetch } from '../lib/api/auth';
 import { logger } from '../utils/logger';
 import BotCard from '../components/bots/BotCard';
-import BotLogsModal from '../components/bots/BotLogsModal';
 import { StatCard } from '../components/dashboard/StatCard';
 import EmptyState from '../components/EmptyState';
 import type { Bot, BotStatus, Exchange, BotType } from '../lib/api/bots';
