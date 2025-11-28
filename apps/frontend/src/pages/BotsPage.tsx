@@ -54,6 +54,7 @@ interface ExtendedBot extends Bot {
 }
 
 export default function BotsPage() {
+  const navigate = useNavigate();
   const [bots, setBots] = useState<ExtendedBot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<{ title: string; details: string; tips?: string[] } | null>(null);
