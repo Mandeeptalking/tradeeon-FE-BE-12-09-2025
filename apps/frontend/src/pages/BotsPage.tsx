@@ -30,6 +30,7 @@ import { toast } from 'sonner';
 import { authenticatedFetch } from '../lib/api/auth';
 import { logger } from '../utils/logger';
 import BotCard from '../components/bots/BotCard';
+import BotLogsModal from '../components/bots/BotLogsModal';
 import { StatCard } from '../components/dashboard/StatCard';
 import EmptyState from '../components/EmptyState';
 import type { Bot, BotStatus, Exchange, BotType } from '../lib/api/bots';
@@ -295,9 +296,10 @@ export default function BotsPage() {
 
   // View/Edit/Duplicate handlers
   const handleView = (botId: string) => {
-    // Navigate to bot details page or show modal
-    toast.info('View bot details', { description: 'Bot details view coming soon' });
-    // TODO: Implement bot details view
+    const bot = bots.find(b => b.bot_id === botId);
+    if (bot) {
+      setSelectedBotForLogs({ id: botId, name: bot.name || bot.bot_id });
+    }
   };
 
   const handleEdit = (botId: string) => {
