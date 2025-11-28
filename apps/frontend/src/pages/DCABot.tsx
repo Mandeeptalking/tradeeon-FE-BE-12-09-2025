@@ -4086,11 +4086,16 @@ export default function DCABot() {
               </div>
 
               {/* Intelligent Profit Taking Strategy */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+              <div className={`bg-white dark:bg-gray-800 rounded-lg border ${!profitStrategyConfig.enabled ? 'border-red-300 dark:border-red-700' : 'border-gray-200 dark:border-gray-700'} p-4`}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <h2 className="text-base font-semibold text-gray-900 dark:text-white">💰 Intelligent Profit Taking Strategy</h2>
                     <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded">Phase 1</span>
+                    {!profitStrategyConfig.enabled && (
+                      <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded font-medium">
+                        ⚠️ Required
+                      </span>
+                    )}
                     <Tooltip
                       content={
                         "Automatically take profits at optimal points:\n\n" +
@@ -4118,6 +4123,17 @@ export default function DCABot() {
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
+                
+                {!profitStrategyConfig.enabled && (
+                  <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-red-800 dark:text-red-300">
+                        <strong className="font-semibold">Required:</strong> You must enable and configure the Intelligent Profit Taking Strategy before creating a bot. This ensures your bot has a proper exit strategy to manage risk and take profits.
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 {profitStrategyConfig.enabled && (
                   <div className="space-y-4 pt-3 border-t border-gray-200 dark:border-gray-700">
