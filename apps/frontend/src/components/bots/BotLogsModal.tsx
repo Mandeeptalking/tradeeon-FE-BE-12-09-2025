@@ -85,6 +85,11 @@ export default function BotLogsModal({ botId, botName, isOpen, onClose }: BotLog
   const [isLoading, setIsLoading] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
+  // Don't render if no botId
+  if (!botId) {
+    return null;
+  }
+
   const fetchBotStatus = async () => {
     try {
       const API_BASE_URL = getApiBaseUrl();
@@ -207,20 +212,26 @@ export default function BotLogsModal({ botId, botName, isOpen, onClose }: BotLog
 
   // Debug logging
   useEffect(() => {
+    console.log('🔍 BotLogsModal useEffect - isOpen changed:', { isOpen, botId, botName });
     if (isOpen) {
       logger.debug('BotLogsModal opened', { botId, botName });
-      console.log('BotLogsModal: Modal should be visible', { botId, botName, isOpen });
+      console.log('✅ BotLogsModal: Modal should be visible', { botId, botName, isOpen });
+    } else {
+      console.log('❌ BotLogsModal: Modal is closed', { botId, botName, isOpen });
     }
   }, [isOpen, botId, botName]);
 
   // Always render Dialog, let Radix UI handle visibility
+  console.log('🔍 BotLogsModal render - isOpen:', isOpen, 'botId:', botId);
+  
   return (
     <Dialog 
       open={isOpen} 
       onOpenChange={(open) => {
-        console.log('Dialog onOpenChange called', { open, isOpen });
+        console.log('🔍 Dialog onOpenChange called', { open, currentIsOpen: isOpen, botId });
         logger.debug('Dialog onOpenChange called', { open });
         if (!open) {
+          console.log('🔍 Closing dialog, calling onClose');
           onClose();
         }
       }}
