@@ -209,18 +209,22 @@ export default function BotLogsModal({ botId, botName, isOpen, onClose }: BotLog
   useEffect(() => {
     if (isOpen) {
       logger.debug('BotLogsModal opened', { botId, botName });
+      console.log('BotLogsModal: Modal should be visible', { botId, botName, isOpen });
     }
   }, [isOpen, botId, botName]);
 
-  if (!isOpen) return null;
-
+  // Always render Dialog, let Radix UI handle visibility
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      logger.debug('Dialog onOpenChange called', { open });
-      if (!open) {
-        onClose();
-      }
-    }}>
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={(open) => {
+        console.log('Dialog onOpenChange called', { open, isOpen });
+        logger.debug('Dialog onOpenChange called', { open });
+        if (!open) {
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <div className="flex items-center justify-between">

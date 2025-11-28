@@ -296,12 +296,16 @@ export default function BotsPage() {
 
   // View/Edit/Duplicate handlers
   const handleView = (botId: string) => {
+    console.log('handleView called with botId:', botId);
     logger.debug('handleView called with botId:', botId);
     const bot = bots.find(b => b.bot_id === botId);
+    console.log('Found bot:', bot);
     logger.debug('Found bot:', bot);
     if (bot) {
-      logger.debug('Setting selectedBotForLogs:', { id: botId, name: bot.name || bot.bot_id });
-      setSelectedBotForLogs({ id: botId, name: bot.name || bot.bot_id });
+      const logData = { id: botId, name: bot.name || bot.bot_id };
+      console.log('Setting selectedBotForLogs:', logData);
+      logger.debug('Setting selectedBotForLogs:', logData);
+      setSelectedBotForLogs(logData);
     } else {
       logger.warn('Bot not found for botId:', botId);
       toast.error('Bot not found', { description: `Could not find bot with ID: ${botId}` });
@@ -756,15 +760,16 @@ export default function BotsPage() {
         </>
       )}
 
-      {/* Bot Logs Modal */}
-      {selectedBotForLogs && (
-        <BotLogsModal
-          botId={selectedBotForLogs.id}
-          botName={selectedBotForLogs.name}
-          isOpen={!!selectedBotForLogs}
-          onClose={() => setSelectedBotForLogs(null)}
-        />
-      )}
+      {/* Bot Logs Modal - Always render, control visibility with isOpen */}
+      <BotLogsModal
+        botId={selectedBotForLogs?.id || ''}
+        botName={selectedBotForLogs?.name || ''}
+        isOpen={!!selectedBotForLogs}
+        onClose={() => {
+          console.log('Closing BotLogsModal');
+          setSelectedBotForLogs(null);
+        }}
+      />
     </div>
   );
 }
