@@ -88,12 +88,16 @@ export default function BotLogsModal({ botId, botName, isOpen, onClose }: BotLog
   const fetchBotStatus = async () => {
     try {
       const API_BASE_URL = getApiBaseUrl();
+      logger.debug('Fetching bot status', { botId, url: `${API_BASE_URL}/bots/dca-bots/${botId}/status` });
       const response = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots/${botId}/status`);
       if (response.ok) {
         const data = await response.json();
+        logger.debug('Bot status fetched successfully', data);
         setStatus(data);
       } else {
-        throw new Error('Failed to fetch bot status');
+        const errorText = await response.text();
+        logger.error('Failed to fetch bot status', { status: response.status, error: errorText });
+        throw new Error(`Failed to fetch bot status: ${response.status} ${errorText}`);
       }
     } catch (error: any) {
       logger.error('Error fetching bot status:', error);
@@ -107,7 +111,10 @@ export default function BotLogsModal({ botId, botName, isOpen, onClose }: BotLog
       const response = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots/${botId}/events?limit=50`);
       if (response.ok) {
         const data = await response.json();
+        logger.debug('Events fetched', { count: data.events?.length || 0 });
         setEvents(data.events || []);
+      } else {
+        logger.error('Failed to fetch events', { status: response.status });
       }
     } catch (error: any) {
       logger.error('Error fetching events:', error);
@@ -120,7 +127,10 @@ export default function BotLogsModal({ botId, botName, isOpen, onClose }: BotLog
       const response = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots/${botId}/orders?limit=50`);
       if (response.ok) {
         const data = await response.json();
+        logger.debug('Orders fetched', { count: data.orders?.length || 0 });
         setOrders(data.orders || []);
+      } else {
+        logger.error('Failed to fetch orders', { status: response.status });
       }
     } catch (error: any) {
       logger.error('Error fetching orders:', error);
