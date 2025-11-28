@@ -233,7 +233,10 @@ class DCABotExecutor:
     async def _process_pair(self, pair: str, current_price: float, market_df: Optional[pd.DataFrame] = None):
         """Process a single trading pair."""
         # Check if we should execute DCA
-        if not await self._should_execute_dca(pair, current_price, market_df):
+        should_execute = await self._should_execute_dca(pair, current_price, market_df)
+        logger.info(f"Should execute DCA for {pair}: {should_execute} (price: ${current_price:.2f})")
+        if not should_execute:
+            logger.debug(f"Skipping DCA for {pair} - conditions not met")
             return
             
         # Calculate DCA amount with dynamic scaling

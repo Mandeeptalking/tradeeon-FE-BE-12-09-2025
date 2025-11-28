@@ -296,9 +296,15 @@ export default function BotsPage() {
 
   // View/Edit/Duplicate handlers
   const handleView = (botId: string) => {
+    logger.debug('handleView called with botId:', botId);
     const bot = bots.find(b => b.bot_id === botId);
+    logger.debug('Found bot:', bot);
     if (bot) {
+      logger.debug('Setting selectedBotForLogs:', { id: botId, name: bot.name || bot.bot_id });
       setSelectedBotForLogs({ id: botId, name: bot.name || bot.bot_id });
+    } else {
+      logger.warn('Bot not found for botId:', botId);
+      toast.error('Bot not found', { description: `Could not find bot with ID: ${botId}` });
     }
   };
 

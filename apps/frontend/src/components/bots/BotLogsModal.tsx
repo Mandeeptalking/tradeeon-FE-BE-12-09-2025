@@ -195,10 +195,22 @@ export default function BotLogsModal({ botId, botName, isOpen, onClose }: BotLog
     return new Date(timestamp).toLocaleString();
   };
 
+  // Debug logging
+  useEffect(() => {
+    if (isOpen) {
+      logger.debug('BotLogsModal opened', { botId, botName });
+    }
+  }, [isOpen, botId, botName]);
+
   if (!isOpen) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      logger.debug('Dialog onOpenChange called', { open });
+      if (!open) {
+        onClose();
+      }
+    }}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <div className="flex items-center justify-between">
