@@ -748,17 +748,6 @@ export default function BotsPage() {
           )}
         </>
       )}
-
-      {/* Bot Logs Modal - Always render, control visibility with isOpen */}
-      <BotLogsModal
-        botId={selectedBotForLogs?.id || ''}
-        botName={selectedBotForLogs?.name || ''}
-        isOpen={!!selectedBotForLogs}
-        onClose={() => {
-          console.log('🔍 Closing BotLogsModal from BotsPage');
-          setSelectedBotForLogs(null);
-        }}
-      />
     </div>
   );
 }
