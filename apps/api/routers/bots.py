@@ -398,8 +398,32 @@ async def start_dca_bot_paper(
     except TradeeonError:
         raise
     except Exception as e:
-        logger.error(f"Error starting DCA bot in paper mode: {e}", exc_info=True)
-        raise TradeeonError(f"Failed to start bot: {str(e)}", "INTERNAL_SERVER_ERROR", status_code=500)
+        error_type = type(e).__name__
+        error_message = str(e)
+        logger.error(f"❌ Error starting DCA bot in paper mode: {error_type}: {error_message}", exc_info=True)
+        logger.error(f"   Bot ID: {bot_id}")
+        logger.error(f"   User ID: {user.user_id}")
+        logger.error(f"   Error details: {repr(e)}")
+        
+        # Include more details in error message for debugging
+        detailed_message = f"Failed to start bot: {error_message}"
+        if "bots_path" in locals():
+            logger.error(f"   Bots path: {bots_path}")
+        if "db_service" in locals():
+            logger.error(f"   DB service enabled: {db_service.enabled if db_service else 'N/A'}")
+        if "bot_execution_service" in locals():
+            logger.error(f"   Bot execution service available: {bot_execution_service is not None}")
+        
+        raise TradeeonError(
+            detailed_message,
+            "INTERNAL_SERVER_ERROR",
+            status_code=500,
+            details={
+                "error_type": error_type,
+                "error_message": error_message,
+                "bot_id": bot_id
+            }
+        )
 
 
 @router.get("/dca-bots/{bot_id}/status")

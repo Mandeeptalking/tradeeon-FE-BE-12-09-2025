@@ -84,7 +84,12 @@ async def tradeeon_error_handler(request, exc: TradeeonError):
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc: Exception):
     """Handle unexpected exceptions"""
-    logger.error(f"Unexpected error: {str(exc)}", exc_info=True)
+    error_type = type(exc).__name__
+    error_message = str(exc)
+    logger.error(f"❌ Unexpected error: {error_type}: {error_message}", exc_info=True)
+    logger.error(f"   Request path: {request.url.path}")
+    logger.error(f"   Request method: {request.method}")
+    
     response = {
         "success": False,
         "error": {
@@ -93,9 +98,15 @@ async def general_exception_handler(request, exc: Exception):
         },
         "timestamp": int(datetime.now().timestamp())
     }
-    # Only show details in development
-    if os.getenv("ENVIRONMENT") != "production":
-        response["error"]["details"] = {"exception": str(exc)}
+    # Show error details in development or if explicitly enabled
+    is_dev = os.getenv("ENVIRONMENT") != "production" or os.getenv("SHOW_ERROR_DETAILS") == "true"
+    if is_dev:
+        response["error"]["details"] = {
+            "exception": error_message,
+            "type": error_type
+        }
+        # Include full error message in dev
+        response["error"]["message"] = f"An unexpected error occurred: {error_message}"
     return JSONResponse(
         status_code=500,
         content=response
