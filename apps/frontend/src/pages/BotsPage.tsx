@@ -460,21 +460,25 @@ export default function BotsPage() {
         stack: err.stack
       });
       
-      // Show detailed error to user
+      // Show detailed error to user with full message
       const errorDescription = action === 'delete' 
         ? 'The bot may still exist. Please refresh the page.' 
-        : 'Please check the browser console for details or contact support if the issue persists.';
+        : 'Check the browser console (F12) for detailed error information.';
       
+      // Show the full error message in toast
       toast.error(errorMessage, { 
         description: errorDescription,
-        duration: 5000 // Show for 5 seconds
+        duration: 8000 // Show for 8 seconds to give user time to read
       });
       
-      // Log to console for debugging
-      console.error(`Bot action failed (${action}):`, {
+      // Log full error details to console for debugging
+      console.error(`❌ Bot action failed (${action}):`, {
         botId,
+        action,
         error: err,
-        message: errorMessage
+        message: errorMessage,
+        stack: err.stack,
+        endpoint: `${getApiBaseUrl()}/bots/dca-bots/${botId}/${action === 'start' ? 'start-paper' : action === 'delete' ? '' : action}`
       });
     } finally {
       setActionLoading(null);
