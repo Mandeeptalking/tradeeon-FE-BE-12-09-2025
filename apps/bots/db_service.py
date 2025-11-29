@@ -453,17 +453,32 @@ class BotDatabaseService:
             return False
         
         try:
+            # First, check if bot exists
+            check_result = self.supabase.table("bots").select("bot_id").eq("bot_id", bot_id).eq("user_id", user_id).execute()
+            
+            if not check_result.data:
+                logger.warning(f"Bot {bot_id} not found or doesn't belong to user {user_id}")
+                return False  # Bot doesn't exist, return False (API will handle idempotent delete)
+            
             # Delete bot (user_id check ensures user can only delete their own bots)
             result = self.supabase.table("bots").delete().eq("bot_id", bot_id).eq("user_id", user_id).execute()
             
-            if result.data:
+            # Verify deletion by checking if bot still exists
+            verify_result = self.supabase.table("bots").select("bot_id").eq("bot_id", bot_id).eq("user_id", user_id).execute()
+            
+            if verify_result.data:
+                logger.error(f"❌ Bot {bot_id} still exists after delete operation")
+                return False
+            else:
                 logger.info(f"✅ Bot {bot_id} deleted from database successfully")
                 return True
-            else:
-                logger.warning(f"Bot {bot_id} not found or already deleted")
-                return False
         except Exception as e:
             logger.error(f"❌ Failed to delete bot {bot_id} from database: {e}", exc_info=True)
+            logger.error(f"   Error type: {type(e).__name__}")
+            if hasattr(e, 'message'):
+                logger.error(f"   Error message: {e.message}")
+            if hasattr(e, 'details'):
+                logger.error(f"   Error details: {e.details}")
             return False
     
     def log_event(

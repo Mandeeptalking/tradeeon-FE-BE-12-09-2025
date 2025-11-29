@@ -234,12 +234,59 @@ async def start_dca_bot_paper(
         import sys
         # os is already imported at module level
         
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
+        # Use absolute path resolution for better reliability in Docker/production
+        current_file = os.path.abspath(__file__)
+        routers_dir = os.path.dirname(current_file)
+        api_dir = os.path.dirname(routers_dir)
+        apps_dir = os.path.dirname(api_dir)
+        bots_path = os.path.join(apps_dir, 'bots')
+        bots_path = os.path.abspath(bots_path)
+        
+        if not os.path.exists(bots_path):
+            logger.error(f"❌ Bots directory not found at: {bots_path}")
+            logger.error(f"   Current file: {current_file}")
+            logger.error(f"   Routers dir: {routers_dir}")
+            logger.error(f"   API dir: {api_dir}")
+            logger.error(f"   Apps dir: {apps_dir}")
+            raise TradeeonError(
+                f"Bots module not found. Expected at: {bots_path}",
+                "INTERNAL_SERVER_ERROR",
+                status_code=500
+            )
+        
         if bots_path not in sys.path:
             sys.path.insert(0, bots_path)
         
-        from db_service import db_service
-        from bot_execution_service import bot_execution_service
+        try:
+            from db_service import db_service
+            from bot_execution_service import bot_execution_service
+        except ImportError as import_error:
+            logger.error(f"❌ Failed to import bot services: {import_error}")
+            logger.error(f"   Bots path: {bots_path}")
+            logger.error(f"   Python path: {sys.path[:5]}")
+            raise TradeeonError(
+                f"Failed to import bot services: {str(import_error)}",
+                "INTERNAL_SERVER_ERROR",
+                status_code=500
+            )
+        
+        # Check if db_service is enabled
+        if not db_service or not db_service.enabled:
+            logger.error("❌ Database service is not enabled!")
+            raise TradeeonError(
+                "Database service is not available. Please check backend configuration.",
+                "SERVICE_UNAVAILABLE",
+                status_code=503
+            )
+        
+        # Check if bot_execution_service is available
+        if not bot_execution_service:
+            logger.error("❌ Bot execution service is not available!")
+            raise TradeeonError(
+                "Bot execution service is not available. Please check backend configuration.",
+                "SERVICE_UNAVAILABLE",
+                status_code=503
+            )
         
         bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
         if not bot_data:
@@ -291,22 +338,45 @@ async def start_dca_bot_paper(
         interval_seconds = start_config.get("interval_seconds", 60)
         
         # Create bot run record FIRST (before starting bot so we can pass run_id)
-        run_id = db_service.create_bot_run(bot_id=bot_id, user_id=user.user_id, status="running")
+        try:
+            run_id = db_service.create_bot_run(bot_id=bot_id, user_id=user.user_id, status="running")
+            if not run_id:
+                logger.warning(f"Failed to create bot run record, continuing without run_id")
+        except Exception as run_error:
+            logger.error(f"Error creating bot run record: {run_error}", exc_info=True)
+            run_id = None  # Continue without run_id
         
         # Start bot with run_id
-        started = await bot_execution_service.start_bot(
-            bot_id=bot_id,
-            bot_config=bot_config,
-            mode="paper",
-            initial_balance=initial_balance,
-            interval_seconds=interval_seconds,
-            run_id=run_id  # Pass run_id to executor
-        )
+        try:
+            started = await bot_execution_service.start_bot(
+                bot_id=bot_id,
+                bot_config=bot_config,
+                mode="paper",
+                initial_balance=initial_balance,
+                interval_seconds=interval_seconds,
+                run_id=run_id  # Pass run_id to executor
+            )
+        except Exception as start_error:
+            logger.error(f"Error starting bot executor: {start_error}", exc_info=True)
+            # If bot failed to start, update run status
+            if run_id and db_service and db_service.enabled:
+                try:
+                    db_service.update_bot_run(run_id, status="error")
+                except:
+                    pass
+            raise TradeeonError(
+                f"Failed to start bot executor: {str(start_error)}",
+                "INTERNAL_SERVER_ERROR",
+                status_code=500
+            )
         
         if not started:
             # If bot failed to start, update run status
-            if run_id and db_service:
-                db_service.update_bot_run(run_id, status="error")
+            if run_id and db_service and db_service.enabled:
+                try:
+                    db_service.update_bot_run(run_id, status="error")
+                except:
+                    pass
             raise TradeeonError("Failed to start bot", "INTERNAL_SERVER_ERROR", status_code=500)
         
         # Update bot status to running
@@ -872,12 +942,54 @@ async def delete_dca_bot(
         import sys
         # os is already imported at module level
         
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
+        # Use absolute path resolution for better reliability in Docker/production
+        current_file = os.path.abspath(__file__)
+        routers_dir = os.path.dirname(current_file)
+        api_dir = os.path.dirname(routers_dir)
+        apps_dir = os.path.dirname(api_dir)
+        bots_path = os.path.join(apps_dir, 'bots')
+        bots_path = os.path.abspath(bots_path)
+        
+        if not os.path.exists(bots_path):
+            logger.error(f"❌ Bots directory not found at: {bots_path}")
+            raise TradeeonError(
+                f"Bots module not found. Expected at: {bots_path}",
+                "INTERNAL_SERVER_ERROR",
+                status_code=500
+            )
+        
         if bots_path not in sys.path:
             sys.path.insert(0, bots_path)
         
-        from db_service import db_service
-        from bot_execution_service import bot_execution_service
+        try:
+            from db_service import db_service
+            from bot_execution_service import bot_execution_service
+        except ImportError as import_error:
+            logger.error(f"❌ Failed to import bot services: {import_error}")
+            logger.error(f"   Bots path: {bots_path}")
+            raise TradeeonError(
+                f"Failed to import bot services: {str(import_error)}",
+                "INTERNAL_SERVER_ERROR",
+                status_code=500
+            )
+        
+        # Check if db_service is enabled
+        if not db_service or not db_service.enabled:
+            logger.error("❌ Database service is not enabled!")
+            raise TradeeonError(
+                "Database service is not available. Please check backend configuration.",
+                "SERVICE_UNAVAILABLE",
+                status_code=503
+            )
+        
+        # Check if bot_execution_service is available
+        if not bot_execution_service:
+            logger.error("❌ Bot execution service is not available!")
+            raise TradeeonError(
+                "Bot execution service is not available. Please check backend configuration.",
+                "SERVICE_UNAVAILABLE",
+                status_code=503
+            )
         
         bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
         if not bot_data:
@@ -889,15 +1001,39 @@ async def delete_dca_bot(
         if current_status in ["running", "paused"]:
             if bot_execution_service.is_running(bot_id):
                 logger.info(f"Stopping bot {bot_id} before deletion (status: {current_status})")
-                await bot_execution_service.stop_bot(bot_id)
+                try:
+                    await bot_execution_service.stop_bot(bot_id)
+                except Exception as stop_error:
+                    logger.warning(f"Error stopping bot before deletion: {stop_error}")
             # Update status to stopped before deletion
-            db_service.update_bot_status(bot_id, "stopped")
+            try:
+                db_service.update_bot_status(bot_id, "stopped")
+            except Exception as status_error:
+                logger.warning(f"Error updating bot status before deletion: {status_error}")
         
         # Delete the bot
+        logger.info(f"Attempting to delete bot {bot_id} for user {user.user_id}")
         deleted = db_service.delete_bot(bot_id, user_id=user.user_id)
         
         if not deleted:
-            raise TradeeonError("Failed to delete bot", "INTERNAL_SERVER_ERROR", status_code=500)
+            logger.error(f"❌ Failed to delete bot {bot_id}. delete_bot returned False")
+            # Check if bot still exists
+            check_bot = db_service.get_bot(bot_id, user_id=user.user_id)
+            if check_bot:
+                logger.error(f"   Bot still exists in database after delete attempt")
+                raise TradeeonError(
+                    "Failed to delete bot. Bot still exists in database.",
+                    "INTERNAL_SERVER_ERROR",
+                    status_code=500
+                )
+            else:
+                logger.warning(f"   Bot not found in database (may have been already deleted)")
+                # Return success if bot doesn't exist (idempotent delete)
+                return {
+                    "success": True,
+                    "message": "Bot not found (may have been already deleted)",
+                    "bot_id": bot_id
+                }
         
         logger.info(f"✅ DCA bot {bot_id} deleted successfully")
         
