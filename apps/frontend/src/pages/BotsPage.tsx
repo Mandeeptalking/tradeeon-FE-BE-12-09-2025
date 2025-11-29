@@ -281,6 +281,9 @@ export default function BotsPage() {
       
       const fetchOptions: RequestInit = {
         method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       };
       
       // Only add body if it exists (for start action)
@@ -288,13 +291,35 @@ export default function BotsPage() {
         fetchOptions.body = requestBody;
       }
       
-      const response = await authenticatedFetch(endpoint, fetchOptions);
+      logger.debug(`Making API request:`, { 
+        endpoint, 
+        method, 
+        hasBody: !!requestBody,
+        body: requestBody 
+      });
+      
+      let response: Response;
+      try {
+        response = await authenticatedFetch(endpoint, fetchOptions);
+      } catch (fetchError: any) {
+        logger.error(`Network error during bot action:`, {
+          action,
+          botId,
+          error: fetchError,
+          message: fetchError?.message
+        });
+        throw new Error(
+          fetchError?.message || 
+          `Network error: Failed to connect to server. Please check your internet connection and try again.`
+        );
+      }
       
       logger.debug(`Bot action response:`, { 
         action, 
         botId, 
         status: response.status, 
-        statusText: response.statusText 
+        statusText: response.statusText,
+        ok: response.ok
       });
       
       if (!response.ok) {
@@ -359,6 +384,18 @@ export default function BotsPage() {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
           responseData = await response.json();
+          logger.debug(`Bot action success response:`, responseData);
+        } else {
+          // Try to get text response
+          const text = await response.text();
+          logger.debug(`Bot action success response (text):`, text);
+          if (text) {
+            try {
+              responseData = JSON.parse(text);
+            } catch {
+              // Not JSON, that's okay
+            }
+          }
         }
       } catch (parseError) {
         logger.warn('Failed to parse success response:', parseError);
@@ -372,25 +409,43 @@ export default function BotsPage() {
         delete: 'deleted'
       };
       
-      toast.success(`Bot ${actionMessages[action]} successfully`);
+      // Show success message with details if available
+      const successMessage = responseData.message || `Bot ${actionMessages[action]} successfully`;
+      toast.success(successMessage);
+      
+      logger.info(`✅ Bot ${action} successful:`, { botId, responseData });
       
       // Refresh bots list after a short delay to ensure backend has updated
       setTimeout(async () => {
+        logger.debug('Refreshing bots list after action...');
         await fetchBots();
       }, 500);
       
     } catch (err: any) {
       const errorMessage = err.message || `Failed to ${action} bot`;
-      logger.error(`Error ${action}ing bot:`, { 
+      logger.error(`❌ Error ${action}ing bot:`, { 
         botId, 
         action, 
         error: err,
-        message: errorMessage 
+        message: errorMessage,
+        stack: err.stack
       });
+      
+      // Show detailed error to user
+      const errorDescription = action === 'delete' 
+        ? 'The bot may still exist. Please refresh the page.' 
+        : 'Please check the browser console for details or contact support if the issue persists.';
+      
       toast.error(errorMessage, { 
-        description: action === 'delete' 
-          ? 'The bot may still exist. Please refresh the page.' 
-          : 'Please try again or contact support if the issue persists.'
+        description: errorDescription,
+        duration: 5000 // Show for 5 seconds
+      });
+      
+      // Log to console for debugging
+      console.error(`Bot action failed (${action}):`, {
+        botId,
+        error: err,
+        message: errorMessage
       });
     } finally {
       setActionLoading(null);
