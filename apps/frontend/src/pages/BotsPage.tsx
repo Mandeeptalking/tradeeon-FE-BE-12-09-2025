@@ -329,8 +329,21 @@ export default function BotsPage() {
         try {
           const errorData = await response.json();
           logger.error(`Bot action error response:`, errorData);
+          console.error('Bot action error details:', errorData);
           
-          if (errorData.detail) {
+          // Try multiple error formats
+          if (errorData.error?.message) {
+            errorMessage = errorData.error.message;
+            // Include error code if available
+            if (errorData.error?.code) {
+              errorMessage = `[${errorData.error.code}] ${errorMessage}`;
+            }
+            // Include details if available
+            if (errorData.error?.details) {
+              errorDetails = JSON.stringify(errorData.error.details);
+              console.error('Error details:', errorData.error.details);
+            }
+          } else if (errorData.detail) {
             if (typeof errorData.detail === 'string') {
               errorMessage = errorData.detail;
             } else if (Array.isArray(errorData.detail)) {
@@ -343,10 +356,12 @@ export default function BotsPage() {
             } else {
               errorMessage = JSON.stringify(errorData.detail);
             }
-          } else if (errorData.error?.message) {
-            errorMessage = errorData.error.message;
           } else if (errorData.message) {
             errorMessage = errorData.message;
+          } else {
+            // Fallback: show the whole error object
+            errorMessage = JSON.stringify(errorData);
+            console.error('Full error response:', errorData);
           }
         } catch (parseError) {
           // If JSON parsing fails, try to get text
@@ -370,10 +385,24 @@ export default function BotsPage() {
         } else if (response.status === 400) {
           // Keep the detailed error message for 400 errors
         } else if (response.status === 500) {
-          errorMessage = `Server error: ${errorMessage}. Please try again later.`;
+          // For 500 errors, show the actual error message if available
+          if (errorMessage && !errorMessage.includes('Server error:')) {
+            errorMessage = `Server error: ${errorMessage}`;
+          } else if (!errorMessage || errorMessage === `Failed to ${action} bot`) {
+            errorMessage = `Server error: An unexpected error occurred. Check browser console for details.`;
+          }
         } else if (response.status === 503) {
           errorMessage = 'Service temporarily unavailable. Please try again later.';
         }
+        
+        // Log full error for debugging
+        console.error(`Bot ${action} failed:`, {
+          status: response.status,
+          errorMessage,
+          errorDetails,
+          botId,
+          endpoint
+        });
         
         throw new Error(errorMessage);
       }
