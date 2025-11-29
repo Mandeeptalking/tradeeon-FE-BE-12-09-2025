@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 import { authenticatedFetch } from '../lib/api/auth';
 import { logger } from '../utils/logger';
 import BotCard from '../components/bots/BotCard';
+import BotLogsModal from '../components/bots/BotLogsModal';
 import { StatCard } from '../components/dashboard/StatCard';
 import EmptyState from '../components/EmptyState';
 import type { Bot, BotStatus, Exchange, BotType } from '../lib/api/bots';
@@ -59,6 +60,10 @@ export default function BotsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<{ title: string; details: string; tips?: string[] } | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  
+  // Logs modal state
+  const [showLogsModal, setShowLogsModal] = useState(false);
+  const [selectedBotForLogs, setSelectedBotForLogs] = useState<{ id: string; name: string } | null>(null);
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -297,8 +302,14 @@ export default function BotsPage() {
 
   // View/Edit/Duplicate handlers
   const handleView = (botId: string) => {
-    logger.debug('Navigating to bot logs:', botId);
-    navigate(`/app/bots/${botId}/logs`);
+    logger.debug('Opening bot logs modal:', botId);
+    const bot = bots.find(b => b.bot_id === botId);
+    if (bot) {
+      setSelectedBotForLogs({ id: botId, name: bot.name });
+      setShowLogsModal(true);
+    } else {
+      toast.error('Bot not found', { description: 'Unable to find bot details' });
+    }
   };
 
   const handleEdit = (botId: string) => {
@@ -747,6 +758,19 @@ export default function BotsPage() {
             </AnimatePresence>
           )}
         </>
+      )}
+
+      {/* Bot Logs Modal */}
+      {selectedBotForLogs && (
+        <BotLogsModal
+          botId={selectedBotForLogs.id}
+          botName={selectedBotForLogs.name}
+          isOpen={showLogsModal}
+          onClose={() => {
+            setShowLogsModal(false);
+            setSelectedBotForLogs(null);
+          }}
+        />
       )}
     </div>
   );
