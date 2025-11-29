@@ -226,7 +226,7 @@ async def create_dca_bot(
 @router.post("/dca-bots/{bot_id}/start-paper")
 async def start_dca_bot_paper(
     bot_id: str = Path(..., description="Bot ID"),
-    start_config: Dict[str, Any] = Body(default={}, description="Start configuration"),
+    start_config: Optional[Dict[str, Any]] = Body(default=None, description="Start configuration"),
     user: AuthedUser = Depends(get_current_user)
 ):
     """Start a DCA bot in paper trading mode."""
@@ -282,6 +282,10 @@ async def start_dca_bot_paper(
         
         bot_config = bot_data.get("config", {})
         bot_config["user_id"] = user.user_id
+        
+        # Handle optional start_config
+        if start_config is None:
+            start_config = {}
         
         initial_balance = start_config.get("initial_balance", 10000.0)
         interval_seconds = start_config.get("interval_seconds", 60)

@@ -249,10 +249,16 @@ export default function BotsPage() {
       const API_BASE_URL = getApiBaseUrl();
       let endpoint = '';
       let method = 'POST';
+      let requestBody: string | undefined = undefined;
       
       switch (action) {
         case 'start':
           endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/start-paper`;
+          requestBody = JSON.stringify({
+            initial_balance: 10000,
+            interval_seconds: 60,
+            use_live_data: true
+          });
           break;
         case 'pause':
           endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/pause`;
@@ -267,32 +273,125 @@ export default function BotsPage() {
           endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}`;
           method = 'DELETE';
           break;
+        default:
+          throw new Error(`Unknown action: ${action}`);
       }
       
-      const response = await authenticatedFetch(endpoint, {
+      logger.debug(`Executing bot action: ${action}`, { botId, endpoint, method });
+      
+      const fetchOptions: RequestInit = {
         method,
-        ...(action === 'start' && {
-          body: JSON.stringify({
-            initial_balance: 10000,
-            interval_seconds: 60,
-            use_live_data: true
-          })
-        })
+      };
+      
+      // Only add body if it exists (for start action)
+      if (requestBody) {
+        fetchOptions.body = requestBody;
+      }
+      
+      const response = await authenticatedFetch(endpoint, fetchOptions);
+      
+      logger.debug(`Bot action response:`, { 
+        action, 
+        botId, 
+        status: response.status, 
+        statusText: response.statusText 
       });
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: `Failed to ${action} bot` }));
-        throw new Error(errorData.detail || `Failed to ${action} bot`);
+        let errorMessage = `Failed to ${action} bot`;
+        let errorDetails = '';
+        
+        try {
+          const errorData = await response.json();
+          logger.error(`Bot action error response:`, errorData);
+          
+          if (errorData.detail) {
+            if (typeof errorData.detail === 'string') {
+              errorMessage = errorData.detail;
+            } else if (Array.isArray(errorData.detail)) {
+              errorDetails = errorData.detail.map((e: any) => {
+                const field = e.loc && e.loc.length > 1 ? e.loc[e.loc.length - 1] : 'field';
+                const msg = e.msg || 'is required';
+                return `${field}: ${msg}`;
+              }).join('; ');
+              errorMessage = `Validation error: ${errorDetails}`;
+            } else {
+              errorMessage = JSON.stringify(errorData.detail);
+            }
+          } else if (errorData.error?.message) {
+            errorMessage = errorData.error.message;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (parseError) {
+          // If JSON parsing fails, try to get text
+          try {
+            const errorText = await response.text();
+            if (errorText) {
+              errorMessage = errorText.substring(0, 200); // Limit length
+            }
+          } catch (textError) {
+            logger.error('Failed to parse error response:', textError);
+          }
+        }
+        
+        // Provide user-friendly error messages based on status code
+        if (response.status === 401) {
+          errorMessage = 'Authentication required. Please sign in again.';
+        } else if (response.status === 403) {
+          errorMessage = 'You do not have permission to perform this action.';
+        } else if (response.status === 404) {
+          errorMessage = 'Bot not found. It may have been deleted.';
+        } else if (response.status === 400) {
+          // Keep the detailed error message for 400 errors
+        } else if (response.status === 500) {
+          errorMessage = `Server error: ${errorMessage}. Please try again later.`;
+        } else if (response.status === 503) {
+          errorMessage = 'Service temporarily unavailable. Please try again later.';
+        }
+        
+        throw new Error(errorMessage);
       }
       
-      toast.success(`Bot ${action === 'start' ? 'started' : action === 'pause' ? 'paused' : action === 'resume' ? 'resumed' : action === 'stop' ? 'stopped' : 'deleted'} successfully`);
+      // Parse successful response
+      let responseData: any = {};
+      try {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          responseData = await response.json();
+        }
+      } catch (parseError) {
+        logger.warn('Failed to parse success response:', parseError);
+      }
       
-      // Refresh bots list
-      await fetchBots();
+      const actionMessages = {
+        start: 'started',
+        pause: 'paused',
+        resume: 'resumed',
+        stop: 'stopped',
+        delete: 'deleted'
+      };
+      
+      toast.success(`Bot ${actionMessages[action]} successfully`);
+      
+      // Refresh bots list after a short delay to ensure backend has updated
+      setTimeout(async () => {
+        await fetchBots();
+      }, 500);
+      
     } catch (err: any) {
       const errorMessage = err.message || `Failed to ${action} bot`;
-      logger.error(`Error ${action}ing bot:`, err);
-      toast.error(errorMessage);
+      logger.error(`Error ${action}ing bot:`, { 
+        botId, 
+        action, 
+        error: err,
+        message: errorMessage 
+      });
+      toast.error(errorMessage, { 
+        description: action === 'delete' 
+          ? 'The bot may still exist. Please refresh the page.' 
+          : 'Please try again or contact support if the issue persists.'
+      });
     } finally {
       setActionLoading(null);
     }
