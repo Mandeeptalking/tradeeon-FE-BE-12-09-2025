@@ -162,33 +162,71 @@ export default function BotLogsPage() {
 
   // Fetch bot status
   const fetchBotStatus = async () => {
-    if (!botId) return;
+    if (!botId) {
+      console.log('⚠️ fetchBotStatus: No botId provided');
+      return;
+    }
     
     try {
       const API_BASE_URL = getApiBaseUrl();
+      console.log('🔍 Fetching bot status for:', botId);
       const response = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots/${botId}/status`);
+      console.log('📡 Status API response:', { status: response.status, ok: response.ok });
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('📦 Status data received:', data);
         setStatus(data);
+      } else {
+        const errorText = await response.text();
+        console.error('❌ Status API error:', { status: response.status, error: errorText });
+        logger.error('Failed to fetch bot status', { status: response.status, error: errorText });
       }
     } catch (error: any) {
+      console.error('❌ Error fetching bot status:', error);
       logger.error('Error fetching bot status:', error);
     }
   };
 
   // Fetch events
   const fetchEvents = async () => {
-    if (!botId) return;
+    if (!botId) {
+      console.log('⚠️ fetchEvents: No botId provided');
+      return;
+    }
     
     try {
       const API_BASE_URL = getApiBaseUrl();
+      console.log('🔍 Fetching events for bot:', botId, `${API_BASE_URL}/bots/dca-bots/${botId}/events?limit=100`);
       const response = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots/${botId}/events?limit=100`);
+      console.log('📡 Events API response:', { status: response.status, ok: response.ok });
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('📦 Events data received:', { 
+          success: data.success, 
+          eventsCount: data.events?.length || 0,
+          total: data.total,
+          data: data 
+        });
         setEvents(data.events || []);
+        
+        if (!data.events || data.events.length === 0) {
+          console.warn('⚠️ No events found for bot:', botId);
+          if (data.message) {
+            console.warn('📝 Message:', data.message);
+          }
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('❌ Events API error:', { status: response.status, error: errorText });
+        logger.error('Failed to fetch events', { status: response.status, error: errorText });
+        toast.error('Failed to fetch events', { description: `Status: ${response.status}` });
       }
     } catch (error: any) {
+      console.error('❌ Error fetching events:', error);
       logger.error('Error fetching events:', error);
+      toast.error('Error fetching events', { description: error.message });
     }
   };
 
@@ -256,9 +294,12 @@ export default function BotLogsPage() {
 
   // Initial load
   useEffect(() => {
+    console.log('🔍 BotLogsPage useEffect - botId:', botId);
     if (botId) {
+      console.log('✅ BotId found, fetching all data...');
       fetchAll();
     } else {
+      console.error('❌ No botId provided');
       setError('Invalid bot ID');
       setIsLoading(false);
     }
@@ -544,13 +585,15 @@ export default function BotLogsPage() {
           <TabsContent value="events" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Bot Events</CardTitle>
+                <CardTitle>Bot Events {events.length > 0 && `(${events.length})`}</CardTitle>
               </CardHeader>
               <CardContent>
-                {events.length > 0 ? (
+                {isLoading ? (
+                  <div className="text-center py-8 text-gray-500">Loading events...</div>
+                ) : events.length > 0 ? (
                   <div className="space-y-2 max-h-[600px] overflow-y-auto">
                     {events.map((event) => (
-                      <div key={event.event_id} className="border-b border-gray-200 dark:border-gray-700 pb-2">
+                      <div key={event.event_id || event.id || Math.random()} className="border-b border-gray-200 dark:border-gray-700 pb-2">
                         <div className="flex items-start gap-2">
                           {getEventIcon(event.event_category, event.event_type)}
                           <div className="flex-1">
@@ -574,7 +617,26 @@ export default function BotLogsPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">No events found</div>
+                  <div className="text-center py-8 space-y-3">
+                    <div className="text-gray-500 font-medium">No events found</div>
+                    <div className="text-xs text-gray-400 space-y-1">
+                      <p>Possible reasons:</p>
+                      <ul className="list-disc list-inside space-y-1 text-left max-w-md mx-auto">
+                        <li>Bot hasn't been started yet</li>
+                        <li>Bot hasn't executed any actions</li>
+                        <li>bot_events table doesn't exist in database</li>
+                        <li>Events haven't been logged yet</li>
+                      </ul>
+                    </div>
+                    {error && (
+                      <div className="text-xs text-red-500 mt-2">
+                        Error: {error}
+                      </div>
+                    )}
+                    <div className="text-xs text-blue-500 mt-4">
+                      💡 Check browser console (F12) for detailed API response logs
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>

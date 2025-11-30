@@ -518,9 +518,38 @@ export default function BotsPage() {
 
   // View/Edit/Duplicate handlers
   const handleView = (botId: string) => {
-    logger.debug('Navigating to bot logs page:', botId);
-    // Navigate to the logs page instead of opening a modal
-    navigate(`/app/bots/${botId}/logs`);
+    console.log('🔍 handleView called with botId:', botId);
+    console.log('📍 Current location:', window.location.pathname);
+    
+    if (!botId) {
+      console.error('❌ handleView: botId is empty or undefined');
+      toast.error('Error', { description: 'Bot ID is missing. Cannot navigate to logs.' });
+      return;
+    }
+    
+    try {
+      const targetPath = `/app/bots/${botId}/logs`;
+      console.log('🚀 Navigating to:', targetPath);
+      logger.debug('Navigating to bot logs page:', botId);
+      
+      // Navigate to the logs page instead of opening a modal
+      navigate(targetPath);
+      
+      // Log after a short delay to see if navigation happened
+      setTimeout(() => {
+        console.log('📍 Location after navigation:', window.location.pathname);
+        if (window.location.pathname !== targetPath) {
+          console.error('❌ Navigation failed! Still at:', window.location.pathname);
+        } else {
+          console.log('✅ Navigation successful!');
+        }
+      }, 100);
+    } catch (error) {
+      console.error('❌ Error during navigation:', error);
+      toast.error('Navigation Error', { 
+        description: `Failed to navigate to logs: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      });
+    }
   };
 
   const handleEdit = (botId: string) => {

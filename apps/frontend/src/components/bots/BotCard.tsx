@@ -316,7 +316,20 @@ export default function BotCard({
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => onView(bot.bot_id)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔍 View button clicked for bot:', bot.bot_id);
+                    try {
+                      if (onView && typeof onView === 'function') {
+                        onView(bot.bot_id);
+                      } else {
+                        console.error('❌ onView is not a function:', typeof onView);
+                      }
+                    } catch (error) {
+                      console.error('❌ Error in onView:', error);
+                    }
+                  }}
                   title="View Details"
                   className="text-gray-400 hover:text-white hover:bg-gray-700/50 border border-transparent hover:border-gray-600"
                 >
@@ -355,7 +368,20 @@ export default function BotCard({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
                     <DropdownMenuItem 
-                      onClick={() => onView(bot.bot_id)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🔍 View Logs clicked for bot:', bot.bot_id);
+                        try {
+                          if (onView && typeof onView === 'function') {
+                            onView(bot.bot_id);
+                          } else {
+                            console.error('❌ onView is not a function:', typeof onView);
+                          }
+                        } catch (error) {
+                          console.error('❌ Error in onView:', error);
+                        }
+                      }}
                       className="text-white hover:bg-gray-700 focus:bg-gray-700"
                     >
                       <FileText className="h-4 w-4 mr-2" />
