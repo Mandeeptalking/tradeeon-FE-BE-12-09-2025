@@ -283,8 +283,23 @@ async def start_dca_bot_paper(
                 interval_seconds=interval_seconds,
                 run_id=run_id  # Pass run_id to executor
             )
-        except Exception as start_error:
+        except RuntimeError as start_error:
+            # RuntimeError from bot_execution_service.start_bot with detailed message
             logger.error(f"Error starting bot executor: {start_error}", exc_info=True)
+            # If bot failed to start, update run status
+            if run_id and db_service and db_service.enabled:
+                try:
+                    db_service.update_bot_run(run_id, status="error")
+                except:
+                    pass
+            raise TradeeonError(
+                str(start_error),
+                "INTERNAL_SERVER_ERROR",
+                status_code=500,
+                details={"bot_id": bot_id, "error_type": type(start_error).__name__}
+            )
+        except Exception as start_error:
+            logger.error(f"Unexpected error starting bot executor: {start_error}", exc_info=True)
             # If bot failed to start, update run status
             if run_id and db_service and db_service.enabled:
                 try:
@@ -294,7 +309,8 @@ async def start_dca_bot_paper(
             raise TradeeonError(
                 f"Failed to start bot executor: {str(start_error)}",
                 "INTERNAL_SERVER_ERROR",
-                status_code=500
+                status_code=500,
+                details={"bot_id": bot_id, "error_type": type(start_error).__name__}
             )
         
         if not started:
@@ -304,7 +320,18 @@ async def start_dca_bot_paper(
                     db_service.update_bot_run(run_id, status="error")
                 except:
                     pass
-            raise TradeeonError("Failed to start bot", "INTERNAL_SERVER_ERROR", status_code=500)
+            # Get more details about why it failed
+            error_msg = "Failed to start bot. Check backend logs for details."
+            if bot_execution_service:
+                # Check if DCABotExecutor is available
+                if not hasattr(bot_execution_service, 'DCABotExecutor') or bot_execution_service.DCABotExecutor is None:
+                    error_msg = "DCABotExecutor is not available. Check bot module imports."
+            raise TradeeonError(
+                error_msg,
+                "INTERNAL_SERVER_ERROR",
+                status_code=500,
+                details={"bot_id": bot_id, "user_id": user.user_id}
+            )
         
         # Update bot status to running
         db_service.update_bot_status(bot_id, "running")

@@ -119,7 +119,11 @@ class BotExecutionService:
             return True
             
         except Exception as e:
-            logger.error(f"Failed to start bot {bot_id}: {e}", exc_info=True)
+            error_type = type(e).__name__
+            error_message = str(e)
+            logger.error(f"Failed to start bot {bot_id}: {error_type}: {error_message}", exc_info=True)
+            logger.error(f"   Bot config keys: {list(bot_config.keys()) if bot_config else 'None'}")
+            logger.error(f"   Bot ID: {bot_id}, User ID: {bot_config.get('user_id') if bot_config else 'None'}")
             # Cleanup on error
             if bot_id in self.running_bots:
                 del self.running_bots[bot_id]
@@ -128,7 +132,8 @@ class BotExecutionService:
             if bot_id in self.bot_tasks:
                 self.bot_tasks[bot_id].cancel()
                 del self.bot_tasks[bot_id]
-            return False
+            # Re-raise the exception with more context so it can be caught and handled properly
+            raise RuntimeError(f"Failed to start bot {bot_id}: {error_message}") from e
     
     async def _execute_bot_loop(self, bot_id: str, interval_seconds: int):
         """Execute bot in a loop with specified interval."""
