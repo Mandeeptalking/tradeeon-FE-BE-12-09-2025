@@ -164,6 +164,67 @@ async def startup_event():
             if os.getenv("ENVIRONMENT") == "production":
                 raise RuntimeError(f"Database connection test failed: {e}")
     
+    # Initialize bot execution service
+    try:
+        # Add bots directory to path for imports
+        import sys
+        bots_path = os.path.join(os.path.dirname(__file__), '..', 'bots')
+        bots_path = os.path.abspath(bots_path)
+        if bots_path not in sys.path:
+            sys.path.insert(0, bots_path)
+        
+        from bot_execution_service import bot_execution_service
+        from db_service import db_service
+        
+        # Verify services are available
+        if bot_execution_service is None:
+            logger.error("❌ Bot execution service failed to initialize")
+            if os.getenv("ENVIRONMENT") == "production":
+                raise RuntimeError("Bot execution service is required in production")
+        else:
+            logger.info("✅ Bot execution service initialized successfully")
+        
+        if db_service is None:
+            logger.error("❌ Database service failed to initialize")
+            if os.getenv("ENVIRONMENT") == "production":
+                raise RuntimeError("Database service is required in production")
+        elif not db_service.enabled:
+            logger.warning("⚠️  Database service is disabled - bot persistence will not work")
+        else:
+            logger.info("✅ Database service initialized and enabled")
+        
+        # Store services in app state for access in routers
+        app.state.bot_execution_service = bot_execution_service
+        app.state.db_service = db_service
+        logger.info("✅ Bot services registered in app state")
+        
+        # Recover active bots from database
+        if bot_execution_service and db_service and db_service.enabled:
+            try:
+                recovered = await bot_execution_service.recover_active_bots()
+                if recovered > 0:
+                    logger.info(f"✅ Recovered {recovered} active bot(s) from database")
+            except Exception as recovery_error:
+                logger.error(f"❌ Error during bot recovery: {recovery_error}", exc_info=True)
+                # Don't fail startup if recovery fails, but log the error
+        
+    except ImportError as e:
+        logger.error(f"❌ Failed to import bot services: {e}", exc_info=True)
+        if os.getenv("ENVIRONMENT") == "production":
+            raise RuntimeError(f"Failed to import bot services: {e}")
+        else:
+            logger.warning("⚠️  Running without bot services - bot operations will fail")
+            app.state.bot_execution_service = None
+            app.state.db_service = None
+    except Exception as e:
+        logger.error(f"❌ Error initializing bot services: {e}", exc_info=True)
+        if os.getenv("ENVIRONMENT") == "production":
+            raise RuntimeError(f"Error initializing bot services: {e}")
+        else:
+            logger.warning("⚠️  Running without bot services - bot operations will fail")
+            app.state.bot_execution_service = None
+            app.state.db_service = None
+    
     # Start background tasks
     asyncio.create_task(cleanup_rate_limits())
     
@@ -174,13 +235,15 @@ async def startup_event():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint with database status"""
+    """Health check endpoint with database and bot service status"""
     from apps.api.clients.supabase_client import supabase
     
     health_status = {
         "status": "ok",
         "timestamp": int(datetime.now().timestamp()),
-        "database": "connected" if supabase is not None else "disconnected"
+        "database": "connected" if supabase is not None else "disconnected",
+        "bot_execution_service": "available" if hasattr(app.state, 'bot_execution_service') and app.state.bot_execution_service is not None else "unavailable",
+        "db_service": "enabled" if hasattr(app.state, 'db_service') and app.state.db_service and app.state.db_service.enabled else "disabled"
     }
     
     # Test database connection if available
@@ -191,6 +254,27 @@ async def health_check():
         except Exception as e:
             health_status["database"] = "error"
             health_status["database_error"] = str(e)
+    
+    # Check bot execution service
+    if hasattr(app.state, 'bot_execution_service') and app.state.bot_execution_service is not None:
+        try:
+            # Simple check - see if service has running_bots attribute
+            if hasattr(app.state.bot_execution_service, 'running_bots'):
+                health_status["bot_execution_service"] = "available"
+                running_bots = app.state.bot_execution_service.running_bots
+                health_status["running_bots_count"] = len(running_bots)
+                health_status["running_bot_ids"] = list(running_bots.keys())
+            else:
+                health_status["bot_execution_service"] = "error"
+        except Exception as e:
+            health_status["bot_execution_service"] = "error"
+            health_status["bot_service_error"] = str(e)
+    
+    # Determine overall status
+    if health_status["database"] == "error" or health_status["bot_execution_service"] == "error":
+        health_status["status"] = "degraded"
+    elif health_status["database"] == "disconnected" or health_status["bot_execution_service"] == "unavailable":
+        health_status["status"] = "degraded"
     
     return health_status
 

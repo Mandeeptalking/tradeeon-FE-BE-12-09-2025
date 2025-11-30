@@ -3,7 +3,7 @@
 import logging
 import sys
 import os
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import datetime
 
 # Add parent directory to path to import supabase_client
@@ -480,6 +480,107 @@ class BotDatabaseService:
             if hasattr(e, 'details'):
                 logger.error(f"   Error details: {e.details}")
             return False
+    
+    def save_bot_state(
+        self,
+        bot_id: str,
+        run_id: Optional[str],
+        state: Dict[str, Any]
+    ) -> bool:
+        """
+        Save bot execution state to database for recovery.
+        
+        Args:
+            bot_id: Bot identifier
+            run_id: Current run identifier
+            state: State dictionary containing execution state
+            
+        Returns:
+            True if saved successfully, False otherwise
+        """
+        if not self.enabled:
+            return False
+        
+        try:
+            # Store state in bot_runs meta field or create a separate state record
+            if run_id:
+                # Update run with state
+                self.supabase.table("bot_runs").update({
+                    "meta": state,
+                    "updated_at": datetime.now().isoformat()
+                }).eq("run_id", run_id).execute()
+            else:
+                # Store in bot config or create state record
+                # For now, we'll store in the latest run's meta
+                latest_run = self.supabase.table("bot_runs").select("run_id").eq("bot_id", bot_id).order("started_at", desc=True).limit(1).execute()
+                if latest_run.data:
+                    run_id = latest_run.data[0]["run_id"]
+                    self.supabase.table("bot_runs").update({
+                        "meta": state,
+                        "updated_at": datetime.now().isoformat()
+                    }).eq("run_id", run_id).execute()
+            
+            logger.debug(f"Saved bot state for {bot_id} (run_id: {run_id})")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to save bot state: {e}", exc_info=True)
+            return False
+    
+    def load_bot_state(
+        self,
+        bot_id: str,
+        run_id: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Load bot execution state from database.
+        
+        Args:
+            bot_id: Bot identifier
+            run_id: Optional run identifier (loads latest if not provided)
+            
+        Returns:
+            State dictionary or None if not found
+        """
+        if not self.enabled:
+            return None
+        
+        try:
+            if run_id:
+                result = self.supabase.table("bot_runs").select("meta").eq("run_id", run_id).execute()
+            else:
+                # Get latest run
+                result = self.supabase.table("bot_runs").select("run_id, meta").eq("bot_id", bot_id).order("started_at", desc=True).limit(1).execute()
+            
+            if result.data and len(result.data) > 0:
+                meta = result.data[0].get("meta")
+                if meta and isinstance(meta, dict):
+                    logger.debug(f"Loaded bot state for {bot_id} (run_id: {run_id or 'latest'})")
+                    return meta
+            
+            return None
+        except Exception as e:
+            logger.error(f"Failed to load bot state: {e}", exc_info=True)
+            return None
+    
+    def get_active_bots_for_recovery(self) -> List[Dict[str, Any]]:
+        """
+        Get list of bots that were running/paused and need recovery on restart.
+        
+        Returns:
+            List of bot dictionaries with status 'running' or 'paused'
+        """
+        if not self.enabled:
+            return []
+        
+        try:
+            result = self.supabase.table("bots").select("*").in_("status", ["running", "paused"]).execute()
+            if result.data:
+                logger.info(f"Found {len(result.data)} bots for recovery (status: running/paused)")
+                return result.data
+            return []
+        except Exception as e:
+            logger.error(f"Failed to get active bots for recovery: {e}", exc_info=True)
+            return []
     
     def log_event(
         self,

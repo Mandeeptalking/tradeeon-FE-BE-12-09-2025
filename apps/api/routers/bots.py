@@ -1,6 +1,6 @@
 """Bot management API routes."""
 
-from fastapi import APIRouter, HTTPException, Query, Path, Body, Depends
+from fastapi import APIRouter, HTTPException, Query, Path, Body, Depends, Request
 from fastapi.exceptions import RequestValidationError
 from typing import List, Optional, Dict, Any
 import logging
@@ -19,10 +19,35 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/bots", tags=["bots"])
 
 
+def get_bot_services(request: Request):
+    """Dependency to get bot services from app state."""
+    bot_execution_service = getattr(request.app.state, 'bot_execution_service', None)
+    db_service = getattr(request.app.state, 'db_service', None)
+    
+    if bot_execution_service is None:
+        logger.error("Bot execution service not available in app state")
+        raise TradeeonError(
+            "Bot execution service is not available. Please check backend configuration.",
+            "SERVICE_UNAVAILABLE",
+            status_code=503
+        )
+    
+    if db_service is None or not db_service.enabled:
+        logger.error("Database service not available or disabled in app state")
+        raise TradeeonError(
+            "Database service is not available. Please check backend configuration.",
+            "SERVICE_UNAVAILABLE",
+            status_code=503
+        )
+    
+    return bot_execution_service, db_service
+
+
 @router.get("/")
 async def list_bots(
     status: Optional[BotStatus] = Query(None, description="Filter by status (optional)"),
-    user: AuthedUser = Depends(get_current_user)
+    user: AuthedUser = Depends(get_current_user),
+    services: tuple = Depends(get_bot_services)
 ):
     """
     List user's bots from database.
@@ -31,68 +56,32 @@ async def list_bots(
     User ID is extracted from JWT token automatically.
     """
     try:
+        bot_execution_service, db_service = services
+        
         # Get user_id from authenticated user (extracted from JWT token)
         user_id = user.user_id
         logger.debug(f"Listing bots for user_id: {user_id}, status filter: {status}")
         
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
+        status_filter = status.value if status else None
+        logger.info(f"📋 Calling db_service.list_bots(user_id={user_id}, status={status_filter})")
+        logger.debug(f"   User ID type: {type(user_id).__name__}")
+        logger.debug(f"   User ID value: {user_id}")
         
-        bots = []
-        try:
-            from db_service import db_service
-            
-            # Check if database service is enabled
-            if not db_service.enabled:
-                logger.error("Database service is not enabled! Cannot fetch bots.")
-                logger.error(f"   Supabase client status: {db_service.supabase is not None if hasattr(db_service, 'supabase') else 'N/A'}")
-                raise TradeeonError(
-                    "Database service is not configured",
-                    "SERVICE_UNAVAILABLE",
-                    status_code=503
-                )
-            
-            status_filter = status.value if status else None
-            logger.info(f"📋 Calling db_service.list_bots(user_id={user_id}, status={status_filter})")
-            logger.debug(f"   User ID type: {type(user_id).__name__}")
-            logger.debug(f"   User ID value: {user_id}")
-            
-            bots = db_service.list_bots(user_id, status_filter)
-            
-            logger.info(f"✅ db_service.list_bots() returned {len(bots)} bots for user {user_id}")
-            
-            if bots:
-                logger.debug(f"Bot details summary:")
-                for i, bot in enumerate(bots):
-                    logger.debug(f"   Bot {i+1}: id={bot.get('bot_id')}, name={bot.get('name')}, status={bot.get('status')}")
-            else:
-                logger.warning(f"⚠️  No bots returned for user {user_id}")
-                logger.warning(f"   This could indicate:")
-                logger.warning(f"   - User has no bots in database")
-                logger.warning(f"   - RLS policy is blocking results")
-                logger.warning(f"   - Status filter '{status_filter}' doesn't match")
-                logger.warning(f"   - Query failed silently (check db_service logs)")
-                
-        except TradeeonError:
-            # Re-raise TradeeonError
-            raise
-        except Exception as db_error:
-            logger.error(f"❌ Failed to fetch bots from database: {db_error}", exc_info=True)
-            logger.error(f"   Error type: {type(db_error).__name__}")
-            logger.error(f"   Error message: {str(db_error)}")
-            
-            # Log additional context
-            logger.error(f"   Context:")
-            logger.error(f"     - user_id: {user_id}")
-            logger.error(f"     - status filter: {status_filter if 'status_filter' in locals() else 'N/A'}")
-            
-            # Don't return empty list on error - let the error propagate
-            raise TradeeonError(
-                f"Failed to fetch bots from database: {str(db_error)}",
-                "DATABASE_ERROR",
-                status_code=500
-            )
+        bots = db_service.list_bots(user_id, status_filter)
+        
+        logger.info(f"✅ db_service.list_bots() returned {len(bots)} bots for user {user_id}")
+        
+        if bots:
+            logger.debug(f"Bot details summary:")
+            for i, bot in enumerate(bots):
+                logger.debug(f"   Bot {i+1}: id={bot.get('bot_id')}, name={bot.get('name')}, status={bot.get('status')}")
+        else:
+            logger.warning(f"⚠️  No bots returned for user {user_id}")
+            logger.warning(f"   This could indicate:")
+            logger.warning(f"   - User has no bots in database")
+            logger.warning(f"   - RLS policy is blocking results")
+            logger.warning(f"   - Status filter '{status_filter}' doesn't match")
+            logger.warning(f"   - Query failed silently (check db_service logs)")
         
         # Prepare response
         response = {
@@ -102,7 +91,6 @@ async def list_bots(
         }
         
         # Add diagnostic metadata in development mode
-        # Note: os is already imported at module level
         if os.getenv("ENVIRONMENT", "").lower() != "production":
             response["_debug"] = {
                 "user_id": user_id,
@@ -110,7 +98,7 @@ async def list_bots(
                 "status_filter": status.value if status else None,
                 "query_executed": True,
                 "result_count": len(bots),
-                "database_service_enabled": db_service.enabled if 'db_service' in locals() else False
+                "database_service_enabled": db_service.enabled
             }
             logger.debug(f"Response includes debug metadata: {response['_debug']}")
         
@@ -137,20 +125,13 @@ async def list_bots(
 @router.post("/dca-bots")
 async def create_dca_bot(
     bot_config: Dict[str, Any] = Body(..., description="DCA bot configuration"),
-    user: AuthedUser = Depends(get_current_user)
+    user: AuthedUser = Depends(get_current_user),
+    services: tuple = Depends(get_bot_services)
 ):
     """Create a new DCA bot."""
     try:
         import time
-        import sys
-        # os is already imported at module level
-        
-        # Add bots directory to path
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        from db_service import db_service
+        bot_execution_service, db_service = services
         
         user_id = user.user_id
         
@@ -227,66 +208,12 @@ async def create_dca_bot(
 async def start_dca_bot_paper(
     bot_id: str = Path(..., description="Bot ID"),
     start_config: Optional[Dict[str, Any]] = Body(default=None, description="Start configuration"),
-    user: AuthedUser = Depends(get_current_user)
+    user: AuthedUser = Depends(get_current_user),
+    services: tuple = Depends(get_bot_services)
 ):
     """Start a DCA bot in paper trading mode."""
     try:
-        import sys
-        # os is already imported at module level
-        
-        # Use absolute path resolution for better reliability in Docker/production
-        current_file = os.path.abspath(__file__)
-        routers_dir = os.path.dirname(current_file)
-        api_dir = os.path.dirname(routers_dir)
-        apps_dir = os.path.dirname(api_dir)
-        bots_path = os.path.join(apps_dir, 'bots')
-        bots_path = os.path.abspath(bots_path)
-        
-        if not os.path.exists(bots_path):
-            logger.error(f"❌ Bots directory not found at: {bots_path}")
-            logger.error(f"   Current file: {current_file}")
-            logger.error(f"   Routers dir: {routers_dir}")
-            logger.error(f"   API dir: {api_dir}")
-            logger.error(f"   Apps dir: {apps_dir}")
-            raise TradeeonError(
-                f"Bots module not found. Expected at: {bots_path}",
-                "INTERNAL_SERVER_ERROR",
-                status_code=500
-            )
-        
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        try:
-            from db_service import db_service
-            from bot_execution_service import bot_execution_service
-        except ImportError as import_error:
-            logger.error(f"❌ Failed to import bot services: {import_error}")
-            logger.error(f"   Bots path: {bots_path}")
-            logger.error(f"   Python path: {sys.path[:5]}")
-            raise TradeeonError(
-                f"Failed to import bot services: {str(import_error)}",
-                "INTERNAL_SERVER_ERROR",
-                status_code=500
-            )
-        
-        # Check if db_service is enabled
-        if not db_service or not db_service.enabled:
-            logger.error("❌ Database service is not enabled!")
-            raise TradeeonError(
-                "Database service is not available. Please check backend configuration.",
-                "SERVICE_UNAVAILABLE",
-                status_code=503
-            )
-        
-        # Check if bot_execution_service is available
-        if not bot_execution_service:
-            logger.error("❌ Bot execution service is not available!")
-            raise TradeeonError(
-                "Bot execution service is not available. Please check backend configuration.",
-                "SERVICE_UNAVAILABLE",
-                status_code=503
-            )
+        bot_execution_service, db_service = services
         
         bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
         if not bot_data:
@@ -407,12 +334,8 @@ async def start_dca_bot_paper(
         
         # Include more details in error message for debugging
         detailed_message = f"Failed to start bot: {error_message}"
-        if "bots_path" in locals():
-            logger.error(f"   Bots path: {bots_path}")
-        if "db_service" in locals():
-            logger.error(f"   DB service enabled: {db_service.enabled if db_service else 'N/A'}")
-        if "bot_execution_service" in locals():
-            logger.error(f"   Bot execution service available: {bot_execution_service is not None}")
+        logger.error(f"   DB service enabled: {db_service.enabled if db_service else 'N/A'}")
+        logger.error(f"   Bot execution service available: {bot_execution_service is not None if bot_execution_service else False}")
         
         raise TradeeonError(
             detailed_message,
@@ -429,16 +352,12 @@ async def start_dca_bot_paper(
 @router.get("/dca-bots/{bot_id}/status")
 async def get_bot_status(
     bot_id: str = Path(..., description="Bot ID"),
-    user: AuthedUser = Depends(get_current_user)
+    user: AuthedUser = Depends(get_current_user),
+    services: tuple = Depends(get_bot_services)
 ):
     """Get comprehensive status information for a bot."""
     try:
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        from db_service import db_service
-        from bot_execution_service import bot_execution_service
+        bot_execution_service, db_service = services
         
         # Verify bot belongs to user
         bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
@@ -535,15 +454,12 @@ async def get_bot_events(
     event_type: Optional[str] = Query(None, description="Filter by event type"),
     limit: int = Query(100, ge=1, le=1000, description="Number of events to retrieve"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
-    user: AuthedUser = Depends(get_current_user)
+    user: AuthedUser = Depends(get_current_user),
+    services: tuple = Depends(get_bot_services)
 ):
     """Get bot events/logs."""
     try:
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        from db_service import db_service
+        bot_execution_service, db_service = services
         
         # Verify bot belongs to user
         bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
@@ -604,15 +520,12 @@ async def get_bot_orders(
     side: Optional[str] = Query(None, description="Filter by side (buy/sell)"),
     limit: int = Query(100, ge=1, le=1000, description="Number of orders to retrieve"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
-    user: AuthedUser = Depends(get_current_user)
+    user: AuthedUser = Depends(get_current_user),
+    services: tuple = Depends(get_bot_services)
 ):
     """Get bot order history."""
     try:
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        from db_service import db_service
+        bot_execution_service, db_service = services
         
         # Verify bot belongs to user
         bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
@@ -671,15 +584,12 @@ async def get_bot_timeline(
     bot_id: str = Path(..., description="Bot ID"),
     run_id: Optional[str] = Query(None, description="Filter by run ID"),
     limit: int = Query(200, ge=1, le=1000, description="Number of events to retrieve"),
-    user: AuthedUser = Depends(get_current_user)
+    user: AuthedUser = Depends(get_current_user),
+    services: tuple = Depends(get_bot_services)
 ):
     """Get chronological timeline of bot events and orders."""
     try:
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        from db_service import db_service
+        bot_execution_service, db_service = services
         
         # Verify bot belongs to user
         bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
@@ -751,19 +661,12 @@ async def get_bot_timeline(
 @router.post("/dca-bots/{bot_id}/stop")
 async def stop_dca_bot(
     bot_id: str = Path(..., description="Bot ID"),
-    user: AuthedUser = Depends(get_current_user)
+    user: AuthedUser = Depends(get_current_user),
+    services: tuple = Depends(get_bot_services)
 ):
     """Stop a running DCA bot."""
     try:
-        import sys
-        # os is already imported at module level
-        
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        from db_service import db_service
-        from bot_execution_service import bot_execution_service
+        bot_execution_service, db_service = services
         
         bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
         if not bot_data:
@@ -821,19 +724,12 @@ async def stop_dca_bot(
 @router.post("/dca-bots/{bot_id}/pause")
 async def pause_dca_bot(
     bot_id: str = Path(..., description="Bot ID"),
-    user: AuthedUser = Depends(get_current_user)
+    user: AuthedUser = Depends(get_current_user),
+    services: tuple = Depends(get_bot_services)
 ):
     """Pause a running DCA bot."""
     try:
-        import sys
-        # os is already imported at module level
-        
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        from db_service import db_service
-        from bot_execution_service import bot_execution_service
+        bot_execution_service, db_service = services
         
         bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
         if not bot_data:
@@ -890,19 +786,12 @@ async def pause_dca_bot(
 @router.post("/dca-bots/{bot_id}/resume")
 async def resume_dca_bot(
     bot_id: str = Path(..., description="Bot ID"),
-    user: AuthedUser = Depends(get_current_user)
+    user: AuthedUser = Depends(get_current_user),
+    services: tuple = Depends(get_bot_services)
 ):
     """Resume a paused DCA bot."""
     try:
-        import sys
-        # os is already imported at module level
-        
-        bots_path = os.path.join(os.path.dirname(__file__), '..', '..', 'bots')
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        from db_service import db_service
-        from bot_execution_service import bot_execution_service
+        bot_execution_service, db_service = services
         
         bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
         if not bot_data:
@@ -959,61 +848,12 @@ async def resume_dca_bot(
 @router.delete("/dca-bots/{bot_id}")
 async def delete_dca_bot(
     bot_id: str = Path(..., description="Bot ID"),
-    user: AuthedUser = Depends(get_current_user)
+    user: AuthedUser = Depends(get_current_user),
+    services: tuple = Depends(get_bot_services)
 ):
     """Delete a DCA bot."""
     try:
-        import sys
-        # os is already imported at module level
-        
-        # Use absolute path resolution for better reliability in Docker/production
-        current_file = os.path.abspath(__file__)
-        routers_dir = os.path.dirname(current_file)
-        api_dir = os.path.dirname(routers_dir)
-        apps_dir = os.path.dirname(api_dir)
-        bots_path = os.path.join(apps_dir, 'bots')
-        bots_path = os.path.abspath(bots_path)
-        
-        if not os.path.exists(bots_path):
-            logger.error(f"❌ Bots directory not found at: {bots_path}")
-            raise TradeeonError(
-                f"Bots module not found. Expected at: {bots_path}",
-                "INTERNAL_SERVER_ERROR",
-                status_code=500
-            )
-        
-        if bots_path not in sys.path:
-            sys.path.insert(0, bots_path)
-        
-        try:
-            from db_service import db_service
-            from bot_execution_service import bot_execution_service
-        except ImportError as import_error:
-            logger.error(f"❌ Failed to import bot services: {import_error}")
-            logger.error(f"   Bots path: {bots_path}")
-            raise TradeeonError(
-                f"Failed to import bot services: {str(import_error)}",
-                "INTERNAL_SERVER_ERROR",
-                status_code=500
-            )
-        
-        # Check if db_service is enabled
-        if not db_service or not db_service.enabled:
-            logger.error("❌ Database service is not enabled!")
-            raise TradeeonError(
-                "Database service is not available. Please check backend configuration.",
-                "SERVICE_UNAVAILABLE",
-                status_code=503
-            )
-        
-        # Check if bot_execution_service is available
-        if not bot_execution_service:
-            logger.error("❌ Bot execution service is not available!")
-            raise TradeeonError(
-                "Bot execution service is not available. Please check backend configuration.",
-                "SERVICE_UNAVAILABLE",
-                status_code=503
-            )
+        bot_execution_service, db_service = services
         
         bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
         if not bot_data:

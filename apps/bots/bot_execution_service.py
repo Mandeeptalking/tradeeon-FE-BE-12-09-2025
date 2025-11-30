@@ -184,6 +184,13 @@ class BotExecutionService:
                     executor.next_execution_time = next_execution_time
                     executor.iteration_count = iteration_count
                     
+                    # Save state periodically (every 10 iterations or every 10 minutes)
+                    if iteration_count % 10 == 0:
+                        try:
+                            self.save_bot_state(bot_id)
+                        except Exception as save_error:
+                            logger.warning(f"Failed to save bot state: {save_error}")
+                    
                     # Wait for next iteration
                     await asyncio.sleep(interval_seconds)
                     
@@ -302,6 +309,186 @@ class BotExecutionService:
         except Exception as e:
             logger.error(f"Failed to resume bot {bot_id}: {e}", exc_info=True)
             return False
+    
+    def save_bot_state(self, bot_id: str) -> bool:
+        """
+        Save current bot execution state to database.
+        
+        Args:
+            bot_id: Bot identifier
+            
+        Returns:
+            True if saved successfully, False otherwise
+        """
+        if bot_id not in self.running_bots or not db_service:
+            return False
+        
+        try:
+            executor = self.running_bots[bot_id]
+            run_id = getattr(executor, 'run_id', None)
+            
+            # Collect state information
+            state = {
+                "bot_id": bot_id,
+                "run_id": run_id,
+                "iteration_count": getattr(executor, 'iteration_count', 0),
+                "last_execution_time": getattr(executor, 'last_execution_time', None),
+                "next_execution_time": getattr(executor, 'next_execution_time', None),
+                "paused": getattr(executor, 'paused', False),
+                "interval_seconds": self.execution_intervals.get(bot_id, 60),
+                "saved_at": datetime.now().isoformat()
+            }
+            
+            # Get trading engine state if available
+            if hasattr(executor, 'trading_engine') and executor.trading_engine:
+                state["trading_engine"] = {
+                    "balance": executor.trading_engine.get_balance(),
+                    "positions": getattr(executor.trading_engine, 'positions', {}),
+                }
+            
+            # Save to database
+            return db_service.save_bot_state(bot_id, run_id, state)
+        except Exception as e:
+            logger.error(f"Failed to save bot state for {bot_id}: {e}", exc_info=True)
+            return False
+    
+    async def restore_bot_from_state(
+        self,
+        bot_id: str,
+        bot_config: Dict[str, Any],
+        state: Optional[Dict[str, Any]] = None,
+        mode: str = "paper"
+    ) -> bool:
+        """
+        Restore a bot from saved state after server restart.
+        
+        Args:
+            bot_id: Bot identifier
+            bot_config: Bot configuration
+            state: Saved state dictionary (optional, will load from DB if not provided)
+            mode: Trading mode ("paper" or "live")
+            
+        Returns:
+            True if restored successfully, False otherwise
+        """
+        if bot_id in self.running_bots:
+            logger.warning(f"Bot {bot_id} is already running, skipping restore")
+            return False
+        
+        if not DCABotExecutor:
+            logger.error("DCABotExecutor not available")
+            return False
+        
+        try:
+            # Load state from database if not provided
+            if state is None and db_service:
+                state = db_service.load_bot_state(bot_id)
+            
+            # Extract state information (use defaults if state is empty)
+            if state is None:
+                state = {}
+            
+            run_id = state.get("run_id")
+            interval_seconds = state.get("interval_seconds", 60)
+            paused = state.get("paused", False)
+            
+            # Get initial balance from state or use default
+            initial_balance = 10000.0
+            if state.get("trading_engine", {}).get("balance"):
+                initial_balance = state["trading_engine"]["balance"]
+            
+            # Create executor
+            logger.info(f"Restoring DCA bot executor for {bot_id} from saved state")
+            executor = DCABotExecutor(
+                bot_config=bot_config,
+                paper_trading=(mode == "paper"),
+                initial_balance=initial_balance
+            )
+            
+            # Set identifiers
+            executor.bot_id = bot_id
+            executor.user_id = bot_config.get("user_id")
+            executor.run_id = run_id
+            
+            # Restore state
+            executor.iteration_count = state.get("iteration_count", 0)
+            executor.paused = paused
+            
+            # Restore trading engine state if available
+            if hasattr(executor, 'trading_engine') and executor.trading_engine:
+                trading_state = state.get("trading_engine", {})
+                if "positions" in trading_state:
+                    executor.trading_engine.positions = trading_state["positions"]
+            
+            # Initialize executor
+            await executor.initialize()
+            
+            # Store executor and config
+            self.running_bots[bot_id] = executor
+            self.bot_configs[bot_id] = bot_config
+            self.execution_intervals[bot_id] = interval_seconds
+            
+            # Start execution loop
+            task = asyncio.create_task(self._execute_bot_loop(bot_id, interval_seconds))
+            self.bot_tasks[bot_id] = task
+            
+            # Update bot status
+            if db_service:
+                status = "paused" if paused else "running"
+                db_service.update_bot_status(bot_id, status)
+            
+            logger.info(f"✅ Bot {bot_id} restored from state successfully (status: {'paused' if paused else 'running'})")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to restore bot {bot_id} from state: {e}", exc_info=True)
+            return False
+    
+    async def recover_active_bots(self) -> int:
+        """
+        Recover all active bots from database on startup.
+        
+        Returns:
+            Number of bots successfully recovered
+        """
+        if not db_service or not db_service.enabled:
+            logger.warning("Database service not available, skipping bot recovery")
+            return 0
+        
+        try:
+            active_bots = db_service.get_active_bots_for_recovery()
+            recovered_count = 0
+            
+            for bot_data in active_bots:
+                bot_id = bot_data.get("bot_id")
+                bot_config = bot_data.get("config", {})
+                status = bot_data.get("status", "inactive")
+                
+                if status not in ["running", "paused"]:
+                    continue
+                
+                # Restore bot (will load state internally if needed)
+                mode = "paper"  # Default to paper for now
+                restored = await self.restore_bot_from_state(
+                    bot_id=bot_id,
+                    bot_config=bot_config,
+                    state=None,  # Will load from DB
+                    mode=mode
+                )
+                
+                if restored:
+                    recovered_count += 1
+                    logger.info(f"✅ Recovered bot {bot_id} (status: {status})")
+                else:
+                    logger.warning(f"⚠️  Failed to recover bot {bot_id}, updating status to stopped")
+                    db_service.update_bot_status(bot_id, "stopped")
+            
+            logger.info(f"✅ Bot recovery complete: {recovered_count}/{len(active_bots)} bots recovered")
+            return recovered_count
+            
+        except Exception as e:
+            logger.error(f"Error during bot recovery: {e}", exc_info=True)
+            return 0
     
     def get_bot_status(self, bot_id: str) -> Optional[Dict[str, Any]]:
         """Get current status of a bot."""

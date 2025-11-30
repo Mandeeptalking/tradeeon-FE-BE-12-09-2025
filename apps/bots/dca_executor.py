@@ -387,24 +387,24 @@ class DCABotExecutor:
             dca_rules = self.config.get("dcaRules", {})
             cooldown_result = await self._check_dca_cooldown(pair, dca_rules)
             if not cooldown_result:
-            # Log cooldown active
-            if self.bot_id and self.user_id and db_service:
-                last_dca = self.last_dca_time.get(pair)
-                db_service.log_event(
-                    bot_id=self.bot_id,
-                    run_id=getattr(self, 'run_id', None),
-                    user_id=self.user_id,
-                    event_type="cooldown_active",
-                    event_category="system",
-                    message=f"DCA cooldown active for {pair}",
-                    symbol=pair,
-                    details={
-                        "last_dca_time": last_dca.isoformat() if last_dca else None,
-                        "cooldown_value": dca_rules.get("dcaCooldownValue", 0),
-                        "cooldown_unit": dca_rules.get("dcaCooldownUnit", "minutes")
-                    }
-                )
-            return False
+                # Log cooldown active
+                if self.bot_id and self.user_id and db_service:
+                    last_dca = self.last_dca_time.get(pair)
+                    db_service.log_event(
+                        bot_id=self.bot_id,
+                        run_id=getattr(self, 'run_id', None),
+                        user_id=self.user_id,
+                        event_type="cooldown_active",
+                        event_category="system",
+                        message=f"DCA cooldown active for {pair}",
+                        symbol=pair,
+                        details={
+                            "last_dca_time": last_dca.isoformat() if last_dca else None,
+                            "cooldown_value": dca_rules.get("dcaCooldownValue", 0),
+                            "cooldown_unit": dca_rules.get("dcaCooldownUnit", "minutes")
+                        }
+                    )
+                return False
             
         return True
         
