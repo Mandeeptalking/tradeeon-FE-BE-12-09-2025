@@ -27,10 +27,10 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import { authenticatedFetch } from '../lib/api/auth';
 import { logger } from '../utils/logger';
 import BotCard from '../components/bots/BotCard';
-import BotLogsModal from '../components/bots/BotLogsModal';
 import { StatCard } from '../components/dashboard/StatCard';
 import EmptyState from '../components/EmptyState';
 import type { Bot, BotStatus, Exchange, BotType } from '../lib/api/bots';
@@ -63,14 +63,11 @@ interface ExtendedBot extends Bot {
 }
 
 export default function BotsPage() {
+  const navigate = useNavigate();
   const [bots, setBots] = useState<ExtendedBot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<{ title: string; details: string; tips?: string[] } | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  
-  // Logs modal state
-  const [showLogsModal, setShowLogsModal] = useState(false);
-  const [selectedBotForLogs, setSelectedBotForLogs] = useState<{ id: string; name: string } | null>(null);
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -340,6 +337,24 @@ export default function BotsPage() {
           logger.error(`Bot action error response:`, errorData);
           console.error('Bot action error details:', errorData);
           
+          // Log full error structure for debugging
+          console.group('🔴 Bot Start Error - Full Details');
+          console.error('Full Error Object:', JSON.stringify(errorData, null, 2));
+          if (errorData.error) {
+            console.error('Error Code:', errorData.error.code);
+            console.error('Error Message:', errorData.error.message);
+            if (errorData.error.details) {
+              console.error('Error Details:', errorData.error.details);
+              if (errorData.error.details.error_message) {
+                console.error('Actual Error:', errorData.error.details.error_message);
+              }
+              if (errorData.error.details.error_type) {
+                console.error('Error Type:', errorData.error.details.error_type);
+              }
+            }
+          }
+          console.groupEnd();
+          
           // Try multiple error formats
           if (errorData.error?.message) {
             errorMessage = errorData.error.message;
@@ -351,6 +366,13 @@ export default function BotsPage() {
             if (errorData.error?.details) {
               errorDetails = JSON.stringify(errorData.error.details);
               console.error('Error details:', errorData.error.details);
+              // Extract specific error information from details
+              if (errorData.error.details.error_message) {
+                errorMessage = errorData.error.details.error_message;
+              }
+              if (errorData.error.details.error_type) {
+                errorMessage = `${errorData.error.details.error_type}: ${errorMessage}`;
+              }
             }
           } else if (errorData.detail) {
             if (typeof errorData.detail === 'string') {
@@ -496,14 +518,9 @@ export default function BotsPage() {
 
   // View/Edit/Duplicate handlers
   const handleView = (botId: string) => {
-    logger.debug('Opening bot logs modal:', botId);
-    const bot = bots.find(b => b.bot_id === botId);
-    if (bot) {
-      setSelectedBotForLogs({ id: botId, name: bot.name });
-      setShowLogsModal(true);
-    } else {
-      toast.error('Bot not found', { description: 'Unable to find bot details' });
-    }
+    logger.debug('Navigating to bot logs page:', botId);
+    // Navigate to the logs page instead of opening a modal
+    navigate(`/app/bots/${botId}/logs`);
   };
 
   const handleEdit = (botId: string) => {
@@ -952,19 +969,6 @@ export default function BotsPage() {
             </AnimatePresence>
           )}
         </>
-      )}
-
-      {/* Bot Logs Modal */}
-      {selectedBotForLogs && (
-        <BotLogsModal
-          botId={selectedBotForLogs.id}
-          botName={selectedBotForLogs.name}
-          isOpen={showLogsModal}
-          onClose={() => {
-            setShowLogsModal(false);
-            setSelectedBotForLogs(null);
-          }}
-        />
       )}
     </div>
   );

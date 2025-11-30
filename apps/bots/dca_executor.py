@@ -387,7 +387,7 @@ class DCABotExecutor:
             dca_rules = self.config.get("dcaRules", {})
             cooldown_result = await self._check_dca_cooldown(pair, dca_rules)
             if not cooldown_result:
-                # Log cooldown active
+                # Log cooldown active and return False
                 if self.bot_id and self.user_id and db_service:
                     last_dca = self.last_dca_time.get(pair)
                     db_service.log_event(
