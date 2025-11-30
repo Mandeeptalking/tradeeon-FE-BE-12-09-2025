@@ -39,12 +39,21 @@ import { getKPIs, filterBots } from '../lib/api/bots';
 // Helper to get API base URL
 function getApiBaseUrl(): string {
   const apiUrl = import.meta.env.VITE_API_URL;
+  
+  // Log for debugging (remove in production if needed)
+  if (import.meta.env.DEV) {
+    console.log('[DEBUG] VITE_API_URL:', apiUrl);
+  }
+  
   if (import.meta.env.PROD) {
     if (!apiUrl || !apiUrl.startsWith('https://')) {
       throw new Error('API URL must use HTTPS in production');
     }
     return apiUrl;
   }
+  
+  // In development, prefer VITE_API_URL if set, otherwise default to localhost
+  // This allows testing against production API if needed
   return apiUrl || 'http://localhost:8000';
 }
 
