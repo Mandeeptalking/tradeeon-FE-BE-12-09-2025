@@ -1125,6 +1125,7 @@ export default function DCABot() {
   // Debug: Log component render
   useEffect(() => {
     logger.debug('DCABot component mounted');
+    console.log('DCABot component rendering');
   }, []);
   
   return (
