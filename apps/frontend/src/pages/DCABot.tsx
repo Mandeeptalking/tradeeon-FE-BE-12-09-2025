@@ -1129,10 +1129,10 @@ export default function DCABot() {
   }, []);
   
   return (
-    <div className="h-full w-full overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6">
+    <div style={{ minHeight: '100%', width: '100%', overflowY: 'auto', backgroundColor: '#f9fafb', padding: '24px' }} className="dark:bg-gray-900">
       {/* Debug: Test visibility */}
-      <div style={{ backgroundColor: 'red', color: 'white', padding: '20px', marginBottom: '20px', zIndex: 9999 }}>
-        DEBUG: DCABot Component is Rendering
+      <div style={{ backgroundColor: 'red', color: 'white', padding: '20px', marginBottom: '20px', zIndex: 9999, position: 'relative' }}>
+        DEBUG: DCABot Component is Rendering - If you see this, component is working
       </div>
       {/* Debug: Ensure content is visible */}
       <div className="max-w-7xl mx-auto">
