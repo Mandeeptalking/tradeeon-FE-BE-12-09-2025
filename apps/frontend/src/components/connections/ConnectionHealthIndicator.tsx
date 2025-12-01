@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Activity, Clock, Zap, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { connectionsApi } from '../../lib/api/connections';
@@ -16,9 +16,31 @@ const ConnectionHealthIndicator = ({ connection, onRefresh }: ConnectionHealthIn
   const [lastCheck, setLastCheck] = useState<Date | null>(
     connection.last_check_at ? new Date(connection.last_check_at) : null
   );
+  
+  // Use ref to store the latest onRefresh callback to avoid dependency issues
+  const onRefreshRef = useRef(onRefresh);
+  const connectionIdRef = useRef(connection.id);
+  const connectionStatusRef = useRef(connection.status);
+  
+  // Update refs when props change - but only update if values actually changed
+  useEffect(() => {
+    onRefreshRef.current = onRefresh;
+    const idChanged = connectionIdRef.current !== connection.id;
+    const statusChanged = connectionStatusRef.current !== connection.status;
+    
+    if (idChanged) {
+      connectionIdRef.current = connection.id;
+    }
+    if (statusChanged) {
+      connectionStatusRef.current = connection.status;
+    }
+  }, [onRefresh, connection.id, connection.status]);
 
-  const checkLatency = async () => {
-    if (!connection.id || connection.status !== 'connected') return;
+  const checkLatency = useCallback(async (shouldTriggerRefresh = false) => {
+    const currentId = connectionIdRef.current;
+    const currentStatus = connectionStatusRef.current;
+    
+    if (!currentId || currentStatus !== 'connected') return;
 
     setIsChecking(true);
     const startTime = Date.now();
@@ -35,7 +57,12 @@ const ConnectionHealthIndicator = ({ connection, onRefresh }: ConnectionHealthIn
         const calculatedLatency = endTime - startTime;
         setLatency(calculatedLatency);
         setLastCheck(new Date());
-        onRefresh?.();
+        
+        // Only refresh connections if explicitly requested (manual refresh button)
+        // Don't refresh on automatic periodic checks to avoid refresh loops
+        if (shouldTriggerRefresh) {
+          onRefreshRef.current?.();
+        }
       }
     } catch (error) {
       logger.debug('Latency check failed:', error);
@@ -43,25 +70,55 @@ const ConnectionHealthIndicator = ({ connection, onRefresh }: ConnectionHealthIn
     } finally {
       setIsChecking(false);
     }
-  };
+  }, []); // No dependencies - uses refs instead
+
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const hasInitializedRef = useRef(false);
 
   useEffect(() => {
-    // Check latency on mount
-    if (connection.status === 'connected') {
-      checkLatency();
+    // Only set up interval if connection is connected
+    if (connection.status !== 'connected') {
+      // Clear interval if status changed to not connected
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      hasInitializedRef.current = false;
+      return;
     }
 
-    // Refresh every 30 seconds if connected
-    let interval: NodeJS.Timeout | null = null;
-    if (connection.status === 'connected') {
-      interval = setInterval(() => {
-        checkLatency();
+    // Check if id or status actually changed
+    const idChanged = connectionIdRef.current !== connection.id;
+    const statusChanged = connectionStatusRef.current !== connection.status;
+    
+    // Only initialize or restart if id or status actually changed
+    if (idChanged || statusChanged || !hasInitializedRef.current) {
+      // Clear existing interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+
+      // Check latency on mount or when connection changes
+      if (!hasInitializedRef.current) {
+        checkLatency(false); // Don't refresh on initial check
+        hasInitializedRef.current = true;
+      }
+
+      // Set up new interval
+      intervalRef.current = setInterval(() => {
+        checkLatency(false); // Don't refresh connections on automatic checks
       }, 30000);
     }
 
     return () => {
-      if (interval) clearInterval(interval);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
+    // Only depend on connection.id and connection.status - checkLatency is stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connection.id, connection.status]);
 
   const getStatusColor = () => {
@@ -143,7 +200,7 @@ const ConnectionHealthIndicator = ({ connection, onRefresh }: ConnectionHealthIn
       {/* Refresh Button */}
       {connection.status === 'connected' && (
         <button
-          onClick={checkLatency}
+          onClick={() => checkLatency(true)} // Pass true to trigger refresh on manual click
           disabled={isChecking}
           className="ml-auto text-xs text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
           title="Refresh connection status"

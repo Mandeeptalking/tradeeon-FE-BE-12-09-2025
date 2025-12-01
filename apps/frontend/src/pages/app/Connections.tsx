@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import {
   Plug,
   ShieldCheck,
@@ -99,26 +99,67 @@ const ConnectionsPage = () => {
   const [pausingId, setPausingId] = useState<string | null>(null);
   const [showPreChecklist, setShowPreChecklist] = useState(false);
   const [historyConnectionId, setHistoryConnectionId] = useState<string | null>(null);
+  const isLoadingRef = useRef(false);
 
-  useEffect(() => {
-    refreshConnections();
-    loadGuidance();
-  }, []);
-
-  const refreshConnections = async () => {
+  const refreshConnections = useCallback(async () => {
+    // Prevent rapid successive calls using ref
+    if (isLoadingRef.current) {
+      logger.debug('Refresh already in progress, skipping...');
+      return;
+    }
+    
+    isLoadingRef.current = true;
     setLoadingConnections(true);
     try {
       const data = await connectionsApi.listConnections();
-      setConnections(data);
+      // Only update if data actually changed to prevent unnecessary re-renders
+      setConnections(prev => {
+        // Compare by ID and status to avoid creating new objects if nothing changed
+        if (prev.length !== data.length) {
+          return data;
+        }
+        const hasChanged = prev.some((oldConn, index) => {
+          const newConn = data[index];
+          return !newConn || 
+                 oldConn.id !== newConn.id || 
+                 oldConn.status !== newConn.status ||
+                 oldConn.next_check_eta_sec !== newConn.next_check_eta_sec;
+        });
+        return hasChanged ? data : prev;
+      });
+    } catch (error) {
+      logger.error('Failed to refresh connections:', error);
     } finally {
+      isLoadingRef.current = false;
       setLoadingConnections(false);
     }
-  };
+  }, []);
 
-  const loadGuidance = async () => {
+  const loadGuidance = useCallback(async () => {
     const info = await connectionsApi.getGuidance();
     setGuidance(info);
-  };
+  }, []);
+
+  useEffect(() => {
+    // Only run once on mount - don't re-run when dependencies change
+    let mounted = true;
+    
+    const initialize = async () => {
+      try {
+        await refreshConnections();
+        await loadGuidance();
+      } catch (error) {
+        logger.error('Error initializing connections page:', error);
+      }
+    };
+    
+    initialize();
+    
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - only run on mount
 
   const binanceGuidance = useMemo(
     () => guidance.find((item) => item.exchange === 'BINANCE'),
