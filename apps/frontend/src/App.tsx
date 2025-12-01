@@ -16,8 +16,6 @@ import AuthCallback from './pages/AuthCallback'
 import Dashboard from './pages/Dashboard'
 import Connections from './pages/app/Connections'
 import Portfolio from './pages/app/Portfolio'
-import BotsPage from './pages/BotsPage'
-import BotLogsPage from './pages/BotLogsPage'
 import Activity from './pages/Activity'
 import Settings from './pages/Settings'
 import CleanCharts from './pages/CleanCharts'
@@ -107,8 +105,6 @@ function App() {
           <Route index element={<Dashboard />} />
                 <Route path="connections" element={<Connections />} />
           <Route path="portfolio" element={<Portfolio />} />
-          <Route path="bots" element={<BotsPage />} />
-          <Route path="bots/:botId/logs" element={<BotLogsPage />} />
           <Route path="dca-bot" element={<ErrorBoundary><DCABot /></ErrorBoundary>} />
           <Route path="backtest" element={<BacktestPage />} />
           <Route path="activity" element={<Activity />} />
