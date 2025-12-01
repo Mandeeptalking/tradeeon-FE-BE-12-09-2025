@@ -1128,7 +1128,7 @@ export default function DCABot() {
   }, []);
   
   return (
-    <div className="h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="h-full w-full overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6">
       <div className="flex gap-6 max-w-7xl mx-auto">
         {/* Left Content Area */}
         <div className="flex-1 min-w-0">
