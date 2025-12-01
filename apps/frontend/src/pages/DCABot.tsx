@@ -1129,7 +1129,7 @@ export default function DCABot() {
   }, []);
   
   return (
-    <div className="h-full w-full overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-full w-full bg-gray-50 dark:bg-gray-900 p-6">
       {/* Debug: Test visibility */}
       <div style={{ backgroundColor: 'red', color: 'white', padding: '20px', marginBottom: '20px', zIndex: 9999, position: 'relative' }}>
         DEBUG: DCABot Component is Rendering - If you see this, component is working
