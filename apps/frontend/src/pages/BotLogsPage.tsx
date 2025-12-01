@@ -124,15 +124,17 @@ export default function BotLogsPage() {
         });
         
         if (bot) {
-          setBotDetails({
+          const botData = bot as any;
+          const botDetailsObj: BotDetails = {
             bot_id: botId,
-            name: bot.name || `Bot ${botId}`,
-            bot_type: bot.bot_type || 'dca',
-            exchange: bot.exchange || 'Binance',
-            status: bot.status || 'inactive',
-            created_at: bot.created_at || new Date().toISOString(),
-            updated_at: bot.updated_at || new Date().toISOString()
-          });
+            name: botData.name || `Bot ${botId}`,
+            bot_type: botData.bot_type || 'dca',
+            exchange: botData.exchange || 'Binance',
+            status: botData.status || 'inactive',
+            created_at: botData.created_at || new Date().toISOString(),
+            updated_at: botData.updated_at || new Date().toISOString()
+          };
+          setBotDetails(botDetailsObj);
         } else {
           // Bot not found in list, try to get basic info from status endpoint
           const statusResponse = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots/${botId}/status`);
