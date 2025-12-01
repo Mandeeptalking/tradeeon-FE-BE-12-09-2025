@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useNavigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth';
+import { useThemeStore } from '../../store/theme';
 import {
   LayoutDashboard,
   Link,
@@ -16,10 +17,13 @@ import {
   BarChart3,
   Wrench,
   Zap,
+  Moon,
+  Sun,
 } from 'lucide-react';
 
 const AppShell = () => {
   const { user, logout } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -65,36 +69,59 @@ const AppShell = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-900 overflow-hidden">
+    <div className={`flex h-screen overflow-hidden ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Sidebar */}
-      <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-gray-900 border-r border-gray-800 flex flex-col transition-all duration-300`}>
+      <div className={`${isCollapsed ? 'w-16' : 'w-64'} ${theme === 'dark' ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} border-r flex flex-col transition-all duration-300`}>
         {/* Header */}
-        <div className="p-4 border-b border-gray-800">
+        <div className={`p-4 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
           <div className="flex items-center justify-between">
             {!isCollapsed && (
               <div>
-                <h1 className="text-xl font-bold text-white">Tradeeon</h1>
-                <p className="text-xs text-gray-400">Trading Platform</p>
+                <h1 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Tradeeon</h1>
+                <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Trading Platform</p>
               </div>
             )}
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-1.5 rounded-lg hover:bg-gray-800 transition-colors text-gray-400 hover:text-white"
-            >
-              {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </button>
+            <div className="flex items-center gap-2">
+              {!isCollapsed && (
+                <button
+                  onClick={toggleTheme}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    theme === 'dark' 
+                      ? 'hover:bg-gray-800 text-gray-400 hover:text-white' 
+                      : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
+                  }`}
+                  title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+                >
+                  {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </button>
+              )}
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className={`p-1.5 rounded-lg transition-colors ${
+                  theme === 'dark' 
+                    ? 'hover:bg-gray-800 text-gray-400 hover:text-white' 
+                    : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Quick Actions */}
         {!isCollapsed && (
-          <div className="p-4 border-b border-gray-800">
+          <div className={`p-4 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
             <div className="space-y-2">
               {quickActions.map((action, index) => (
                 <button
                   key={index}
                   onClick={action.action}
-                  className="w-full flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+                  className={`w-full flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    theme === 'dark'
+                      ? 'text-gray-300 bg-gray-800 hover:bg-gray-700'
+                      : 'text-gray-700 bg-gray-50 hover:bg-gray-100'
+                  }`}
                 >
                   <action.icon className="h-4 w-4" />
                   <span>{action.label}</span>
@@ -109,7 +136,9 @@ const AppShell = () => {
           {navSections.map((section, sectionIndex) => (
             <div key={sectionIndex} className="p-4">
               {!isCollapsed && (
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${
+                  theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+                }`}>
                   {section.title}
                 </h3>
               )}
@@ -121,8 +150,12 @@ const AppShell = () => {
                     className={({ isActive }) =>
                       `flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                         isActive
-                          ? 'bg-blue-600 text-white border-r-2 border-blue-400'
-                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                          ? theme === 'dark'
+                            ? 'bg-blue-600 text-white border-r-2 border-blue-400'
+                            : 'bg-blue-50 text-blue-700 border-r-2 border-blue-500'
+                          : theme === 'dark'
+                            ? 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                            : 'text-gray-700 hover:bg-gray-100'
                       } ${isCollapsed ? 'justify-center' : ''}`
                     }
                     title={isCollapsed ? item.label : undefined}
@@ -137,7 +170,7 @@ const AppShell = () => {
         </nav>
 
         {/* User Card */}
-        <div className="p-4 border-t border-gray-800">
+        <div className={`p-4 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
           {isCollapsed ? (
             <div className="flex justify-center">
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
@@ -150,11 +183,11 @@ const AppShell = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="text-xs text-gray-400">2 exchanges connected</span>
+                  <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>2 exchanges connected</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Shield className="h-3 w-3 text-green-400" />
-                  <span className="text-xs text-green-400 font-medium">Secure</span>
+                  <Shield className={`h-3 w-3 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'}`} />
+                  <span className={`text-xs font-medium ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>Secure</span>
                 </div>
               </div>
 
@@ -164,12 +197,16 @@ const AppShell = () => {
                   {user?.name?.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{user?.name}</p>
-                  <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                  <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{user?.name}</p>
+                  <p className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{user?.email}</p>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-900/30 rounded-lg transition-colors"
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    theme === 'dark'
+                      ? 'text-gray-400 hover:text-red-400 hover:bg-red-900/30'
+                      : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                  }`}
                   title="Logout"
                 >
                   <LogOut className="h-4 w-4" />
@@ -181,7 +218,7 @@ const AppShell = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col bg-gray-900 overflow-y-auto">
+      <div className={`flex-1 flex flex-col overflow-y-auto ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <Outlet />
       </div>
     </div>

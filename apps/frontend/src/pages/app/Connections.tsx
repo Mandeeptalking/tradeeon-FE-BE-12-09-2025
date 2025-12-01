@@ -21,6 +21,7 @@ import ConnectionHealthIndicator from '../../components/connections/ConnectionHe
 import ConnectionHistory from '../../components/connections/ConnectionHistory';
 import EmptyState from '../../components/EmptyState';
 import { logger } from '../../utils/logger';
+import { useThemeStore } from '../../store/theme';
 
 type StatusStyle = {
   label: string;
@@ -89,6 +90,7 @@ const FALLBACK_BINANCE_GUIDANCE: ConnectionGuidance = {
 };
 
 const ConnectionsPage = () => {
+  const { theme } = useThemeStore();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [guidance, setGuidance] = useState<ConnectionGuidance[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -295,17 +297,23 @@ const ConnectionsPage = () => {
     const isProcessing = deletingId === connection.id || pausingId === connection.id;
 
     return (
-      <div className="group relative flex flex-col rounded-2xl border border-gray-700/50 bg-gray-800/50 backdrop-blur transition hover:border-gray-600 hover:bg-gray-800/70">
+      <div className={`group relative flex flex-col rounded-2xl border backdrop-blur transition ${
+        theme === 'dark'
+          ? 'border-gray-700/50 bg-gray-800/50 hover:border-gray-600 hover:bg-gray-800/70'
+          : 'border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50'
+      }`}>
         {/* Card Header */}
         <div className="flex items-center justify-between px-5 py-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-700/50 text-2xl flex-shrink-0">
+            <div className={`flex h-12 w-12 items-center justify-center rounded-xl text-2xl flex-shrink-0 ${
+              theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-100'
+            }`}>
               {metadata.badge}
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-base font-semibold text-white">{metadata.name}</span>
+              <span className={`text-base font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{metadata.name}</span>
               {connection.nickname && (
-                <span className="text-sm text-white/60 truncate">{connection.nickname}</span>
+                <span className={`text-sm truncate ${theme === 'dark' ? 'text-white/60' : 'text-gray-600'}`}>{connection.nickname}</span>
               )}
             </div>
           </div>
@@ -326,7 +334,11 @@ const ConnectionsPage = () => {
         <div className="px-5 pb-2">
           <button
             onClick={() => setHistoryConnectionId(connection.id)}
-            className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-white hover:bg-gray-700/30 rounded-lg transition-colors"
+            className={`w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+              theme === 'dark'
+                ? 'text-gray-400 hover:text-white hover:bg-gray-700/30'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
           >
             <Clock className="h-3.5 w-3.5" />
             <span>View History</span>
@@ -334,11 +346,17 @@ const ConnectionsPage = () => {
         </div>
         
         {/* Action Buttons */}
-        <div className="px-5 pb-4 pt-0 flex items-center gap-2 border-t border-white/5">
+        <div className={`px-5 pb-4 pt-0 flex items-center gap-2 border-t ${
+          theme === 'dark' ? 'border-white/5' : 'border-gray-200'
+        }`}>
           <button
             onClick={() => handleEditConnection(connection)}
             disabled={isProcessing}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-colors disabled:opacity-50"
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${
+              theme === 'dark'
+                ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-500/10'
+                : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+            }`}
           >
             <Edit className="h-4 w-4" />
             <span>Edit</span>
@@ -348,7 +366,11 @@ const ConnectionsPage = () => {
             <button
               onClick={() => handleResumeConnection(connection.id)}
               disabled={isProcessing}
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-colors disabled:opacity-50"
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${
+                theme === 'dark'
+                  ? 'text-green-400 hover:text-green-300 hover:bg-green-500/10'
+                  : 'text-green-600 hover:text-green-700 hover:bg-green-50'
+              }`}
             >
               {pausingId === connection.id ? (
                 <>
@@ -366,7 +388,11 @@ const ConnectionsPage = () => {
             <button
               onClick={() => handlePauseConnection(connection.id)}
               disabled={isProcessing}
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-lg transition-colors disabled:opacity-50"
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${
+                theme === 'dark'
+                  ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10'
+                  : 'text-amber-600 hover:text-amber-700 hover:bg-amber-50'
+              }`}
             >
               {pausingId === connection.id ? (
                 <>
@@ -385,7 +411,11 @@ const ConnectionsPage = () => {
           <button
             onClick={() => handleDeleteConnection(connection.id)}
             disabled={isProcessing}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${
+              theme === 'dark'
+                ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
+                : 'text-red-600 hover:text-red-700 hover:bg-red-50'
+            }`}
           >
             {deletingId === connection.id ? (
               <>
@@ -405,19 +435,31 @@ const ConnectionsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 pb-20">
+    <div className={`min-h-screen pb-20 ${theme === 'dark' ? 'bg-slate-950' : 'bg-gray-50'}`}>
       <div className="mx-auto max-w-6xl px-6 pt-12 pb-12">
-        <header className="flex flex-col gap-6 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-8 shadow-2xl shadow-blue-500/10">
+        <header className={`flex flex-col gap-6 rounded-3xl border p-8 shadow-2xl ${
+          theme === 'dark'
+            ? 'border-white/10 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 shadow-blue-500/10'
+            : 'border-gray-200 bg-white shadow-gray-200/50'
+        }`}>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-sm text-blue-200">
+              <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm ${
+                theme === 'dark'
+                  ? 'border-blue-400/20 bg-blue-500/10 text-blue-200'
+                  : 'border-blue-300 bg-blue-50 text-blue-700'
+              }`}>
                 <Sparkles className="h-4 w-4" />
                 Exchange Connections
               </div>
-              <h1 className="mt-4 text-3xl font-semibold text-white md:text-4xl">
+              <h1 className={`mt-4 text-3xl font-semibold md:text-4xl ${
+                theme === 'dark' ? 'text-white' : 'text-gray-900'
+              }`}>
                 Connect your exchange securely
               </h1>
-              <p className="mt-3 max-w-2xl text-base text-white/70">
+              <p className={`mt-3 max-w-2xl text-base ${
+                theme === 'dark' ? 'text-white/70' : 'text-gray-600'
+              }`}>
                 Review the whitelist IP, required Binance permissions, and be ready to connect with complete confidence before your first live attempt.
               </p>
             </div>
@@ -432,17 +474,23 @@ const ConnectionsPage = () => {
           </div>
 
           <div className="grid gap-5 md:grid-cols-3">
-            <div className="col-span-1 rounded-2xl border border-white/10 bg-white/[0.04] p-6">
+            <div className={`col-span-1 rounded-2xl border p-6 ${
+              theme === 'dark'
+                ? 'border-white/10 bg-white/[0.04]'
+                : 'border-gray-200 bg-gray-50'
+            }`}>
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-white/60">
+                <h2 className={`text-sm font-semibold uppercase tracking-wide ${
+                  theme === 'dark' ? 'text-white/60' : 'text-gray-600'
+                }`}>
                   Whitelist IP
                 </h2>
-                <ShieldCheck className="h-4 w-4 text-green-300" />
+                <ShieldCheck className={`h-4 w-4 ${theme === 'dark' ? 'text-green-300' : 'text-green-600'}`} />
               </div>
-              <p className="mt-3 text-2xl font-bold text-white">
+              <p className={`mt-3 text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 {binanceGuidance?.whitelist_ip ?? FALLBACK_BINANCE_GUIDANCE.whitelist_ip}
               </p>
-              <p className="mt-2 text-sm text-white/60">
+              <p className={`mt-2 text-sm ${theme === 'dark' ? 'text-white/60' : 'text-gray-600'}`}>
                 Add this IP to Binance API key restrictions before testing your first connection.
               </p>
               <button
@@ -450,7 +498,11 @@ const ConnectionsPage = () => {
                 onClick={() =>
                   handleCopyIp(binanceGuidance?.whitelist_ip ?? FALLBACK_BINANCE_GUIDANCE.whitelist_ip)
                 }
-                className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                className={`mt-4 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
+                  theme === 'dark'
+                    ? 'border-white/10 bg-white/5 text-white hover:bg-white/10'
+                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                }`}
               >
                 {copySuccess ? (
                   <>
@@ -466,15 +518,25 @@ const ConnectionsPage = () => {
               </button>
             </div>
 
-            <div className="col-span-1 rounded-2xl border border-white/10 bg-white/[0.04] p-6">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-white/60">
+            <div className={`col-span-1 rounded-2xl border p-6 ${
+              theme === 'dark'
+                ? 'border-white/10 bg-white/[0.04]'
+                : 'border-gray-200 bg-gray-50'
+            }`}>
+              <h2 className={`text-sm font-semibold uppercase tracking-wide ${
+                theme === 'dark' ? 'text-white/60' : 'text-gray-600'
+              }`}>
                 Required Binance permissions
               </h2>
-              <ul className="mt-3 space-y-2 text-sm text-white/80">
+              <ul className={`mt-3 space-y-2 text-sm ${
+                theme === 'dark' ? 'text-white/80' : 'text-gray-700'
+              }`}>
                 {(binanceGuidance?.required_permissions ?? FALLBACK_BINANCE_GUIDANCE.required_permissions).map(
                   (item) => (
                     <li key={item} className="flex items-start gap-2">
-                      <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-300" />
+                      <span className={`mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full ${
+                        theme === 'dark' ? 'bg-blue-300' : 'bg-blue-500'
+                      }`} />
                       <span>{item}</span>
                     </li>
                   ),
@@ -482,14 +544,24 @@ const ConnectionsPage = () => {
               </ul>
             </div>
 
-            <div className="col-span-1 rounded-2xl border border-white/10 bg-white/[0.04] p-6">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-white/60">
+            <div className={`col-span-1 rounded-2xl border p-6 ${
+              theme === 'dark'
+                ? 'border-white/10 bg-white/[0.04]'
+                : 'border-gray-200 bg-gray-50'
+            }`}>
+              <h2 className={`text-sm font-semibold uppercase tracking-wide ${
+                theme === 'dark' ? 'text-white/60' : 'text-gray-600'
+              }`}>
                 Before you test
               </h2>
-              <ul className="mt-3 space-y-2 text-sm text-white/80">
+              <ul className={`mt-3 space-y-2 text-sm ${
+                theme === 'dark' ? 'text-white/80' : 'text-gray-700'
+              }`}>
                 {(binanceGuidance?.recommendations ?? FALLBACK_BINANCE_GUIDANCE.recommendations).map((tip) => (
                   <li key={tip} className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-300" />
+                    <span className={`mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full ${
+                      theme === 'dark' ? 'bg-emerald-300' : 'bg-emerald-500'
+                    }`} />
                     <span>{tip}</span>
                   </li>
                 ))}
@@ -497,14 +569,24 @@ const ConnectionsPage = () => {
             </div>
           </div>
 
-          <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-white/60">
+          <div className={`mt-5 rounded-2xl border p-6 ${
+            theme === 'dark'
+              ? 'border-white/10 bg-white/[0.03]'
+              : 'border-gray-200 bg-gray-50'
+          }`}>
+            <h3 className={`text-sm font-semibold uppercase tracking-wide ${
+              theme === 'dark' ? 'text-white/60' : 'text-gray-600'
+            }`}>
               How the connection test works
             </h3>
-            <ul className="mt-3 grid gap-2 text-sm text-white/75 md:grid-cols-2">
+            <ul className={`mt-3 grid gap-2 text-sm md:grid-cols-2 ${
+              theme === 'dark' ? 'text-white/75' : 'text-gray-700'
+            }`}>
               {(binanceGuidance?.testing_notes ?? FALLBACK_BINANCE_GUIDANCE.testing_notes).map((note) => (
                 <li key={note} className="flex items-start gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-sky-300" />
+                  <span className={`mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full ${
+                    theme === 'dark' ? 'bg-sky-300' : 'bg-sky-500'
+                  }`} />
                   <span>{note}</span>
                 </li>
               ))}
@@ -515,8 +597,8 @@ const ConnectionsPage = () => {
         <section className="mt-10">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-white">Connection status</h2>
-              <p className="mt-1 text-sm text-white/60">
+              <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Connection status</h2>
+              <p className={`mt-1 text-sm ${theme === 'dark' ? 'text-white/60' : 'text-gray-600'}`}>
                 {connections.length > 0 
                   ? `${connections.length} exchange${connections.length > 1 ? 's' : ''} connected`
                   : 'Track which exchanges are ready before your first Binance sync.'}
@@ -526,7 +608,11 @@ const ConnectionsPage = () => {
               type="button"
               onClick={refreshConnections}
               disabled={loadingConnections}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                theme === 'dark'
+                  ? 'border-white/10 bg-white/5 text-white hover:bg-white/10'
+                  : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+              }`}
             >
               <RefreshCcw className={`h-3.5 w-3.5 ${loadingConnections ? 'animate-spin' : ''}`} />
               {loadingConnections ? 'Refreshing...' : 'Refresh'}
@@ -534,8 +620,14 @@ const ConnectionsPage = () => {
           </div>
 
           {loadingConnections ? (
-            <div className="flex h-32 items-center justify-center rounded-3xl border border-gray-700/50 bg-gray-800/30">
-              <div className="flex items-center gap-2 text-sm text-white/70">
+            <div className={`flex h-32 items-center justify-center rounded-3xl border ${
+              theme === 'dark'
+                ? 'border-gray-700/50 bg-gray-800/30'
+                : 'border-gray-300 bg-gray-100'
+            }`}>
+              <div className={`flex items-center gap-2 text-sm ${
+                theme === 'dark' ? 'text-white/70' : 'text-gray-600'
+              }`}>
                 <div className="h-3 w-3 animate-ping rounded-full bg-blue-400" />
                 Loading connections…
               </div>

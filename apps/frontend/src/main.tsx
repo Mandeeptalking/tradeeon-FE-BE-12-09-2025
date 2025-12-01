@@ -4,7 +4,18 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import ErrorBoundary from './components/ErrorBoundary'
 import { logger } from './utils/logger'
+import { useThemeStore } from './store/theme'
 import './index.css'
+
+// Initialize theme on app load - set dark as default
+const themeStore = useThemeStore.getState();
+if (!themeStore.theme) {
+  themeStore.setTheme('dark');
+} else {
+  // Apply saved theme
+  document.documentElement.classList.remove('light', 'dark');
+  document.documentElement.classList.add(themeStore.theme);
+}
 
 // Debug: Check if environment variables are loaded
 // Debug logging removed for security - use logger utility if needed
