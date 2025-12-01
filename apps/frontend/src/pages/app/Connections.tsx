@@ -406,7 +406,7 @@ const ConnectionsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 pb-20">
-      <div className="mx-auto max-w-6xl px-6 pt-12">
+      <div className="mx-auto max-w-6xl px-6 pt-12 pb-12">
         <header className="flex flex-col gap-6 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-8 shadow-2xl shadow-blue-500/10">
           <div className="flex items-start justify-between gap-4">
             <div>
