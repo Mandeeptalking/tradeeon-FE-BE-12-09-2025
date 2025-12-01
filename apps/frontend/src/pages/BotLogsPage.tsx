@@ -132,9 +132,9 @@ export default function BotLogsPage() {
           const botDetailsObj = {
             bot_id: botId,
             name: botName,
-            bot_type: botData.bot_type || 'dca',
-            exchange: botData.exchange || 'Binance',
-            status: botData.status || 'inactive',
+            bot_type: (botData.bot_type || 'dca'),
+            exchange: (botData.exchange || 'Binance'),
+            status: (botData.status || 'inactive'),
             created_at: created_at_str,
             updated_at: updated_at_str
           };

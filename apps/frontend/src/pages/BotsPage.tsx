@@ -264,9 +264,9 @@ export default function BotsPage() {
           const tradingMode = (bot && bot.config && bot.config.tradingMode) ? bot.config.tradingMode : 'test'; // Default to 'test' if not found
           
           // Use appropriate endpoint based on trading mode
-          endpoint = tradingMode === 'live'
-            ? `${API_BASE_URL}/bots/dca-bots/${botId}/start`
-            : `${API_BASE_URL}/bots/dca-bots/${botId}/start-paper`;
+          const startEndpoint = API_BASE_URL + '/bots/dca-bots/' + botId + '/start';
+          const startPaperEndpoint = API_BASE_URL + '/bots/dca-bots/' + botId + '/start-paper';
+          endpoint = tradingMode === 'live' ? startEndpoint : startPaperEndpoint;
           
           requestBody = JSON.stringify({
             initial_balance: 10000,
@@ -275,23 +275,25 @@ export default function BotsPage() {
           });
           break;
         case 'pause':
-          endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/pause`;
+          endpoint = API_BASE_URL + '/bots/dca-bots/' + botId + '/pause';
           break;
         case 'resume':
-          endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/resume`;
+          endpoint = API_BASE_URL + '/bots/dca-bots/' + botId + '/resume';
           break;
         case 'stop':
-          endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/stop`;
+          endpoint = API_BASE_URL + '/bots/dca-bots/' + botId + '/stop';
           break;
         case 'delete':
-          endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}`;
+          endpoint = API_BASE_URL + '/bots/dca-bots/' + botId;
           method = 'DELETE';
           break;
         default:
-          throw new Error(`Unknown action: ${action}`);
+          const unknownAction = String(action);
+          throw new Error('Unknown action: ' + unknownAction);
       }
       
-      logger.debug(`Executing bot action: ${action}`, { botId, endpoint, method });
+      const actionDebugMsg = 'Executing bot action: ' + action;
+      logger.debug(actionDebugMsg, { botId, endpoint, method });
       
       const fetchOptions: RequestInit = {
         method,
