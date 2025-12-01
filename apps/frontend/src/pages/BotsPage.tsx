@@ -337,12 +337,13 @@ export default function BotsPage() {
       });
       
       if (!response.ok) {
-        let errorMessage = `Failed to ${action} bot`;
+        const actionStr = String(action);
+        let errorMessage = 'Failed to ' + actionStr + ' bot';
         let errorDetails = '';
         
         try {
           const errorData = await response.json();
-          logger.error(`Bot action error response:`, errorData);
+          logger.error('Bot action error response:', errorData);
           console.error('Bot action error details:', errorData);
           
           // Log full error structure for debugging
@@ -365,26 +366,24 @@ export default function BotsPage() {
           // console.groupEnd();
           
           // Try multiple error formats
-          if (errorData.error) {
-            if (errorData.error.message) {
-              errorMessage = errorData.error.message;
-              // Include error code if available
-              if (errorData.error.code) {
-                const codeStr = String(errorData.error.code);
-                errorMessage = '[' + codeStr + '] ' + errorMessage;
+          if (errorData.error && errorData.error.message) {
+            errorMessage = errorData.error.message;
+            // Include error code if available
+            if (errorData.error.code) {
+              const codeStr = String(errorData.error.code);
+              errorMessage = '[' + codeStr + '] ' + errorMessage;
+            }
+            // Include details if available
+            if (errorData.error.details) {
+              errorDetails = JSON.stringify(errorData.error.details);
+              console.error('Error details:', errorData.error.details);
+              // Extract specific error information from details
+              if (errorData.error.details.error_message) {
+                errorMessage = errorData.error.details.error_message;
               }
-              // Include details if available
-              if (errorData.error.details) {
-                errorDetails = JSON.stringify(errorData.error.details);
-                console.error('Error details:', errorData.error.details);
-                // Extract specific error information from details
-                if (errorData.error.details.error_message) {
-                  errorMessage = errorData.error.details.error_message;
-                }
-                if (errorData.error.details.error_type) {
-                  const errorType = String(errorData.error.details.error_type);
-                  errorMessage = errorType + ': ' + errorMessage;
-                }
+              if (errorData.error.details.error_type) {
+                const errorType = String(errorData.error.details.error_type);
+                errorMessage = errorType + ': ' + errorMessage;
               }
             }
           } else if (errorData.detail) {
