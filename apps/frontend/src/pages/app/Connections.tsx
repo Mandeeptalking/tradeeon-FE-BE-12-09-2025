@@ -295,11 +295,11 @@ const ConnectionsPage = () => {
     const isProcessing = deletingId === connection.id || pausingId === connection.id;
 
     return (
-      <div className="group relative flex flex-col rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur transition hover:border-white/20 hover:bg-white/[0.06]">
+      <div className="group relative flex flex-col rounded-2xl border border-gray-700/50 bg-gray-800/50 backdrop-blur transition hover:border-gray-600 hover:bg-gray-800/70">
         {/* Card Header */}
         <div className="flex items-center justify-between px-5 py-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-2xl flex-shrink-0">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-700/50 text-2xl flex-shrink-0">
               {metadata.badge}
             </div>
             <div className="flex flex-col min-w-0">
@@ -534,7 +534,7 @@ const ConnectionsPage = () => {
           </div>
 
           {loadingConnections ? (
-            <div className="flex h-32 items-center justify-center rounded-3xl border border-white/10 bg-white/[0.03]">
+            <div className="flex h-32 items-center justify-center rounded-3xl border border-gray-700/50 bg-gray-800/30">
               <div className="flex items-center gap-2 text-sm text-white/70">
                 <div className="h-3 w-3 animate-ping rounded-full bg-blue-400" />
                 Loading connections…
