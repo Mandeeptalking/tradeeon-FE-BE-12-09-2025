@@ -47,6 +47,9 @@ const fetchBinancePairs = async (): Promise<string[]> => {
 };
 
 export default function DCABot() {
+  // Debug: Log component start
+  console.log('DCABot component function called');
+  
   const navigate = useNavigate();
   // Trading mode: test (paper trading) or live (real trading)
   const [tradingMode, setTradingMode] = useState<'test' | 'live'>('test');
@@ -5953,5 +5956,4 @@ export default function DCABot() {
       </Dialog>
     </div>
   );
-}
 }
