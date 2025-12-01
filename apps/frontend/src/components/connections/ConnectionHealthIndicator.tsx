@@ -74,6 +74,8 @@ const ConnectionHealthIndicator = ({ connection, onRefresh }: ConnectionHealthIn
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const hasInitializedRef = useRef(false);
+  const lastIdRef = useRef<string | null>(null);
+  const lastStatusRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Only set up interval if connection is connected
@@ -84,31 +86,41 @@ const ConnectionHealthIndicator = ({ connection, onRefresh }: ConnectionHealthIn
         intervalRef.current = null;
       }
       hasInitializedRef.current = false;
+      lastIdRef.current = null;
+      lastStatusRef.current = null;
       return;
     }
 
-    // Check if id or status actually changed
-    const idChanged = connectionIdRef.current !== connection.id;
-    const statusChanged = connectionStatusRef.current !== connection.status;
+    // Check if id or status actually changed - use refs to track previous values
+    const idChanged = lastIdRef.current !== connection.id;
+    const statusChanged = lastStatusRef.current !== connection.status;
     
     // Only initialize or restart if id or status actually changed
     if (idChanged || statusChanged || !hasInitializedRef.current) {
+      // Update tracking refs
+      lastIdRef.current = connection.id;
+      lastStatusRef.current = connection.status;
+      
       // Clear existing interval
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
 
-      // Check latency on mount or when connection changes
+      // Check latency on mount or when connection changes (only once)
+      // TEMPORARILY DISABLED TO STOP THE LOOP
+      // if (!hasInitializedRef.current) {
+      //   checkLatency(false); // Don't refresh on initial check
+      //   hasInitializedRef.current = true;
+      // }
       if (!hasInitializedRef.current) {
-        checkLatency(false); // Don't refresh on initial check
         hasInitializedRef.current = true;
       }
 
-      // Set up new interval
-      intervalRef.current = setInterval(() => {
-        checkLatency(false); // Don't refresh connections on automatic checks
-      }, 30000);
+      // Set up new interval - DISABLED TEMPORARILY TO STOP THE LOOP
+      // intervalRef.current = setInterval(() => {
+      //   checkLatency(false); // Don't refresh connections on automatic checks
+      // }, 30000);
     }
 
     return () => {

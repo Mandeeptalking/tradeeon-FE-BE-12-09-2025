@@ -100,14 +100,26 @@ const ConnectionsPage = () => {
   const [showPreChecklist, setShowPreChecklist] = useState(false);
   const [historyConnectionId, setHistoryConnectionId] = useState<string | null>(null);
   const isLoadingRef = useRef(false);
+  const lastRefreshTimeRef = useRef<number>(0);
+  const MIN_REFRESH_INTERVAL = 2000; // Minimum 2 seconds between refreshes
 
   const refreshConnections = useCallback(async () => {
-    // Prevent rapid successive calls using ref
+    const now = Date.now();
+    const timeSinceLastRefresh = now - lastRefreshTimeRef.current;
+    
+    // Prevent rapid successive calls using ref and time check
     if (isLoadingRef.current) {
       logger.debug('Refresh already in progress, skipping...');
       return;
     }
     
+    // Throttle: Don't allow refreshes more than once every 2 seconds
+    if (timeSinceLastRefresh < MIN_REFRESH_INTERVAL) {
+      logger.debug(`Refresh throttled. Last refresh was ${timeSinceLastRefresh}ms ago. Need ${MIN_REFRESH_INTERVAL}ms between refreshes.`);
+      return;
+    }
+    
+    lastRefreshTimeRef.current = now;
     isLoadingRef.current = true;
     setLoadingConnections(true);
     try {
@@ -118,13 +130,28 @@ const ConnectionsPage = () => {
         if (prev.length !== data.length) {
           return data;
         }
-        const hasChanged = prev.some((oldConn, index) => {
-          const newConn = data[index];
-          return !newConn || 
-                 oldConn.id !== newConn.id || 
-                 oldConn.status !== newConn.status ||
-                 oldConn.next_check_eta_sec !== newConn.next_check_eta_sec;
-        });
+        
+        // Create a map of existing connections by ID for efficient lookup
+        const prevMap = new Map(prev.map(conn => [conn.id, conn]));
+        let hasChanged = false;
+        
+        for (const newConn of data) {
+          const oldConn = prevMap.get(newConn.id);
+          if (!oldConn) {
+            hasChanged = true;
+            break;
+          }
+          // Only update if meaningful properties changed
+          if (oldConn.id !== newConn.id || 
+              oldConn.status !== newConn.status ||
+              oldConn.next_check_eta_sec !== newConn.next_check_eta_sec ||
+              oldConn.last_check_at !== newConn.last_check_at) {
+            hasChanged = true;
+            break;
+          }
+        }
+        
+        // If nothing changed, return the previous array to maintain object references
         return hasChanged ? data : prev;
       });
     } catch (error) {
