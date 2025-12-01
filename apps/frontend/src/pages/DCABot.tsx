@@ -1130,9 +1130,11 @@ export default function DCABot() {
   
   return (
     <div className="h-full w-full overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="flex gap-6 max-w-7xl mx-auto">
-        {/* Left Content Area */}
-        <div className="flex-1 min-w-0">
+      {/* Debug: Ensure content is visible */}
+      <div className="max-w-7xl mx-auto">
+        <div className="flex gap-6">
+          {/* Left Content Area */}
+          <div className="flex-1 min-w-0">
             {/* Trading Mode Toggle - At the top */}
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-4">
               <div className="flex items-center justify-between">
@@ -5172,6 +5174,7 @@ export default function DCABot() {
               )}
             </div>
           </div>
+        </div>
         </div>
       </div>
 
