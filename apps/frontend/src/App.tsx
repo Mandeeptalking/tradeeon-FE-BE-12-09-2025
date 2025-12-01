@@ -19,7 +19,6 @@ import Portfolio from './pages/app/Portfolio'
 import Activity from './pages/Activity'
 import Settings from './pages/Settings'
 import CleanCharts from './pages/CleanCharts'
-// import DCABot from './pages/DCABot' // Temporarily removed
 import DCABotNew from './pages/DCABotNew'
 import BacktestPage from './pages/BacktestPage'
 import Security from './pages/Security'
@@ -106,7 +105,6 @@ function App() {
           <Route index element={<Dashboard />} />
                 <Route path="connections" element={<Connections />} />
           <Route path="portfolio" element={<Portfolio />} />
-          {/* <Route path="dca-bot" element={<DCABot />} /> Temporarily removed */}
           <Route path="dca-bot-new" element={<ErrorBoundary><DCABotNew /></ErrorBoundary>} />
           <Route path="backtest" element={<BacktestPage />} />
           <Route path="activity" element={<Activity />} />
