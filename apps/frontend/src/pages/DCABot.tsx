@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import Tooltip from '../components/Tooltip';
 import { logger } from '../utils/logger';
 import { authenticatedFetch } from '../lib/api/auth';
+import { connectionsApi } from '../lib/api/connections';
+import type { Connection } from '../types/connections';
 import {
   Dialog,
   DialogContent,
@@ -63,6 +65,10 @@ export default function DCABot() {
   const [exchange, setExchange] = useState('My Binance | Binance Spot');
   const [botType, setBotType] = useState<'single' | 'multi'>('single');
   const [profitCurrency, setProfitCurrency] = useState<'quote' | 'base'>('quote');
+  
+  // Connection status
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [connectionsLoading, setConnectionsLoading] = useState(true);
   
   // Store multi-pair selections separately
   const [multiPairSelection, setMultiPairSelection] = useState<string[]>([]);
@@ -404,6 +410,62 @@ export default function DCABot() {
       setBaseOrderCurrency(quoteCurrency);
     }
   }, [pair]);
+
+  // Fetch connections on mount
+  useEffect(() => {
+    const fetchConnections = async () => {
+      try {
+        setConnectionsLoading(true);
+        const conns = await connectionsApi.listConnections();
+        setConnections(conns);
+      } catch (error) {
+        logger.error('Failed to fetch connections:', error);
+        setConnections([]);
+      } finally {
+        setConnectionsLoading(false);
+      }
+    };
+    fetchConnections();
+  }, []);
+
+  // Check if selected exchange has valid connection
+  const getConnectionStatus = (): { isValid: boolean; connection?: Connection } => {
+    // In test mode, always return valid - no connection check needed for paper trading
+    if (tradingMode === 'test') {
+      return { isValid: true };
+    }
+    
+    // While loading, don't show warnings
+    if (connectionsLoading) {
+      return { isValid: true };
+    }
+    
+    // Extract exchange name from selection (e.g., "My Binance | Binance Spot" -> "BINANCE")
+    const exchangeMap: Record<string, string> = {
+      'My Binance | Binance Spot': 'BINANCE',
+      'My Binance | Binance Futures': 'BINANCE',
+      'My Coinbase | Coinbase': 'COINBASE',
+      'My Kraken | Kraken': 'KRAKEN',
+    };
+    
+    const exchangeCode = exchangeMap[exchange];
+    if (!exchangeCode) {
+      return { isValid: false };
+    }
+    
+    // Find active connection for this exchange
+    const connection = connections.find(
+      (conn) => conn.exchange === exchangeCode && 
+      (conn.status === 'connected' || conn.status === 'degraded')
+    );
+    
+    return {
+      isValid: !!connection,
+      connection
+    };
+  };
+
+  const connectionStatus = getConnectionStatus();
 
   const handlePairClick = (pairSymbol: string) => {
     const normalizedPair = pairSymbol.replace('USDT', '/USDT');
@@ -1157,7 +1219,27 @@ export default function DCABot() {
                     <option value="My Coinbase | Coinbase">My Coinbase | Coinbase</option>
                     <option value="My Kraken | Kraken">My Kraken | Kraken</option>
                   </select>
-                  <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">⚠️ Invalid API Key</p>
+                  {/* Only show connection status in live mode */}
+                  {tradingMode === 'live' && (
+                    <>
+                      {!connectionsLoading && !connectionStatus.isValid && (
+                        <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
+                          ⚠️ No active connection found. Please connect your {exchange.split('|')[0].trim()} account in the Connections page.
+                        </p>
+                      )}
+                      {!connectionsLoading && connectionStatus.isValid && connectionStatus.connection?.status === 'degraded' && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                          ⚠️ Connection status: Attention required. Some features may be limited.
+                        </p>
+                      )}
+                      {!connectionsLoading && connectionStatus.isValid && connectionStatus.connection?.status === 'connected' && (
+                        <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">
+                          ✓ Connection active ({connectionStatus.connection?.nickname || 'Connected'})
+                        </p>
+                      )}
+                    </>
+                  )}
+                  {/* In test mode, show nothing - no connection validation needed */}
                 </div>
 
                 {/* Market */}
@@ -5864,4 +5946,3 @@ export default function DCABot() {
     </div>
   );
 }
-
