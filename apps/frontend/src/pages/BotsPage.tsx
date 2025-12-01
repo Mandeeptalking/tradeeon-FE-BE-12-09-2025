@@ -259,7 +259,15 @@ export default function BotsPage() {
       
       switch (action) {
         case 'start':
-          endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/start-paper`;
+          // Get bot to check trading mode
+          const bot = bots.find(b => b.bot_id === botId);
+          const tradingMode = bot?.config?.tradingMode || 'test'; // Default to 'test' if not found
+          
+          // Use appropriate endpoint based on trading mode
+          endpoint = tradingMode === 'live'
+            ? `${API_BASE_URL}/bots/dca-bots/${botId}/start`
+            : `${API_BASE_URL}/bots/dca-bots/${botId}/start-paper`;
+          
           requestBody = JSON.stringify({
             initial_balance: 10000,
             interval_seconds: 60,
@@ -338,7 +346,8 @@ export default function BotsPage() {
           console.error('Bot action error details:', errorData);
           
           // Log full error structure for debugging
-          console.group('🔴 Bot Start Error - Full Details');
+          // Temporarily disabled console.group to fix build issue
+          // console.group('🔴 Bot Start Error - Full Details');
           console.error('Full Error Object:', JSON.stringify(errorData, null, 2));
           if (errorData.error) {
             console.error('Error Code:', errorData.error.code);
@@ -353,17 +362,17 @@ export default function BotsPage() {
               }
             }
           }
-          console.groupEnd();
+          // console.groupEnd();
           
           // Try multiple error formats
-          if (errorData.error?.message) {
+          if (errorData.error && errorData.error.message) {
             errorMessage = errorData.error.message;
             // Include error code if available
-            if (errorData.error?.code) {
+            if (errorData.error.code) {
               errorMessage = `[${errorData.error.code}] ${errorMessage}`;
             }
             // Include details if available
-            if (errorData.error?.details) {
+            if (errorData.error.details) {
               errorDetails = JSON.stringify(errorData.error.details);
               console.error('Error details:', errorData.error.details);
               // Extract specific error information from details
