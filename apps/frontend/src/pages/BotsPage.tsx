@@ -261,7 +261,7 @@ export default function BotsPage() {
         case 'start':
           // Get bot to check trading mode
           const bot = bots.find(b => b.bot_id === botId);
-          const tradingMode = bot?.config?.tradingMode || 'test'; // Default to 'test' if not found
+          const tradingMode = (bot && bot.config && bot.config.tradingMode) ? bot.config.tradingMode : 'test'; // Default to 'test' if not found
           
           // Use appropriate endpoint based on trading mode
           endpoint = tradingMode === 'live'
@@ -320,12 +320,12 @@ export default function BotsPage() {
           action,
           botId,
           error: fetchError,
-          message: fetchError?.message
+          message: fetchError && fetchError.message ? fetchError.message : undefined
         });
-        throw new Error(
-          fetchError?.message || 
-          `Network error: Failed to connect to server. Please check your internet connection and try again.`
-        );
+        const errorMsg = (fetchError && fetchError.message) 
+          ? fetchError.message 
+          : `Network error: Failed to connect to server. Please check your internet connection and try again.`;
+        throw new Error(errorMsg);
       }
       
       logger.debug(`Bot action response:`, { 
@@ -365,22 +365,26 @@ export default function BotsPage() {
           // console.groupEnd();
           
           // Try multiple error formats
-          if (errorData.error && errorData.error.message) {
-            errorMessage = errorData.error.message;
-            // Include error code if available
-            if (errorData.error.code) {
-              errorMessage = `[${errorData.error.code}] ${errorMessage}`;
-            }
-            // Include details if available
-            if (errorData.error.details) {
-              errorDetails = JSON.stringify(errorData.error.details);
-              console.error('Error details:', errorData.error.details);
-              // Extract specific error information from details
-              if (errorData.error.details.error_message) {
-                errorMessage = errorData.error.details.error_message;
+          if (errorData.error) {
+            if (errorData.error.message) {
+              errorMessage = errorData.error.message;
+              // Include error code if available
+              if (errorData.error.code) {
+                const codeStr = String(errorData.error.code);
+                errorMessage = '[' + codeStr + '] ' + errorMessage;
               }
-              if (errorData.error.details.error_type) {
-                errorMessage = `${errorData.error.details.error_type}: ${errorMessage}`;
+              // Include details if available
+              if (errorData.error.details) {
+                errorDetails = JSON.stringify(errorData.error.details);
+                console.error('Error details:', errorData.error.details);
+                // Extract specific error information from details
+                if (errorData.error.details.error_message) {
+                  errorMessage = errorData.error.details.error_message;
+                }
+                if (errorData.error.details.error_type) {
+                  const errorType = String(errorData.error.details.error_type);
+                  errorMessage = errorType + ': ' + errorMessage;
+                }
               }
             }
           } else if (errorData.detail) {
