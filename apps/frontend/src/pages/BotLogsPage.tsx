@@ -119,12 +119,13 @@ export default function BotLogsPage() {
       if (response.ok) {
         const data = await response.json();
         const botsArray = Array.isArray(data) ? data : (data.bots || []);
-        const bot = botsArray.find((b: any) => {
-          return (b.bot_id || b.id) === botId;
+        const bot = (botsArray as any[]).find((b) => {
+          const bid = b.bot_id || b.id;
+          return bid === botId;
         });
         
         if (bot) {
-          const botData = bot as any;
+          const botData = bot;
           const botDetailsObj: BotDetails = {
             bot_id: botId,
             name: botData.name || `Bot ${botId}`,
