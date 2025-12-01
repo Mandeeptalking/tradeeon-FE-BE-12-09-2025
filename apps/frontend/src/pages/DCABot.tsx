@@ -1130,6 +1130,10 @@ export default function DCABot() {
   
   return (
     <div className="h-full w-full overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6">
+      {/* Debug: Test visibility */}
+      <div style={{ backgroundColor: 'red', color: 'white', padding: '20px', marginBottom: '20px', zIndex: 9999 }}>
+        DEBUG: DCABot Component is Rendering
+      </div>
       {/* Debug: Ensure content is visible */}
       <div className="max-w-7xl mx-auto">
         <div className="flex gap-6">
