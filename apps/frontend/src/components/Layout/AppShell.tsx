@@ -182,10 +182,8 @@ const AppShell = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
-        <div className="flex-1 overflow-y-auto">
-          <Outlet />
-        </div>
+      <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
+        <Outlet />
       </div>
     </div>
   );
