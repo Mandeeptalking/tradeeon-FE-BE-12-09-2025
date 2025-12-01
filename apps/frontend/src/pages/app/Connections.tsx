@@ -124,38 +124,19 @@ const ConnectionsPage = () => {
     setLoadingConnections(true);
     try {
       const data = await connectionsApi.listConnections();
-      // Only update if data actually changed to prevent unnecessary re-renders
-      setConnections(prev => {
-        // Compare by ID and status to avoid creating new objects if nothing changed
-        if (prev.length !== data.length) {
-          return data;
-        }
-        
-        // Create a map of existing connections by ID for efficient lookup
-        const prevMap = new Map(prev.map(conn => [conn.id, conn]));
-        let hasChanged = false;
-        
-        for (const newConn of data) {
-          const oldConn = prevMap.get(newConn.id);
-          if (!oldConn) {
-            hasChanged = true;
-            break;
-          }
-          // Only update if meaningful properties changed
-          if (oldConn.id !== newConn.id || 
-              oldConn.status !== newConn.status ||
-              oldConn.next_check_eta_sec !== newConn.next_check_eta_sec ||
-              oldConn.last_check_at !== newConn.last_check_at) {
-            hasChanged = true;
-            break;
-          }
-        }
-        
-        // If nothing changed, return the previous array to maintain object references
-        return hasChanged ? data : prev;
-      });
+      logger.debug('Fetched connections:', data.length, data);
+      // Always update with fresh data from API to ensure status is current
+      setConnections(data);
+      
+      // Log if we have connections but they're not showing
+      if (data.length > 0) {
+        logger.info(`Successfully loaded ${data.length} connection(s)`, data.map(c => ({ id: c.id, exchange: c.exchange, status: c.status })));
+      } else {
+        logger.info('No connections found in API response');
+      }
     } catch (error) {
       logger.error('Failed to refresh connections:', error);
+      // Don't clear connections on error - keep showing last known state
     } finally {
       isLoadingRef.current = false;
       setLoadingConnections(false);
@@ -536,16 +517,19 @@ const ConnectionsPage = () => {
             <div>
               <h2 className="text-xl font-semibold text-white">Connection status</h2>
               <p className="mt-1 text-sm text-white/60">
-                Track which exchanges are ready before your first Binance sync.
+                {connections.length > 0 
+                  ? `${connections.length} exchange${connections.length > 1 ? 's' : ''} connected`
+                  : 'Track which exchanges are ready before your first Binance sync.'}
               </p>
             </div>
             <button
               type="button"
               onClick={refreshConnections}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/10"
+              disabled={loadingConnections}
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <RefreshCcw className="h-3.5 w-3.5" />
-              Refresh
+              <RefreshCcw className={`h-3.5 w-3.5 ${loadingConnections ? 'animate-spin' : ''}`} />
+              {loadingConnections ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
 

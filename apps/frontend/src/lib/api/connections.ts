@@ -106,41 +106,72 @@ const mockAuditEvents: AuditEvent[] = [
 
 export const connectionsApi = {
   async listConnections(): Promise<Connection[]> {
-    // CRITICAL: Always return data immediately - never block on API
-    // Return mock data first, then try API in background
     try {
-      // Try API with very short timeout (1 second)
+      // Use a reasonable timeout (10 seconds) to allow proper API calls
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
-      const response = await Promise.race([
-        authenticatedFetch(`${API_BASE_URL}/connections`, {
-          method: 'GET',
-          signal: controller.signal,
-        }),
-        new Promise<Response>((_, reject) => 
-          setTimeout(() => reject(new Error('timeout')), 1000)
-        )
-      ]).catch(() => null);
+      logger.debug('Fetching connections from:', `${API_BASE_URL}/connections`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/connections`, {
+        method: 'GET',
+        signal: controller.signal,
+      });
       
       clearTimeout(timeoutId);
       
-      if (response && response.ok) {
-        try {
-          const data = await response.json();
-          if (Array.isArray(data) && data.length > 0) {
-            return data;
-          }
-        } catch {
-          // If JSON parse fails, use mock
+      logger.debug('Connections API response status:', response.status, response.ok);
+      
+      if (response.ok) {
+        const data = await response.json();
+        logger.debug('Connections API response data:', data, 'Type:', Array.isArray(data), 'Length:', Array.isArray(data) ? data.length : 'N/A');
+        
+        if (Array.isArray(data)) {
+          // Validate and normalize the data
+          const normalizedConnections = data.map((conn: any) => {
+            // Ensure all required fields are present
+            return {
+              id: String(conn.id || ''),
+              exchange: (conn.exchange || '').toUpperCase(),
+              nickname: conn.nickname || undefined,
+              status: conn.status || (conn.is_active ? 'connected' : 'not_connected'),
+              last_check_at: conn.last_check_at || conn.updated_at || undefined,
+              next_check_eta_sec: conn.next_check_eta_sec || 60,
+              features: conn.features || {
+                trading: conn.permissions?.trading || false,
+                wallet: conn.permissions?.wallet || false,
+                paper: conn.permissions?.paper || false,
+              },
+              notes: conn.notes || undefined,
+            };
+          });
+          
+          logger.debug('Normalized connections:', normalizedConnections);
+          return normalizedConnections;
+        } else {
+          logger.warn('API returned non-array data:', data);
+          return [];
         }
+      } else {
+        // Try to get error details
+        let errorText = response.statusText;
+        try {
+          const errorData = await response.json();
+          errorText = errorData.detail || errorData.message || errorText;
+        } catch {
+          // Ignore JSON parse errors
+        }
+        logger.warn('Failed to fetch connections:', response.status, errorText);
+        return [];
       }
-      } catch (error) {
-        logger.debug('Failed to fetch connections from API, using mock data', error);
+    } catch (error: any) {
+      // Only log if it's not an abort (timeout)
+      if (error.name !== 'AbortError') {
+        logger.error('Failed to fetch connections from API:', error);
+      } else {
+        logger.warn('Connections API call timed out');
       }
-    
-    // Always return mock data as fallback - ensures page loads instantly
-    return mockConnections;
+      return [];
+    }
   },
 
   async testConnection(body: TestConnectionBody): Promise<TestConnectionResponse> {
