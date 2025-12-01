@@ -289,7 +289,7 @@ export default function BotsPage() {
           break;
         default:
           const unknownAction = String(action);
-          throw new Error('Unknown action: ' + unknownAction);
+          throw new Error(`Unknown action: ${unknownAction}`);
       }
       
       const actionDebugMsg = 'Executing bot action: ' + action;
@@ -322,11 +322,9 @@ export default function BotsPage() {
           action,
           botId,
           error: fetchError,
-          message: fetchError && fetchError.message ? fetchError.message : undefined
+          message: fetchError?.message
         });
-        const errorMsg = (fetchError && fetchError.message) 
-          ? fetchError.message 
-          : `Network error: Failed to connect to server. Please check your internet connection and try again.`;
+        const errorMsg = fetchError?.message || `Network error: Failed to connect to server. Please check your internet connection and try again.`;
         throw new Error(errorMsg);
       }
       
@@ -340,7 +338,7 @@ export default function BotsPage() {
       
       if (!response.ok) {
         const actionStr = String(action);
-        let errorMessage = 'Failed to ' + actionStr + ' bot';
+        let errorMessage = `Failed to ${actionStr} bot`;
         let errorDetails = '';
         
         try {
@@ -373,7 +371,7 @@ export default function BotsPage() {
             // Include error code if available
             if (errorData.error.code) {
               const codeStr = String(errorData.error.code);
-              errorMessage = '[' + codeStr + '] ' + errorMessage;
+              errorMessage = `[${codeStr}] ${errorMessage}`;
             }
             // Include details if available
             if (errorData.error.details) {
@@ -385,7 +383,7 @@ export default function BotsPage() {
               }
               if (errorData.error.details.error_type) {
                 const errorType = String(errorData.error.details.error_type);
-                errorMessage = errorType + ': ' + errorMessage;
+                errorMessage = `${errorType}: ${errorMessage}`;
               }
             }
           } else if (errorData.detail) {
