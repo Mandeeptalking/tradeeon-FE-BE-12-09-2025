@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   Settings,
   TrendingUp,
@@ -342,6 +342,17 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
     validateConfig(newConfig);
   };
 
+  // Format pair display helper function (must be defined before useMemo hooks that use it)
+  const formatPairDisplay = useCallback((pair: string) => {
+    // Convert BTCUSDT to BTC/USDT format
+    if (pair.length >= 6) {
+      const quote = pair.slice(-4);
+      const base = pair.slice(0, -4);
+      return `${base}/${quote}`;
+    }
+    return pair;
+  }, []);
+
   // Popular pairs (most traded)
   const popularPairs = useMemo(() => {
     return ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'SOLUSDT', 'XRPUSDT', 'DOGEUSDT', 'MATICUSDT'];
@@ -387,7 +398,7 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
       
       return a.localeCompare(b);
     });
-  }, [availablePairs, pairSearch, selectedQuoteCurrency, popularPairs]);
+  }, [availablePairs, pairSearch, selectedQuoteCurrency, popularPairs, formatPairDisplay]);
 
   // Highlight matching text in pair
   const highlightMatch = (pair: string, search: string) => {
@@ -465,16 +476,6 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
     const newConfig = { ...config, pairMode: mode, pairs: newPairs };
     onChange(newConfig);
     validateConfig(newConfig);
-  };
-
-  const formatPairDisplay = (pair: string) => {
-    // Convert BTCUSDT to BTC/USDT format
-    if (pair.length >= 6) {
-      const quote = pair.slice(-4);
-      const base = pair.slice(0, -4);
-      return `${base}/${quote}`;
-    }
-    return pair;
   };
 
   // Get current exchange value for select
