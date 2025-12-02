@@ -28,15 +28,21 @@ export interface EntryCondition {
   id: string;
   name: string;
   enabled: boolean;
-  indicator: 'RSI' | 'MACD' | 'EMA' | 'SMA' | 'Price';
-  component?: string;
-  operator: string;
+  indicator: string; // All indicators from clean charts
+  component?: string; // Component of the indicator (e.g., 'rsi_line', 'macd_line', 'histogram')
+  operator: string; // Operator specific to indicator/component
   value?: number;
   lowerBound?: number;
   upperBound?: number;
-  period?: number;
+  period?: number; // For RSI, EMA, SMA, CCI, MFI, etc.
+  fastPeriod?: number; // For MACD
+  slowPeriod?: number; // For MACD
+  signalPeriod?: number; // For MACD
   timeframe: string;
   logicGate?: 'AND' | 'OR';
+  // Additional parameters for specific indicators
+  maType?: 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'KAMA' | 'MAMA' | 'VWMA' | 'Hull'; // For MA types
+  source?: 'close' | 'open' | 'high' | 'low' | 'hlc3' | 'ohlc4'; // Price source
 }
 
 export interface EntryConditionsData {
@@ -129,42 +135,336 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     timeframe: '4h',
   },
   {
-    name: 'Price Above EMA 20',
+    name: 'Price Crosses Above EMA 20',
     enabled: true,
     indicator: 'EMA',
-    component: 'ema_line',
+    component: 'line',
     operator: 'crosses_above',
     period: 20,
     timeframe: '1h',
   },
   {
-    name: 'Price Below EMA 20',
+    name: 'Price Crosses Below EMA 20',
     enabled: true,
     indicator: 'EMA',
-    component: 'ema_line',
+    component: 'line',
     operator: 'crosses_below',
     period: 20,
     timeframe: '1h',
   },
   {
-    name: 'EMA 9 Crosses Above EMA 26',
+    name: 'MACD Line Crosses Signal',
     enabled: true,
-    indicator: 'EMA',
-    component: 'crossover',
+    indicator: 'MACD',
+    component: 'macd_line',
     operator: 'crosses_above',
-    period: 9,
+    fastPeriod: 12,
+    slowPeriod: 26,
+    signalPeriod: 9,
     timeframe: '4h',
   },
 ];
 
-// Available indicators
+// Available indicators from clean charts
 const INDICATORS = [
-  { value: 'RSI', label: 'RSI (Relative Strength Index)', icon: BarChart3 },
-  { value: 'MACD', label: 'MACD', icon: TrendingUp },
-  { value: 'EMA', label: 'EMA (Exponential Moving Average)', icon: TrendingUp },
-  { value: 'SMA', label: 'SMA (Simple Moving Average)', icon: TrendingUp },
-  { value: 'Price', label: 'Price Action', icon: Zap },
+  // Momentum Oscillators
+  { value: 'RSI', label: 'RSI (Relative Strength Index)', category: 'Momentum', icon: BarChart3 },
+  { value: 'MACD', label: 'MACD (Moving Average Convergence Divergence)', category: 'Momentum', icon: TrendingUp },
+  { value: 'STOCHASTIC', label: 'Stochastic Oscillator', category: 'Momentum', icon: BarChart3 },
+  { value: 'WILLIAMS_R', label: 'Williams %R', category: 'Momentum', icon: BarChart3 },
+  { value: 'CCI', label: 'CCI (Commodity Channel Index)', category: 'Momentum', icon: BarChart3 },
+  { value: 'MFI', label: 'MFI (Money Flow Index)', category: 'Momentum', icon: BarChart3 },
+  { value: 'ADX', label: 'ADX (Average Directional Index)', category: 'Momentum', icon: TrendingUp },
+  
+  // Trend Indicators
+  { value: 'EMA', label: 'EMA (Exponential Moving Average)', category: 'Trend', icon: TrendingUp },
+  { value: 'SMA', label: 'SMA (Simple Moving Average)', category: 'Trend', icon: TrendingUp },
+  { value: 'WMA', label: 'WMA (Weighted Moving Average)', category: 'Trend', icon: TrendingUp },
+  { value: 'TEMA', label: 'TEMA (Triple Exponential Moving Average)', category: 'Trend', icon: TrendingUp },
+  { value: 'HULL', label: 'Hull Moving Average', category: 'Trend', icon: TrendingUp },
+  
+  // Volatility Indicators
+  { value: 'BOLLINGER_BANDS', label: 'Bollinger Bands', category: 'Volatility', icon: BarChart3 },
+  { value: 'ATR', label: 'ATR (Average True Range)', category: 'Volatility', icon: BarChart3 },
+  { value: 'KELTNER_CHANNELS', label: 'Keltner Channels', category: 'Volatility', icon: BarChart3 },
+  
+  // Volume Indicators
+  { value: 'OBV', label: 'OBV (On-Balance Volume)', category: 'Volume', icon: BarChart3 },
+  { value: 'VWAP', label: 'VWAP (Volume Weighted Average Price)', category: 'Volume', icon: BarChart3 },
+  
+  // Price Action
+  { value: 'Price', label: 'Price Action', category: 'Price', icon: Zap },
 ];
+
+// Indicator components - what parts of each indicator can be used in conditions
+const INDICATOR_COMPONENTS: Record<string, Array<{ value: string; label: string; description: string }>> = {
+  RSI: [
+    { value: 'rsi_line', label: 'RSI Line', description: 'RSI value (0-100)' },
+    { value: 'overbought', label: 'Overbought Level', description: 'RSI crosses above overbought level (default: 70)' },
+    { value: 'oversold', label: 'Oversold Level', description: 'RSI crosses below oversold level (default: 30)' },
+  ],
+  MACD: [
+    { value: 'macd_line', label: 'MACD Line', description: 'MACD Line (12-period EMA - 26-period EMA)' },
+    { value: 'signal_line', label: 'Signal Line', description: 'Signal Line (9-period EMA of MACD Line)' },
+    { value: 'histogram', label: 'Histogram', description: 'MACD Histogram (MACD Line - Signal Line)' },
+    { value: 'zero_line', label: 'Zero Line', description: 'Zero Line crossover' },
+  ],
+  STOCHASTIC: [
+    { value: 'k_percent', label: '%K Line', description: 'Stochastic %K line' },
+    { value: 'd_percent', label: '%D Line', description: 'Stochastic %D line (SMA of %K)' },
+    { value: 'overbought', label: 'Overbought', description: 'Above 80' },
+    { value: 'oversold', label: 'Oversold', description: 'Below 20' },
+  ],
+  WILLIAMS_R: [
+    { value: 'williams_line', label: 'Williams %R', description: 'Williams %R value (-100 to 0)' },
+    { value: 'overbought', label: 'Overbought', description: 'Above -20' },
+    { value: 'oversold', label: 'Oversold', description: 'Below -80' },
+  ],
+  CCI: [
+    { value: 'cci_line', label: 'CCI Line', description: 'Commodity Channel Index' },
+    { value: 'overbought', label: 'Overbought', description: 'Above +100' },
+    { value: 'oversold', label: 'Oversold', description: 'Below -100' },
+  ],
+  MFI: [
+    { value: 'mfi_line', label: 'MFI Line', description: 'Money Flow Index (0-100)' },
+    { value: 'overbought', label: 'Overbought', description: 'Above 80' },
+    { value: 'oversold', label: 'Oversold', description: 'Below 20' },
+  ],
+  ADX: [
+    { value: 'adx_line', label: 'ADX Line', description: 'Average Directional Index (trend strength)' },
+    { value: 'plus_di', label: '+DI', description: 'Positive Directional Indicator' },
+    { value: 'minus_di', label: '-DI', description: 'Negative Directional Indicator' },
+  ],
+  EMA: [
+    { value: 'line', label: 'EMA Line', description: 'Exponential Moving Average' },
+  ],
+  SMA: [
+    { value: 'line', label: 'SMA Line', description: 'Simple Moving Average' },
+  ],
+  WMA: [
+    { value: 'line', label: 'WMA Line', description: 'Weighted Moving Average' },
+  ],
+  TEMA: [
+    { value: 'line', label: 'TEMA Line', description: 'Triple Exponential Moving Average' },
+  ],
+  HULL: [
+    { value: 'line', label: 'Hull MA Line', description: 'Hull Moving Average' },
+  ],
+  BOLLINGER_BANDS: [
+    { value: 'upper_band', label: 'Upper Band', description: 'Upper Bollinger Band' },
+    { value: 'middle_band', label: 'Middle Band', description: 'Middle Bollinger Band (SMA)' },
+    { value: 'lower_band', label: 'Lower Band', description: 'Lower Bollinger Band' },
+    { value: 'bandwidth', label: 'Bandwidth', description: 'Bandwidth ((Upper - Lower) / Middle)' },
+  ],
+  ATR: [
+    { value: 'atr_line', label: 'ATR Line', description: 'Average True Range value' },
+  ],
+  KELTNER_CHANNELS: [
+    { value: 'upper_channel', label: 'Upper Channel', description: 'Upper Keltner Channel' },
+    { value: 'middle_channel', label: 'Middle Channel', description: 'Middle Keltner Channel (EMA)' },
+    { value: 'lower_channel', label: 'Lower Channel', description: 'Lower Keltner Channel' },
+  ],
+  OBV: [
+    { value: 'obv_line', label: 'OBV Line', description: 'On-Balance Volume' },
+  ],
+  VWAP: [
+    { value: 'vwap_line', label: 'VWAP Line', description: 'Volume Weighted Average Price' },
+  ],
+  Price: [
+    { value: 'close', label: 'Close Price', description: 'Closing price' },
+    { value: 'open', label: 'Open Price', description: 'Opening price' },
+    { value: 'high', label: 'High Price', description: 'High price' },
+    { value: 'low', label: 'Low Price', description: 'Low price' },
+  ],
+};
+
+// Operators by indicator component - each component has specific operators
+const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }>> = {
+  // RSI
+  'rsi_line': [
+    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'less_than', label: 'Less Than' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'between', label: 'Between' },
+  ],
+  'overbought': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+  ],
+  'oversold': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+  ],
+  
+  // MACD
+  'macd_line': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+    { value: 'equals', label: 'Equals' },
+  ],
+  'signal_line': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  'histogram': [
+    { value: 'crosses_above', label: 'Crosses Above Zero' },
+    { value: 'crosses_below', label: 'Crosses Below Zero' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  'zero_line': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+  ],
+  
+  // Stochastic
+  'k_percent': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  'd_percent': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  
+  // Williams %R
+  'williams_line': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  
+  // CCI
+  'cci_line': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  
+  // MFI
+  'mfi_line': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  
+  // ADX
+  'adx_line': [
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  'plus_di': [
+    { value: 'crosses_above', label: 'Crosses Above -DI' },
+    { value: 'crosses_below', label: 'Crosses Below -DI' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  'minus_di': [
+    { value: 'crosses_above', label: 'Crosses Above +DI' },
+    { value: 'crosses_below', label: 'Crosses Below +DI' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  
+  // Moving Averages (EMA, SMA, WMA, TEMA, HULL)
+  'line': [
+    { value: 'crosses_above', label: 'Price Crosses Above' },
+    { value: 'crosses_below', label: 'Price Crosses Below' },
+    { value: 'price_above', label: 'Price Above' },
+    { value: 'price_below', label: 'Price Below' },
+  ],
+  
+  // Bollinger Bands
+  'upper_band': [
+    { value: 'crosses_above', label: 'Price Crosses Above' },
+    { value: 'crosses_below', label: 'Price Crosses Below' },
+  ],
+  'middle_band': [
+    { value: 'crosses_above', label: 'Price Crosses Above' },
+    { value: 'crosses_below', label: 'Price Crosses Below' },
+  ],
+  'lower_band': [
+    { value: 'crosses_above', label: 'Price Crosses Above' },
+    { value: 'crosses_below', label: 'Price Crosses Below' },
+  ],
+  'bandwidth': [
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  
+  // ATR
+  'atr_line': [
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  
+  // Keltner Channels
+  'upper_channel': [
+    { value: 'crosses_above', label: 'Price Crosses Above' },
+    { value: 'crosses_below', label: 'Price Crosses Below' },
+  ],
+  'middle_channel': [
+    { value: 'crosses_above', label: 'Price Crosses Above' },
+    { value: 'crosses_below', label: 'Price Crosses Below' },
+  ],
+  'lower_channel': [
+    { value: 'crosses_above', label: 'Price Crosses Above' },
+    { value: 'crosses_below', label: 'Price Crosses Below' },
+  ],
+  
+  // OBV
+  'obv_line': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  
+  // VWAP
+  'vwap_line': [
+    { value: 'crosses_above', label: 'Price Crosses Above' },
+    { value: 'crosses_below', label: 'Price Crosses Below' },
+  ],
+  
+  // Price Action
+  'close': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  'open': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  'high': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+  'low': [
+    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'greater_than', label: 'Greater Than' },
+    { value: 'less_than', label: 'Less Than' },
+  ],
+};
 
 // Available timeframes
 const TIMEFRAMES = [
@@ -177,43 +477,6 @@ const TIMEFRAMES = [
   { value: '1d', label: '1 Day' },
   { value: '1w', label: '1 Week' },
 ];
-
-// Operators by indicator
-const OPERATORS: Record<string, Array<{ value: string; label: string }>> = {
-  RSI: [
-    { value: 'crosses_below', label: 'Crosses Below' },
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'less_than', label: 'Less Than' },
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'equals', label: 'Equals' },
-    { value: 'between', label: 'Between' },
-  ],
-  MACD: [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'less_than', label: 'Less Than' },
-    { value: 'equals', label: 'Equals' },
-  ],
-  EMA: [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'less_than', label: 'Less Than' },
-  ],
-  SMA: [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'less_than', label: 'Less Than' },
-  ],
-  Price: [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'less_than', label: 'Less Than' },
-  ],
-};
 
 const EntryConditions: React.FC<EntryConditionsProps> = ({
   conditions,
@@ -241,13 +504,17 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
   };
 
   const handleAddCustom = () => {
+    const defaultIndicator = 'RSI';
+    const defaultComponent = INDICATOR_COMPONENTS[defaultIndicator]?.[0]?.value || '';
+    const defaultOperator = defaultComponent ? COMPONENT_OPERATORS[defaultComponent]?.[0]?.value || 'crosses_below' : 'crosses_below';
+    
     const newCondition: EntryCondition = {
       id: `condition_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: 'Custom Condition',
       enabled: true,
-      indicator: 'RSI',
-      component: 'rsi_line',
-      operator: 'crosses_below',
+      indicator: defaultIndicator,
+      component: defaultComponent,
+      operator: defaultOperator,
       value: 30,
       period: 14,
       timeframe: '1h',
@@ -284,13 +551,22 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
 
   const formatConditionDescription = (condition: EntryCondition): string => {
     const indicator = INDICATORS.find((ind) => ind.value === condition.indicator);
-    const operator = OPERATORS[condition.indicator]?.find(
-      (op) => op.value === condition.operator
-    );
+    const component = condition.component 
+      ? INDICATOR_COMPONENTS[condition.indicator]?.find((c) => c.value === condition.component)
+      : null;
+    const operator = condition.component && COMPONENT_OPERATORS[condition.component]
+      ? COMPONENT_OPERATORS[condition.component]?.find((op) => op.value === condition.operator)
+      : null;
     
-    if (!indicator || !operator) return condition.name;
+    if (!indicator) return condition.name;
     
-    let desc = `${indicator.label} ${operator.label}`;
+    let desc = indicator.label;
+    if (component) {
+      desc += ` ${component.label}`;
+    }
+    if (operator) {
+      desc += ` ${operator.label}`;
+    }
     
     if (condition.operator === 'between' && condition.lowerBound !== undefined && condition.upperBound !== undefined) {
       desc += ` ${condition.lowerBound}-${condition.upperBound}`;
@@ -300,6 +576,9 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
     
     if (condition.period) {
       desc += ` (Period: ${condition.period})`;
+    }
+    if (condition.fastPeriod && condition.slowPeriod) {
+      desc += ` (Fast: ${condition.fastPeriod}, Slow: ${condition.slowPeriod})`;
     }
     
     desc += ` on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
@@ -808,6 +1087,41 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               </SelectContent>
                             </Select>
                           </div>
+                          
+                          {/* Component Selection */}
+                          {INDICATOR_COMPONENTS[condition.indicator] && INDICATOR_COMPONENTS[condition.indicator].length > 0 && (
+                            <div>
+                              <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                Component
+                              </label>
+                              <Select
+                                value={condition.component || ''}
+                                onValueChange={(value) => {
+                                  // Reset operator when component changes
+                                  const newComponent = value;
+                                  const availableOps = COMPONENT_OPERATORS[newComponent] || [];
+                                  handleUpdateCondition(condition.id, {
+                                    component: newComponent,
+                                    operator: availableOps[0]?.value || condition.operator,
+                                  });
+                                }}
+                              >
+                                <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
+                                  <SelectValue placeholder="Select component" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {INDICATOR_COMPONENTS[condition.indicator].map((comp) => (
+                                    <SelectItem key={comp.value} value={comp.value}>
+                                      <div>
+                                        <div className="font-medium">{comp.label}</div>
+                                        <div className="text-xs text-gray-500">{comp.description}</div>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
                         </div>
 
                         <div className="grid grid-cols-3 gap-4">
@@ -820,12 +1134,13 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               onValueChange={(value) =>
                                 handleUpdateCondition(condition.id, { operator: value })
                               }
+                              disabled={!condition.component || !COMPONENT_OPERATORS[condition.component]}
                             >
                               <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
-                                <SelectValue />
+                                <SelectValue placeholder={condition.component ? "Select operator" : "Select component first"} />
                               </SelectTrigger>
                               <SelectContent>
-                                {OPERATORS[condition.indicator]?.map((op) => (
+                                {(condition.component ? COMPONENT_OPERATORS[condition.component] : []).map((op) => (
                                   <SelectItem key={op.value} value={op.value}>
                                     {op.label}
                                   </SelectItem>
@@ -857,7 +1172,8 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                             </Select>
                           </div>
 
-                          {(condition.indicator === 'RSI' || condition.indicator === 'EMA' || condition.indicator === 'SMA') && (
+                          {/* Period/Parameters based on indicator type */}
+                          {['RSI', 'EMA', 'SMA', 'WMA', 'TEMA', 'HULL', 'CCI', 'MFI', 'STOCHASTIC', 'WILLIAMS_R', 'ATR', 'ADX', 'OBV'].includes(condition.indicator) && (
                             <div>
                               <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
                                 Period
@@ -871,8 +1187,62 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                   })
                                 }
                                 className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
-                                placeholder="14"
+                                placeholder={condition.indicator === 'RSI' ? '14' : condition.indicator === 'EMA' ? '20' : '14'}
                               />
+                            </div>
+                          )}
+                          
+                          {/* MACD Parameters */}
+                          {condition.indicator === 'MACD' && (
+                            <div className="grid grid-cols-3 gap-2">
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Fast Period
+                                </label>
+                                <Input
+                                  type="number"
+                                  value={condition.fastPeriod || ''}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      fastPeriod: parseInt(e.target.value) || undefined,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="12"
+                                />
+                              </div>
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Slow Period
+                                </label>
+                                <Input
+                                  type="number"
+                                  value={condition.slowPeriod || ''}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      slowPeriod: parseInt(e.target.value) || undefined,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="26"
+                                />
+                              </div>
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Signal Period
+                                </label>
+                                <Input
+                                  type="number"
+                                  value={condition.signalPeriod || ''}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      signalPeriod: parseInt(e.target.value) || undefined,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="9"
+                                />
+                              </div>
                             </div>
                           )}
                         </div>
