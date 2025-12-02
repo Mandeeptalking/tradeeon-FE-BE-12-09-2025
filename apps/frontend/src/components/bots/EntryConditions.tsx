@@ -39,6 +39,8 @@ export interface EntryCondition {
   slowPeriod?: number; // For MACD
   signalPeriod?: number; // For MACD
   stdDeviation?: number; // For Bollinger Bands (default: 2)
+  comparisonPeriod?: number; // For MA crossovers (e.g., EMA 20 vs EMA 100)
+  comparisonMaType?: 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL'; // Type of MA to compare against
   timeframe: string;
   logicGate?: 'AND' | 'OR';
   // Additional parameters for specific indicators
@@ -303,6 +305,28 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     operator: 'crosses_above_zero',
     value: 0,
     timeframe: '1h',
+  },
+  {
+    name: 'EMA 20 Crosses Above EMA 100',
+    enabled: true,
+    indicator: 'EMA',
+    component: 'line',
+    operator: 'crosses_above_ma',
+    period: 20,
+    comparisonMaType: 'EMA',
+    comparisonPeriod: 100,
+    timeframe: '4h',
+  },
+  {
+    name: 'SMA 50 Crosses Below SMA 200',
+    enabled: true,
+    indicator: 'SMA',
+    component: 'line',
+    operator: 'crosses_below_ma',
+    period: 50,
+    comparisonMaType: 'SMA',
+    comparisonPeriod: 200,
+    timeframe: '1d',
   },
 ];
 
@@ -577,6 +601,10 @@ const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }
   'line': [
     { value: 'crosses_above', label: 'Price Crosses Above' },
     { value: 'crosses_below', label: 'Price Crosses Below' },
+    { value: 'crosses_above_ma', label: 'Crosses Above Another MA' },
+    { value: 'crosses_below_ma', label: 'Crosses Below Another MA' },
+    { value: 'greater_than_ma', label: 'Greater Than Another MA' },
+    { value: 'less_than_ma', label: 'Less Than Another MA' },
     { value: 'price_above', label: 'Price Above' },
     { value: 'price_below', label: 'Price Below' },
     { value: 'price_percent_above', label: 'Price % Above' },
@@ -765,6 +793,12 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       }
     }
     
+    // MA crossover operators (comparing MA to another MA)
+    if (operator === 'crosses_above_ma' || operator === 'crosses_below_ma' || 
+        operator === 'greater_than_ma' || operator === 'less_than_ma') {
+      return false; // Uses comparisonPeriod and comparisonMaType instead
+    }
+    
     // Comparison operators that compare to other components (not values)
     const componentComparisonOperators = [
       'greater_than_signal',
@@ -932,6 +966,12 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
     }
     if (condition.indicator === 'BOLLINGER_BANDS' && condition.stdDeviation !== undefined && !condition.period) {
       desc += ` (StdDev: ${condition.stdDeviation})`;
+    }
+    // MA crossover description
+    if ((condition.operator === 'crosses_above_ma' || condition.operator === 'crosses_below_ma' || 
+         condition.operator === 'greater_than_ma' || condition.operator === 'less_than_ma') &&
+        condition.comparisonPeriod && condition.comparisonMaType) {
+      desc += ` vs ${condition.comparisonMaType} ${condition.comparisonPeriod}`;
     }
     
     desc += ` on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
@@ -1750,7 +1790,12 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               {condition.operator === 'less_than_minus_di' && 'Triggers when +DI is less than -DI'}
                               {condition.operator === 'greater_than_plus_di' && 'Triggers when -DI is greater than +DI'}
                               {condition.operator === 'less_than_plus_di' && 'Triggers when -DI is less than +DI'}
-                              {!['crosses_above_zero', 'crosses_below_zero', 'crosses_above', 'crosses_below', 'crosses_above_overbought', 'crosses_below_oversold', 'crosses_above_oversold', 'crosses_below_overbought', 'greater_than_zero', 'less_than_zero', 'greater_than_signal', 'less_than_signal', 'greater_than_macd', 'less_than_macd', 'greater_than_d', 'less_than_d', 'greater_than_k', 'less_than_k', 'greater_than_minus_di', 'less_than_minus_di', 'greater_than_plus_di', 'less_than_plus_di'].includes(condition.operator) && 'No value input needed for this operator'}
+                              {condition.operator === 'crosses_above_ma' && condition.comparisonPeriod && condition.comparisonMaType && `Triggers when ${condition.indicator} ${condition.period || 'X'} crosses above ${condition.comparisonMaType} ${condition.comparisonPeriod}`}
+                              {condition.operator === 'crosses_below_ma' && condition.comparisonPeriod && condition.comparisonMaType && `Triggers when ${condition.indicator} ${condition.period || 'X'} crosses below ${condition.comparisonMaType} ${condition.comparisonPeriod}`}
+                              {condition.operator === 'greater_than_ma' && condition.comparisonPeriod && condition.comparisonMaType && `Triggers when ${condition.indicator} ${condition.period || 'X'} is greater than ${condition.comparisonMaType} ${condition.comparisonPeriod}`}
+                              {condition.operator === 'less_than_ma' && condition.comparisonPeriod && condition.comparisonMaType && `Triggers when ${condition.indicator} ${condition.period || 'X'} is less than ${condition.comparisonMaType} ${condition.comparisonPeriod}`}
+                              {((condition.operator === 'crosses_above_ma' || condition.operator === 'crosses_below_ma' || condition.operator === 'greater_than_ma' || condition.operator === 'less_than_ma') && (!condition.comparisonPeriod || !condition.comparisonMaType)) && 'Select comparison MA type and period below'}
+                              {!['crosses_above_zero', 'crosses_below_zero', 'crosses_above', 'crosses_below', 'crosses_above_overbought', 'crosses_below_oversold', 'crosses_above_oversold', 'crosses_below_overbought', 'greater_than_zero', 'less_than_zero', 'greater_than_signal', 'less_than_signal', 'greater_than_macd', 'less_than_macd', 'greater_than_d', 'less_than_d', 'greater_than_k', 'less_than_k', 'greater_than_minus_di', 'less_than_minus_di', 'greater_than_plus_di', 'less_than_plus_di', 'crosses_above_ma', 'crosses_below_ma', 'greater_than_ma', 'less_than_ma'].includes(condition.operator) && 'No value input needed for this operator'}
                             </p>
                           </div>
                         ) : (
