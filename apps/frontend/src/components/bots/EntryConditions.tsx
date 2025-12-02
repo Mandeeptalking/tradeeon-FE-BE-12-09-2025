@@ -209,6 +209,99 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     signalPeriod: 9,
     timeframe: '4h',
   },
+  {
+    name: 'MACD Line Crosses Above Zero',
+    enabled: true,
+    indicator: 'MACD',
+    component: 'macd_line',
+    operator: 'crosses_above_zero',
+    value: 0,
+    fastPeriod: 12,
+    slowPeriod: 26,
+    signalPeriod: 9,
+    timeframe: '4h',
+  },
+  {
+    name: 'MACD Histogram Below -10',
+    enabled: true,
+    indicator: 'MACD',
+    component: 'histogram',
+    operator: 'less_than',
+    value: -10,
+    fastPeriod: 12,
+    slowPeriod: 26,
+    signalPeriod: 9,
+    timeframe: '1h',
+  },
+  {
+    name: 'MACD Histogram Crosses Below Zero',
+    enabled: true,
+    indicator: 'MACD',
+    component: 'histogram',
+    operator: 'crosses_below_zero',
+    value: 0,
+    fastPeriod: 12,
+    slowPeriod: 26,
+    signalPeriod: 9,
+    timeframe: '4h',
+  },
+  {
+    name: 'Stochastic %K Crosses Above %D',
+    enabled: true,
+    indicator: 'STOCHASTIC',
+    component: 'k_percent',
+    operator: 'crosses_above',
+    period: 14,
+    timeframe: '1h',
+  },
+  {
+    name: 'Stochastic %K Below 20',
+    enabled: true,
+    indicator: 'STOCHASTIC',
+    component: 'k_percent',
+    operator: 'less_than',
+    value: 20,
+    period: 14,
+    timeframe: '1h',
+  },
+  {
+    name: 'ADX Above 25',
+    enabled: true,
+    indicator: 'ADX',
+    component: 'adx_line',
+    operator: 'greater_than',
+    value: 25,
+    period: 14,
+    timeframe: '4h',
+  },
+  {
+    name: '+DI Crosses Above -DI',
+    enabled: true,
+    indicator: 'ADX',
+    component: 'plus_di',
+    operator: 'crosses_above',
+    period: 14,
+    timeframe: '4h',
+  },
+  {
+    name: 'CCI Crosses Above +100',
+    enabled: true,
+    indicator: 'CCI',
+    component: 'cci_line',
+    operator: 'crosses_above_overbought',
+    value: 100,
+    period: 20,
+    timeframe: '1h',
+  },
+  {
+    name: 'OBV Crosses Above Zero',
+    enabled: true,
+    indicator: 'OBV',
+    component: 'obv_line',
+    operator: 'crosses_above_zero',
+    value: 0,
+    timeframe: '1h',
+  },
 ];
 
 // Available indicators from clean charts
@@ -328,101 +421,154 @@ const INDICATOR_COMPONENTS: Record<string, Array<{ value: string; label: string;
 const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }>> = {
   // RSI
   'rsi_line': [
-    { value: 'crosses_below', label: 'Crosses Below' },
-    { value: 'crosses_above', label: 'Crosses Above' },
+    { value: 'crosses_below', label: 'Crosses Below Level' },
+    { value: 'crosses_above', label: 'Crosses Above Level' },
+    { value: 'crosses_below_oversold', label: 'Crosses Below Oversold (30)' },
+    { value: 'crosses_above_overbought', label: 'Crosses Above Overbought (70)' },
     { value: 'less_than', label: 'Less Than' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'equals', label: 'Equals' },
     { value: 'between', label: 'Between' },
   ],
   'overbought': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'RSI Crosses Above Overbought' },
+    { value: 'crosses_below', label: 'RSI Crosses Below Overbought' },
   ],
   'oversold': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'RSI Crosses Above Oversold' },
+    { value: 'crosses_below', label: 'RSI Crosses Below Oversold' },
   ],
   
   // MACD
   'macd_line': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'Crosses Above Signal Line' },
+    { value: 'crosses_below', label: 'Crosses Below Signal Line' },
+    { value: 'crosses_above_zero', label: 'Crosses Above Zero' },
+    { value: 'crosses_below_zero', label: 'Crosses Below Zero' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
     { value: 'equals', label: 'Equals' },
+    { value: 'greater_than_signal', label: 'Greater Than Signal Line' },
+    { value: 'less_than_signal', label: 'Less Than Signal Line' },
   ],
   'signal_line': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'Crosses Above MACD Line' },
+    { value: 'crosses_below', label: 'Crosses Below MACD Line' },
+    { value: 'crosses_above_zero', label: 'Crosses Above Zero' },
+    { value: 'crosses_below_zero', label: 'Crosses Below Zero' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'greater_than_macd', label: 'Greater Than MACD Line' },
+    { value: 'less_than_macd', label: 'Less Than MACD Line' },
   ],
   'histogram': [
-    { value: 'crosses_above', label: 'Crosses Above Zero' },
-    { value: 'crosses_below', label: 'Crosses Below Zero' },
+    { value: 'crosses_above_zero', label: 'Crosses Above Zero' },
+    { value: 'crosses_below_zero', label: 'Crosses Below Zero' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'greater_than_zero', label: 'Greater Than Zero' },
+    { value: 'less_than_zero', label: 'Less Than Zero' },
+    { value: 'between', label: 'Between' },
   ],
   'zero_line': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'MACD Crosses Above Zero' },
+    { value: 'crosses_below', label: 'MACD Crosses Below Zero' },
+    { value: 'signal_crosses_above', label: 'Signal Crosses Above Zero' },
+    { value: 'signal_crosses_below', label: 'Signal Crosses Below Zero' },
   ],
   
   // Stochastic
   'k_percent': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'Crosses Above %D Line' },
+    { value: 'crosses_below', label: 'Crosses Below %D Line' },
+    { value: 'crosses_above_overbought', label: 'Crosses Above Overbought (80)' },
+    { value: 'crosses_below_oversold', label: 'Crosses Below Oversold (20)' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'between', label: 'Between' },
+    { value: 'greater_than_d', label: 'Greater Than %D' },
+    { value: 'less_than_d', label: 'Less Than %D' },
   ],
   'd_percent': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'Crosses Above %K Line' },
+    { value: 'crosses_below', label: 'Crosses Below %K Line' },
+    { value: 'crosses_above_overbought', label: 'Crosses Above Overbought (80)' },
+    { value: 'crosses_below_oversold', label: 'Crosses Below Oversold (20)' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'between', label: 'Between' },
+    { value: 'greater_than_k', label: 'Greater Than %K' },
+    { value: 'less_than_k', label: 'Less Than %K' },
   ],
   
   // Williams %R
   'williams_line': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'Crosses Above Level' },
+    { value: 'crosses_below', label: 'Crosses Below Level' },
+    { value: 'crosses_above_oversold', label: 'Crosses Above Oversold (-80)' },
+    { value: 'crosses_below_overbought', label: 'Crosses Below Overbought (-20)' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'between', label: 'Between' },
   ],
   
   // CCI
   'cci_line': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'Crosses Above Level' },
+    { value: 'crosses_below', label: 'Crosses Below Level' },
+    { value: 'crosses_above_zero', label: 'Crosses Above Zero' },
+    { value: 'crosses_below_zero', label: 'Crosses Below Zero' },
+    { value: 'crosses_above_overbought', label: 'Crosses Above Overbought (+100)' },
+    { value: 'crosses_below_oversold', label: 'Crosses Below Oversold (-100)' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'between', label: 'Between' },
   ],
   
   // MFI
   'mfi_line': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'Crosses Above Level' },
+    { value: 'crosses_below', label: 'Crosses Below Level' },
+    { value: 'crosses_above_overbought', label: 'Crosses Above Overbought (80)' },
+    { value: 'crosses_below_oversold', label: 'Crosses Below Oversold (20)' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'between', label: 'Between' },
   ],
   
   // ADX
   'adx_line': [
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'between', label: 'Between' },
+    { value: 'crosses_above', label: 'Crosses Above Level' },
+    { value: 'crosses_below', label: 'Crosses Below Level' },
   ],
   'plus_di': [
     { value: 'crosses_above', label: 'Crosses Above -DI' },
     { value: 'crosses_below', label: 'Crosses Below -DI' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'greater_than_minus_di', label: 'Greater Than -DI' },
+    { value: 'less_than_minus_di', label: 'Less Than -DI' },
   ],
   'minus_di': [
     { value: 'crosses_above', label: 'Crosses Above +DI' },
     { value: 'crosses_below', label: 'Crosses Below +DI' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'greater_than_plus_di', label: 'Greater Than +DI' },
+    { value: 'less_than_plus_di', label: 'Less Than +DI' },
   ],
   
   // Moving Averages (EMA, SMA, WMA, TEMA, HULL)
@@ -457,12 +603,20 @@ const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }
   'bandwidth': [
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'between', label: 'Between' },
+    { value: 'crosses_above', label: 'Crosses Above Level' },
+    { value: 'crosses_below', label: 'Crosses Below Level' },
   ],
   
   // ATR
   'atr_line': [
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'between', label: 'Between' },
+    { value: 'crosses_above', label: 'Crosses Above Level' },
+    { value: 'crosses_below', label: 'Crosses Below Level' },
   ],
   
   // Keltner Channels
@@ -487,10 +641,15 @@ const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }
   
   // OBV
   'obv_line': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'Crosses Above Level' },
+    { value: 'crosses_below', label: 'Crosses Below Level' },
+    { value: 'crosses_above_zero', label: 'Crosses Above Zero' },
+    { value: 'crosses_below_zero', label: 'Crosses Below Zero' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'greater_than_zero', label: 'Greater Than Zero' },
+    { value: 'less_than_zero', label: 'Less Than Zero' },
   ],
   
   // VWAP
@@ -666,6 +825,27 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       if (condition.value !== undefined) {
         desc += ` ${condition.value}%`;
       }
+    } else if (condition.operator === 'crosses_above_zero' || condition.operator === 'crosses_below_zero') {
+      // Zero crossover conditions
+      desc += ' Zero';
+    } else if (condition.operator === 'crosses_above' && condition.indicator === 'MACD' && condition.component === 'macd_line') {
+      // MACD line crosses above signal line
+      desc += ' Signal Line';
+    } else if (condition.operator === 'crosses_below' && condition.indicator === 'MACD' && condition.component === 'macd_line') {
+      // MACD line crosses below signal line
+      desc += ' Signal Line';
+    } else if (condition.operator === 'crosses_above' && condition.indicator === 'STOCHASTIC' && condition.component === 'k_percent') {
+      // %K crosses above %D
+      desc += ' %D Line';
+    } else if (condition.operator === 'crosses_below' && condition.indicator === 'STOCHASTIC' && condition.component === 'k_percent') {
+      // %K crosses below %D
+      desc += ' %D Line';
+    } else if (condition.operator === 'crosses_above' && condition.indicator === 'ADX' && condition.component === 'plus_di') {
+      // +DI crosses above -DI
+      desc += ' -DI';
+    } else if (condition.operator === 'crosses_below' && condition.indicator === 'ADX' && condition.component === 'plus_di') {
+      // +DI crosses below -DI
+      desc += ' -DI';
     } else if (condition.value !== undefined) {
       desc += ` ${condition.value}`;
     }
@@ -1403,6 +1583,23 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               {condition.operator === 'price_percent_above'
                                 ? `Price must be ${condition.value || 'X'}% above the ${condition.component === 'line' ? 'indicator' : 'band/channel'}`
                                 : `Price must be ${condition.value || 'X'}% below the ${condition.component === 'line' ? 'indicator' : 'band/channel'}`}
+                            </p>
+                          </div>
+                        ) : condition.operator === 'crosses_above_zero' || condition.operator === 'crosses_below_zero' ||
+                           condition.operator === 'crosses_above' && (condition.indicator === 'MACD' && condition.component === 'macd_line' || 
+                                                                      condition.indicator === 'STOCHASTIC' && condition.component === 'k_percent' ||
+                                                                      condition.indicator === 'ADX' && condition.component === 'plus_di') ? (
+                          // Component crossover conditions - no value input needed
+                          <div>
+                            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                              {condition.operator === 'crosses_above_zero' && 'Triggers when the component crosses above zero'}
+                              {condition.operator === 'crosses_below_zero' && 'Triggers when the component crosses below zero'}
+                              {condition.operator === 'crosses_above' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line crosses above Signal Line'}
+                              {condition.operator === 'crosses_below' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line crosses below Signal Line'}
+                              {condition.operator === 'crosses_above' && condition.indicator === 'STOCHASTIC' && condition.component === 'k_percent' && 'Triggers when %K crosses above %D'}
+                              {condition.operator === 'crosses_below' && condition.indicator === 'STOCHASTIC' && condition.component === 'k_percent' && 'Triggers when %K crosses below %D'}
+                              {condition.operator === 'crosses_above' && condition.indicator === 'ADX' && condition.component === 'plus_di' && 'Triggers when +DI crosses above -DI'}
+                              {condition.operator === 'crosses_below' && condition.indicator === 'ADX' && condition.component === 'plus_di' && 'Triggers when +DI crosses below -DI'}
                             </p>
                           </div>
                         ) : (
