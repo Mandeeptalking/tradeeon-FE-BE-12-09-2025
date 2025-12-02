@@ -21,6 +21,7 @@ import { useThemeStore } from '../../store/theme';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import BotConfiguration, { type BotConfigurationData } from '../../components/bots/BotConfiguration';
+import EntryConditions, { type EntryConditionsData } from '../../components/bots/EntryConditions';
 
 interface DCABotConfig {
   // Bot Configuration (from reusable component)
@@ -39,7 +40,7 @@ interface DCABotConfig {
   enableEmergencyBrake: boolean;
   
   // Entry Conditions
-  useEntryConditions: boolean;
+  entryConditions: EntryConditionsData;
 }
 
 const DCABot: React.FC = () => {
@@ -67,7 +68,11 @@ const DCABot: React.FC = () => {
     enableDynamicScaling: false,
     enableProfitTaking: false,
     enableEmergencyBrake: false,
-    useEntryConditions: false,
+    entryConditions: {
+      enabled: false,
+      conditions: [],
+      logicGate: 'AND',
+    },
   });
 
   const ConfigSection = ({
@@ -271,6 +276,22 @@ const DCABot: React.FC = () => {
               />
             </ConfigSection>
 
+            {/* Entry Conditions */}
+            <ConfigSection
+              id="entry-conditions"
+              title="Entry Conditions"
+              icon={Target}
+              description="Define when the bot should start trading"
+            >
+              <EntryConditions
+                conditions={config.entryConditions}
+                onChange={(newConditions) =>
+                  setConfig((prev) => ({ ...prev, entryConditions: newConditions }))
+                }
+                showTitle={false}
+              />
+            </ConfigSection>
+
             {/* DCA Settings */}
             <ConfigSection
               id="dca-settings"
@@ -367,61 +388,6 @@ const DCABot: React.FC = () => {
                     </p>
                   </div>
                 </div>
-              </div>
-            </ConfigSection>
-
-            {/* Entry Conditions */}
-            <ConfigSection
-              id="entry-conditions"
-              title="Entry Conditions"
-              icon={Target}
-              description="Define when the bot should start trading"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg border border-gray-700/50">
-                  <div>
-                    <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      Enable Entry Conditions
-                    </p>
-                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
-                      Wait for technical indicators before starting trades
-                    </p>
-                  </div>
-                  <button
-                    onClick={() =>
-                      setConfig((prev) => ({
-                        ...prev,
-                        useEntryConditions: !prev.useEntryConditions,
-                      }))
-                    }
-                    className={`relative w-12 h-6 rounded-full transition-colors ${
-                      config.useEntryConditions
-                        ? 'bg-blue-500'
-                        : isDark
-                        ? 'bg-gray-700'
-                        : 'bg-gray-300'
-                    }`}
-                  >
-                    <div
-                      className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                        config.useEntryConditions ? 'translate-x-6' : ''
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                {config.useEntryConditions && (
-                  <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
-                    <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Configure RSI, MACD, Moving Averages, and other technical indicators to trigger
-                      entry conditions.
-                    </p>
-                    <Button variant="outline" className="mt-3">
-                      <Target className="w-4 h-4 mr-2" />
-                      Configure Conditions
-                    </Button>
-                  </div>
-                )}
               </div>
             </ConfigSection>
 
