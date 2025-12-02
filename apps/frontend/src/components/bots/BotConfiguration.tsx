@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Settings,
   TrendingUp,
@@ -8,6 +8,8 @@ import {
   Search,
   ChevronDown,
   AlertCircle,
+  Star,
+  Clock,
 } from 'lucide-react';
 import { useThemeStore } from '../../store/theme';
 import { Input } from '../ui/input';
@@ -71,6 +73,9 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
   const [showPairDropdown, setShowPairDropdown] = useState(false);
   const [pairSearch, setPairSearch] = useState('');
   const [selectedQuoteCurrency, setSelectedQuoteCurrency] = useState<string>('');
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const pairListRef = useRef<HTMLDivElement>(null);
 
   // Validation errors
   const [errors, setErrors] = useState<{
@@ -132,11 +137,77 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
     loadPairs();
   }, [config.exchange]);
 
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (showPairDropdown && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  }, [showPairDropdown]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!showPairDropdown) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHighlightedIndex((prev) => 
+          prev < filteredPairs.length - 1 ? prev + 1 : prev
+        );
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+      } else if (e.key === 'Enter' && highlightedIndex >= 0 && highlightedIndex < filteredPairs.length) {
+        e.preventDefault();
+        const pair = filteredPairs[highlightedIndex];
+        if (pair) {
+          let newPairs: string[];
+          if (config.pairMode === 'single') {
+            newPairs = [pair];
+            setShowPairDropdown(false);
+          } else {
+            newPairs = config.pairs.includes(pair)
+              ? config.pairs
+              : [...config.pairs, pair];
+          }
+          const newConfig = { ...config, pairs: newPairs };
+          onChange(newConfig);
+          validateConfig(newConfig);
+          if (config.pairMode === 'single') {
+            setPairSearch('');
+            setHighlightedIndex(-1);
+          }
+        }
+      } else if (e.key === 'Escape') {
+        setShowPairDropdown(false);
+        setHighlightedIndex(-1);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showPairDropdown, filteredPairs, highlightedIndex, config, onChange]);
+
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (highlightedIndex >= 0 && pairListRef.current) {
+      const items = pairListRef.current.querySelectorAll('button');
+      if (items[highlightedIndex]) {
+        items[highlightedIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+  }, [highlightedIndex]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowPairDropdown(false);
+        setHighlightedIndex(-1);
       }
     };
 
@@ -147,6 +218,11 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
       };
     }
   }, [showPairDropdown]);
+
+  // Reset highlighted index when search changes
+  useEffect(() => {
+    setHighlightedIndex(-1);
+  }, [pairSearch, selectedQuoteCurrency]);
 
   // Validate configuration
   const validateConfig = (newConfig: BotConfigurationData): boolean => {
@@ -266,12 +342,77 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
     validateConfig(newConfig);
   };
 
-  // Filter pairs based on search and quote currency
-  const filteredPairs = availablePairs.filter((pair) => {
-    const matchesSearch = pair.toLowerCase().includes(pairSearch.toLowerCase());
-    const matchesQuote = !selectedQuoteCurrency || pair.endsWith(selectedQuoteCurrency);
-    return matchesSearch && matchesQuote;
-  });
+  // Popular pairs (most traded)
+  const popularPairs = useMemo(() => {
+    return ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'SOLUSDT', 'XRPUSDT', 'DOGEUSDT', 'MATICUSDT'];
+  }, []);
+
+  // Filter pairs based on search and quote currency with better matching
+  const filteredPairs = useMemo(() => {
+    const searchLower = pairSearch.toLowerCase().trim();
+    
+    return availablePairs.filter((pair) => {
+      // Quote currency filter
+      const matchesQuote = !selectedQuoteCurrency || pair.endsWith(selectedQuoteCurrency);
+      if (!matchesQuote) return false;
+
+      // If no search, return all
+      if (!searchLower) return true;
+
+      // Format pair for display
+      const formatted = formatPairDisplay(pair);
+      const formattedLower = formatted.toLowerCase();
+      
+      // Check if search matches:
+      // 1. Full pair symbol (BTCUSDT)
+      // 2. Formatted pair (BTC/USDT)
+      // 3. Base currency (BTC)
+      // 4. Quote currency (USDT)
+      const base = pair.slice(0, -4).toLowerCase();
+      const quote = pair.slice(-4).toLowerCase();
+      
+      return (
+        pair.toLowerCase().includes(searchLower) ||
+        formattedLower.includes(searchLower) ||
+        base.includes(searchLower) ||
+        quote.includes(searchLower)
+      );
+    }).sort((a, b) => {
+      // Sort: popular pairs first, then alphabetically
+      const aIsPopular = popularPairs.includes(a);
+      const bIsPopular = popularPairs.includes(b);
+      
+      if (aIsPopular && !bIsPopular) return -1;
+      if (!aIsPopular && bIsPopular) return 1;
+      
+      return a.localeCompare(b);
+    });
+  }, [availablePairs, pairSearch, selectedQuoteCurrency, popularPairs]);
+
+  // Highlight matching text in pair
+  const highlightMatch = (pair: string, search: string) => {
+    if (!search.trim()) return formatPairDisplay(pair);
+    
+    const formatted = formatPairDisplay(pair);
+    const searchLower = search.toLowerCase();
+    const formattedLower = formatted.toLowerCase();
+    
+    // Find match position
+    const index = formattedLower.indexOf(searchLower);
+    if (index === -1) return formatted;
+    
+    const before = formatted.substring(0, index);
+    const match = formatted.substring(index, index + search.length);
+    const after = formatted.substring(index + search.length);
+    
+    return (
+      <>
+        {before}
+        <span className="bg-yellow-400/30 dark:bg-yellow-500/30 font-semibold">{match}</span>
+        {after}
+      </>
+    );
+  };
 
   // Get unique quote currencies from pairs
   const quoteCurrencies = Array.from(
@@ -283,6 +424,7 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
     
     if (config.pairMode === 'single') {
       newPairs = [pair];
+      setShowPairDropdown(false);
     } else {
       newPairs = config.pairs.includes(pair)
         ? config.pairs
@@ -292,8 +434,18 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
     const newConfig = { ...config, pairs: newPairs };
     onChange(newConfig);
     validateConfig(newConfig);
-    setShowPairDropdown(false);
+    
+    if (config.pairMode === 'single') {
+      setPairSearch('');
+      setHighlightedIndex(-1);
+    }
+  };
+
+  const handleClearSearch = () => {
     setPairSearch('');
+    setSelectedQuoteCurrency('');
+    setHighlightedIndex(-1);
+    searchInputRef.current?.focus();
   };
 
   const handleRemovePair = (pair: string) => {
@@ -549,100 +701,207 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
 
           {showPairDropdown && (
             <div
-              className={`absolute z-50 w-full mt-2 rounded-lg border shadow-lg ${
+              className={`absolute z-50 w-full mt-2 rounded-lg border shadow-xl ${
                 isDark
                   ? 'bg-gray-800 border-gray-700'
                   : 'bg-white border-gray-200'
-              } max-h-80 overflow-hidden flex flex-col`}
+              } max-h-96 overflow-hidden flex flex-col`}
             >
               {/* Search and Filter */}
-              <div className="p-3 border-b border-gray-700/50 space-y-2">
+              <div className="p-3 border-b border-gray-700/50 space-y-3">
                 <div className="relative">
                   <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${
                     isDark ? 'text-gray-400' : 'text-gray-500'
                   }`} />
                   <Input
+                    ref={searchInputRef}
                     value={pairSearch}
                     onChange={(e) => setPairSearch(e.target.value)}
-                    placeholder="Search pairs..."
-                    className={`pl-9 ${isDark ? 'bg-gray-900 border-gray-700 text-white' : ''}`}
+                    placeholder="Search by symbol (BTC), pair (BTC/USDT), or quote (USDT)..."
+                    className={`pl-9 pr-9 ${isDark ? 'bg-gray-900 border-gray-700 text-white' : ''}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        setShowPairDropdown(false);
+                      }
+                    }}
                   />
-                </div>
-                {quoteCurrencies.length > 0 && (
-                  <div className="flex gap-2 flex-wrap">
-                    <Button
+                  {pairSearch && (
+                    <button
                       type="button"
-                      variant={selectedQuoteCurrency === '' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setSelectedQuoteCurrency('')}
+                      onClick={handleClearSearch}
+                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${
+                        isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
+                      }`}
                     >
-                      All
-                    </Button>
-                    {quoteCurrencies.map((quote) => (
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                
+                {/* Quick filters and stats */}
+                <div className="flex items-center justify-between">
+                  {quoteCurrencies.length > 0 && (
+                    <div className="flex gap-2 flex-wrap flex-1">
                       <Button
-                        key={quote}
                         type="button"
-                        variant={selectedQuoteCurrency === quote ? 'default' : 'outline'}
+                        variant={selectedQuoteCurrency === '' ? 'default' : 'outline'}
                         size="sm"
-                        onClick={() => setSelectedQuoteCurrency(quote)}
+                        onClick={() => {
+                          setSelectedQuoteCurrency('');
+                          setHighlightedIndex(-1);
+                        }}
                       >
-                        {quote}
+                        All
                       </Button>
-                    ))}
+                      {quoteCurrencies.map((quote) => (
+                        <Button
+                          key={quote}
+                          type="button"
+                          variant={selectedQuoteCurrency === quote ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => {
+                            setSelectedQuoteCurrency(quote);
+                            setHighlightedIndex(-1);
+                          }}
+                        >
+                          {quote}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                  <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} ml-2`}>
+                    {filteredPairs.length} {filteredPairs.length === 1 ? 'pair' : 'pairs'}
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Pairs List */}
-              <div className="overflow-y-auto max-h-60">
+              <div ref={pairListRef} className="overflow-y-auto max-h-64">
                 {loadingPairs ? (
                   <div className={`p-4 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Loading pairs...
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                      Loading pairs...
+                    </div>
                   </div>
                 ) : filteredPairs.length === 0 ? (
                   <div className={`p-4 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    No pairs found
+                    <p className="mb-1">No pairs found</p>
+                    {pairSearch && (
+                      <p className="text-xs">Try a different search term</p>
+                    )}
                   </div>
                 ) : (
-                  filteredPairs.map((pair) => {
-                    const isSelected = config.pairs.includes(pair);
-                    const isDisabled = config.pairMode === 'single' && config.pairs.length > 0 && !isSelected;
-                    
-                    return (
-                      <button
-                        key={pair}
-                        type="button"
-                        onClick={() => !isDisabled && handleAddPair(pair)}
-                        disabled={isDisabled}
-                        className={`w-full text-left px-4 py-2 hover:bg-opacity-50 transition-colors ${
-                          isSelected
-                            ? isDark
-                              ? 'bg-blue-500/20 text-blue-400'
-                              : 'bg-blue-50 text-blue-600'
-                            : isDisabled
-                            ? isDark
-                              ? 'text-gray-600 cursor-not-allowed'
-                              : 'text-gray-400 cursor-not-allowed'
-                            : isDark
-                            ? 'text-gray-300 hover:bg-gray-700'
-                            : 'text-gray-900 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{formatPairDisplay(pair)}</span>
-                          {isSelected && (
-                            <span className={`text-xs px-2 py-0.5 rounded ${
-                              isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'
-                            }`}>
-                              Selected
-                            </span>
-                          )}
+                  <>
+                    {/* Popular pairs section (only if no search) */}
+                    {!pairSearch && !selectedQuoteCurrency && (
+                      <div className={`px-3 py-2 border-b ${isDark ? 'border-gray-700/50' : 'border-gray-200'}`}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Star className={`w-3 h-3 ${isDark ? 'text-yellow-400' : 'text-yellow-500'}`} />
+                          <span className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Popular Pairs
+                          </span>
                         </div>
-                      </button>
-                    );
-                  })
+                        <div className="flex flex-wrap gap-1">
+                          {popularPairs.slice(0, 8).map((pair) => {
+                            if (!availablePairs.includes(pair)) return null;
+                            const isSelected = config.pairs.includes(pair);
+                            return (
+                              <button
+                                key={pair}
+                                type="button"
+                                onClick={() => handleAddPair(pair)}
+                                className={`px-2 py-1 rounded text-xs transition-colors ${
+                                  isSelected
+                                    ? isDark
+                                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                      : 'bg-blue-50 text-blue-600 border border-blue-200'
+                                    : isDark
+                                    ? 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                                }`}
+                              >
+                                {formatPairDisplay(pair)}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* All pairs list */}
+                    <div>
+                      {filteredPairs.map((pair, index) => {
+                        const isSelected = config.pairs.includes(pair);
+                        const isDisabled = config.pairMode === 'single' && config.pairs.length > 0 && !isSelected;
+                        const isHighlighted = index === highlightedIndex;
+                        const isPopular = popularPairs.includes(pair);
+                        
+                        return (
+                          <button
+                            key={pair}
+                            type="button"
+                            onClick={() => !isDisabled && handleAddPair(pair)}
+                            disabled={isDisabled}
+                            className={`w-full text-left px-4 py-2.5 transition-colors ${
+                              isHighlighted
+                                ? isDark
+                                  ? 'bg-blue-500/30 border-l-2 border-blue-400'
+                                  : 'bg-blue-100 border-l-2 border-blue-500'
+                                : isSelected
+                                ? isDark
+                                  ? 'bg-blue-500/20 text-blue-400'
+                                  : 'bg-blue-50 text-blue-600'
+                                : isDisabled
+                                ? isDark
+                                  ? 'text-gray-600 cursor-not-allowed opacity-50'
+                                  : 'text-gray-400 cursor-not-allowed opacity-50'
+                                : isDark
+                                ? 'text-gray-300 hover:bg-gray-700/50'
+                                : 'text-gray-900 hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {isPopular && !pairSearch && (
+                                  <Star className={`w-3 h-3 ${isDark ? 'text-yellow-400' : 'text-yellow-500'}`} />
+                                )}
+                                <span className="font-medium">
+                                  {highlightMatch(pair, pairSearch)}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {isSelected && (
+                                  <span className={`text-xs px-2 py-0.5 rounded ${
+                                    isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'
+                                  }`}>
+                                    Selected
+                                  </span>
+                                )}
+                                {isHighlighted && (
+                                  <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                    Press Enter
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
               </div>
+              
+              {/* Footer hint */}
+              {filteredPairs.length > 0 && (
+                <div className={`px-3 py-2 border-t ${isDark ? 'border-gray-700/50 bg-gray-900/50' : 'border-gray-200 bg-gray-50'} text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+                  <div className="flex items-center justify-between">
+                    <span>Use ↑↓ to navigate, Enter to select</span>
+                    <span>ESC to close</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
