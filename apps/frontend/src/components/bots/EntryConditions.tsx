@@ -733,6 +733,74 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
     }
   }, [conditions.conditions, expandedCondition]);
 
+  // Helper function to determine if an operator needs a value input
+  const operatorNeedsValue = (operator: string, indicator: string, component?: string): boolean => {
+    // Operators that don't need values
+    const noValueOperators = [
+      'crosses_above_zero',
+      'crosses_below_zero',
+      'greater_than_zero',
+      'less_than_zero',
+      'crosses_above_overbought',
+      'crosses_below_oversold',
+      'crosses_above_oversold',
+      'crosses_below_overbought',
+    ];
+    
+    if (noValueOperators.includes(operator)) {
+      return false;
+    }
+    
+    // Component crossover operators (comparing components to each other)
+    if (operator === 'crosses_above' || operator === 'crosses_below') {
+      if (indicator === 'MACD' && component === 'macd_line') return false; // MACD line crosses signal
+      if (indicator === 'MACD' && component === 'signal_line') return false; // Signal crosses MACD
+      if (indicator === 'STOCHASTIC' && component === 'k_percent') return false; // %K crosses %D
+      if (indicator === 'STOCHASTIC' && component === 'd_percent') return false; // %D crosses %K
+      if (indicator === 'ADX' && component === 'plus_di') return false; // +DI crosses -DI
+      if (indicator === 'ADX' && component === 'minus_di') return false; // -DI crosses +DI
+      // Price crossing indicators (for moving averages, bands, channels, VWAP)
+      if (['EMA', 'SMA', 'WMA', 'TEMA', 'HULL', 'BOLLINGER_BANDS', 'KELTNER_CHANNELS', 'VWAP'].includes(indicator)) {
+        return false; // Price crosses indicator - no value needed
+      }
+    }
+    
+    // Comparison operators that compare to other components (not values)
+    const componentComparisonOperators = [
+      'greater_than_signal',
+      'less_than_signal',
+      'greater_than_macd',
+      'less_than_macd',
+      'greater_than_d',
+      'less_than_d',
+      'greater_than_k',
+      'less_than_k',
+      'greater_than_minus_di',
+      'less_than_minus_di',
+      'greater_than_plus_di',
+      'less_than_plus_di',
+    ];
+    
+    if (componentComparisonOperators.includes(operator)) {
+      return false;
+    }
+    
+    // Overbought/oversold level crossings (levels are predefined)
+    if (component === 'overbought' || component === 'oversold') {
+      if (operator === 'crosses_above' || operator === 'crosses_below') {
+        return false;
+      }
+    }
+    
+    // Zero line crossings
+    if (component === 'zero_line') {
+      return false;
+    }
+    
+    // All other operators need values
+    return true;
+  };
+
   const handleAddPreset = (preset: Omit<EntryCondition, 'id'>) => {
     const newCondition: EntryCondition = {
       ...preset,
@@ -1636,21 +1704,53 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 : `Price must be ${condition.value || 'X'}% below the ${condition.component === 'line' ? 'indicator' : 'band/channel'}`}
                             </p>
                           </div>
-                        ) : condition.operator === 'crosses_above_zero' || condition.operator === 'crosses_below_zero' ||
-                           condition.operator === 'crosses_above' && (condition.indicator === 'MACD' && condition.component === 'macd_line' || 
-                                                                      condition.indicator === 'STOCHASTIC' && condition.component === 'k_percent' ||
-                                                                      condition.indicator === 'ADX' && condition.component === 'plus_di') ? (
-                          // Component crossover conditions - no value input needed
+                        ) : !operatorNeedsValue(condition.operator, condition.indicator, condition.component) ? (
+                          // Operators that don't need value input - show description
                           <div>
                             <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                               {condition.operator === 'crosses_above_zero' && 'Triggers when the component crosses above zero'}
                               {condition.operator === 'crosses_below_zero' && 'Triggers when the component crosses below zero'}
                               {condition.operator === 'crosses_above' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line crosses above Signal Line'}
                               {condition.operator === 'crosses_below' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line crosses below Signal Line'}
+                              {condition.operator === 'crosses_above' && condition.indicator === 'MACD' && condition.component === 'signal_line' && 'Triggers when Signal Line crosses above MACD Line'}
+                              {condition.operator === 'crosses_below' && condition.indicator === 'MACD' && condition.component === 'signal_line' && 'Triggers when Signal Line crosses below MACD Line'}
                               {condition.operator === 'crosses_above' && condition.indicator === 'STOCHASTIC' && condition.component === 'k_percent' && 'Triggers when %K crosses above %D'}
                               {condition.operator === 'crosses_below' && condition.indicator === 'STOCHASTIC' && condition.component === 'k_percent' && 'Triggers when %K crosses below %D'}
+                              {condition.operator === 'crosses_above' && condition.indicator === 'STOCHASTIC' && condition.component === 'd_percent' && 'Triggers when %D crosses above %K'}
+                              {condition.operator === 'crosses_below' && condition.indicator === 'STOCHASTIC' && condition.component === 'd_percent' && 'Triggers when %D crosses below %K'}
                               {condition.operator === 'crosses_above' && condition.indicator === 'ADX' && condition.component === 'plus_di' && 'Triggers when +DI crosses above -DI'}
                               {condition.operator === 'crosses_below' && condition.indicator === 'ADX' && condition.component === 'plus_di' && 'Triggers when +DI crosses below -DI'}
+                              {condition.operator === 'crosses_above' && condition.indicator === 'ADX' && condition.component === 'minus_di' && 'Triggers when -DI crosses above +DI'}
+                              {condition.operator === 'crosses_below' && condition.indicator === 'ADX' && condition.component === 'minus_di' && 'Triggers when -DI crosses below +DI'}
+                              {condition.operator === 'crosses_above' && ['EMA', 'SMA', 'WMA', 'TEMA', 'HULL'].includes(condition.indicator) && 'Triggers when price crosses above the moving average'}
+                              {condition.operator === 'crosses_below' && ['EMA', 'SMA', 'WMA', 'TEMA', 'HULL'].includes(condition.indicator) && 'Triggers when price crosses below the moving average'}
+                              {condition.operator === 'crosses_above' && condition.indicator === 'BOLLINGER_BANDS' && 'Triggers when price crosses above the band'}
+                              {condition.operator === 'crosses_below' && condition.indicator === 'BOLLINGER_BANDS' && 'Triggers when price crosses below the band'}
+                              {condition.operator === 'crosses_above' && condition.indicator === 'KELTNER_CHANNELS' && 'Triggers when price crosses above the channel'}
+                              {condition.operator === 'crosses_below' && condition.indicator === 'KELTNER_CHANNELS' && 'Triggers when price crosses below the channel'}
+                              {condition.operator === 'crosses_above' && condition.indicator === 'VWAP' && 'Triggers when price crosses above VWAP'}
+                              {condition.operator === 'crosses_below' && condition.indicator === 'VWAP' && 'Triggers when price crosses below VWAP'}
+                              {condition.operator === 'crosses_above' && (condition.component === 'overbought' || condition.component === 'oversold') && 'Triggers when indicator crosses above the level'}
+                              {condition.operator === 'crosses_below' && (condition.component === 'overbought' || condition.component === 'oversold') && 'Triggers when indicator crosses below the level'}
+                              {condition.operator === 'crosses_above_overbought' && 'Triggers when indicator crosses above overbought level'}
+                              {condition.operator === 'crosses_below_oversold' && 'Triggers when indicator crosses below oversold level'}
+                              {condition.operator === 'crosses_above_oversold' && 'Triggers when indicator crosses above oversold level'}
+                              {condition.operator === 'crosses_below_overbought' && 'Triggers when indicator crosses below overbought level'}
+                              {condition.operator === 'greater_than_zero' && 'Triggers when indicator is greater than zero'}
+                              {condition.operator === 'less_than_zero' && 'Triggers when indicator is less than zero'}
+                              {condition.operator === 'greater_than_signal' && 'Triggers when MACD Line is greater than Signal Line'}
+                              {condition.operator === 'less_than_signal' && 'Triggers when MACD Line is less than Signal Line'}
+                              {condition.operator === 'greater_than_macd' && 'Triggers when Signal Line is greater than MACD Line'}
+                              {condition.operator === 'less_than_macd' && 'Triggers when Signal Line is less than MACD Line'}
+                              {condition.operator === 'greater_than_d' && 'Triggers when %K is greater than %D'}
+                              {condition.operator === 'less_than_d' && 'Triggers when %K is less than %D'}
+                              {condition.operator === 'greater_than_k' && 'Triggers when %D is greater than %K'}
+                              {condition.operator === 'less_than_k' && 'Triggers when %D is less than %K'}
+                              {condition.operator === 'greater_than_minus_di' && 'Triggers when +DI is greater than -DI'}
+                              {condition.operator === 'less_than_minus_di' && 'Triggers when +DI is less than -DI'}
+                              {condition.operator === 'greater_than_plus_di' && 'Triggers when -DI is greater than +DI'}
+                              {condition.operator === 'less_than_plus_di' && 'Triggers when -DI is less than +DI'}
+                              {!['crosses_above_zero', 'crosses_below_zero', 'crosses_above', 'crosses_below', 'crosses_above_overbought', 'crosses_below_oversold', 'crosses_above_oversold', 'crosses_below_overbought', 'greater_than_zero', 'less_than_zero', 'greater_than_signal', 'less_than_signal', 'greater_than_macd', 'less_than_macd', 'greater_than_d', 'less_than_d', 'greater_than_k', 'less_than_k', 'greater_than_minus_di', 'less_than_minus_di', 'greater_than_plus_di', 'less_than_plus_di'].includes(condition.operator) && 'No value input needed for this operator'}
                             </p>
                           </div>
                         ) : (
