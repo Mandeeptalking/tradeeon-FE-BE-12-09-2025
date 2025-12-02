@@ -38,6 +38,7 @@ export interface EntryCondition {
   fastPeriod?: number; // For MACD
   slowPeriod?: number; // For MACD
   signalPeriod?: number; // For MACD
+  stdDeviation?: number; // For Bollinger Bands (default: 2)
   timeframe: string;
   logicGate?: 'AND' | 'OR';
   // Additional parameters for specific indicators
@@ -187,6 +188,7 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     component: 'lower_band',
     operator: 'crosses_above',
     period: 20,
+    stdDeviation: 2,
     timeframe: '1h',
   },
   {
@@ -851,10 +853,17 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
     }
     
     if (condition.period) {
-      desc += ` (Period: ${condition.period})`;
+      if (condition.indicator === 'BOLLINGER_BANDS' && condition.stdDeviation !== undefined) {
+        desc += ` (Period: ${condition.period}, StdDev: ${condition.stdDeviation})`;
+      } else {
+        desc += ` (Period: ${condition.period})`;
+      }
     }
     if (condition.fastPeriod && condition.slowPeriod) {
       desc += ` (Fast: ${condition.fastPeriod}, Slow: ${condition.slowPeriod})`;
+    }
+    if (condition.indicator === 'BOLLINGER_BANDS' && condition.stdDeviation !== undefined && !condition.period) {
+      desc += ` (StdDev: ${condition.stdDeviation})`;
     }
     
     desc += ` on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
@@ -1466,6 +1475,48 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
                                 placeholder={condition.indicator === 'RSI' ? '14' : condition.indicator === 'EMA' ? '20' : '14'}
                               />
+                            </div>
+                          )}
+                          
+                          {/* Bollinger Bands Parameters */}
+                          {condition.indicator === 'BOLLINGER_BANDS' && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Period
+                                </label>
+                                <Input
+                                  type="number"
+                                  value={condition.period || ''}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      period: parseInt(e.target.value) || undefined,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="20"
+                                />
+                              </div>
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Standard Deviation
+                                </label>
+                                <Input
+                                  type="number"
+                                  step="0.1"
+                                  value={condition.stdDeviation !== undefined ? condition.stdDeviation : ''}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      stdDeviation: parseFloat(e.target.value) || undefined,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="2"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: 2 (typical range: 1.5-2.5)
+                                </p>
+                              </div>
                             </div>
                           )}
                           
