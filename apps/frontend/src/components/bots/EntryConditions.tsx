@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Target,
   Plus,
@@ -489,6 +489,14 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
   const isDark = theme === 'dark';
   const [expandedCondition, setExpandedCondition] = useState<string | null>(null);
   const [showPresets, setShowPresets] = useState(false);
+  
+  // Preserve expanded state when conditions change from parent
+  useEffect(() => {
+    // If a condition was expanded but no longer exists, clear the expanded state
+    if (expandedCondition && !conditions.conditions.find(c => c.id === expandedCondition)) {
+      setExpandedCondition(null);
+    }
+  }, [conditions.conditions, expandedCondition]);
 
   const handleAddPreset = (preset: Omit<EntryCondition, 'id'>) => {
     const newCondition: EntryCondition = {
@@ -528,12 +536,20 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
   };
 
   const handleUpdateCondition = (id: string, updates: Partial<EntryCondition>) => {
+    // Preserve expanded state when updating
+    const wasExpanded = expandedCondition === id;
+    
     onChange({
       ...conditions,
       conditions: conditions.conditions.map((c) =>
         c.id === id ? { ...c, ...updates } : c
       ),
     });
+    
+    // Keep the condition expanded after update
+    if (wasExpanded) {
+      setExpandedCondition(id);
+    }
   };
 
   const handleRemoveCondition = (id: string) => {
