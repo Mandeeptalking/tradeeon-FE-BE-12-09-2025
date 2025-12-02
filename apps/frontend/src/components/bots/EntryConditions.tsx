@@ -913,6 +913,17 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
     
     if (!indicator) return condition.name;
     
+    // Special handling for MA crossovers - show cleaner format
+    if ((condition.operator === 'crosses_above_ma' || condition.operator === 'crosses_below_ma' || 
+         condition.operator === 'greater_than_ma' || condition.operator === 'less_than_ma') &&
+        condition.comparisonPeriod && condition.comparisonMaType && condition.period) {
+      const operatorText = condition.operator === 'crosses_above_ma' ? 'Crosses Above' :
+                          condition.operator === 'crosses_below_ma' ? 'Crosses Below' :
+                          condition.operator === 'greater_than_ma' ? 'Greater Than' :
+                          'Less Than';
+      return `${indicator.label} ${condition.period} ${operatorText} ${condition.comparisonMaType} ${condition.comparisonPeriod} on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+    }
+    
     let desc = indicator.label;
     if (component) {
       desc += ` ${component.label}`;
@@ -966,12 +977,6 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
     }
     if (condition.indicator === 'BOLLINGER_BANDS' && condition.stdDeviation !== undefined && !condition.period) {
       desc += ` (StdDev: ${condition.stdDeviation})`;
-    }
-    // MA crossover description
-    if ((condition.operator === 'crosses_above_ma' || condition.operator === 'crosses_below_ma' || 
-         condition.operator === 'greater_than_ma' || condition.operator === 'less_than_ma') &&
-        condition.comparisonPeriod && condition.comparisonMaType) {
-      desc += ` vs ${condition.comparisonMaType} ${condition.comparisonPeriod}`;
     }
     
     desc += ` on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
@@ -1567,7 +1572,10 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                           </div>
 
                           {/* Period/Parameters based on indicator type */}
-                          {['RSI', 'EMA', 'SMA', 'WMA', 'TEMA', 'HULL', 'CCI', 'MFI', 'STOCHASTIC', 'WILLIAMS_R', 'ATR', 'ADX', 'OBV'].includes(condition.indicator) && (
+                          {['RSI', 'EMA', 'SMA', 'WMA', 'TEMA', 'HULL', 'CCI', 'MFI', 'STOCHASTIC', 'WILLIAMS_R', 'ATR', 'ADX', 'OBV'].includes(condition.indicator) && 
+                           !(['EMA', 'SMA', 'WMA', 'TEMA', 'HULL'].includes(condition.indicator) && 
+                             (condition.operator === 'crosses_above_ma' || condition.operator === 'crosses_below_ma' || 
+                              condition.operator === 'greater_than_ma' || condition.operator === 'less_than_ma')) && (
                             <div>
                               <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
                                 Period
@@ -1584,6 +1592,73 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 placeholder={condition.indicator === 'RSI' ? '14' : condition.indicator === 'EMA' ? '20' : '14'}
                               />
                             </div>
+                          )}
+                          
+                          {/* Moving Average Crossover Parameters */}
+                          {['EMA', 'SMA', 'WMA', 'TEMA', 'HULL'].includes(condition.indicator) && 
+                           (condition.operator === 'crosses_above_ma' || condition.operator === 'crosses_below_ma' || 
+                            condition.operator === 'greater_than_ma' || condition.operator === 'less_than_ma') && (
+                            <>
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  {condition.indicator} Period
+                                </label>
+                                <Input
+                                  type="number"
+                                  value={condition.period || ''}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      period: parseInt(e.target.value) || undefined,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder={condition.indicator === 'EMA' ? '20' : '50'}
+                                />
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                    Comparison MA Type
+                                  </label>
+                                  <Select
+                                    value={condition.comparisonMaType || 'EMA'}
+                                    onValueChange={(value: 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL') =>
+                                      handleUpdateCondition(condition.id, { comparisonMaType: value })
+                                    }
+                                  >
+                                    <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="EMA">EMA</SelectItem>
+                                      <SelectItem value="SMA">SMA</SelectItem>
+                                      <SelectItem value="WMA">WMA</SelectItem>
+                                      <SelectItem value="TEMA">TEMA</SelectItem>
+                                      <SelectItem value="HULL">Hull MA</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                    Comparison Period
+                                  </label>
+                                  <Input
+                                    type="number"
+                                    value={condition.comparisonPeriod || ''}
+                                    onChange={(e) =>
+                                      handleUpdateCondition(condition.id, {
+                                        comparisonPeriod: parseInt(e.target.value) || undefined,
+                                      })
+                                    }
+                                    className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                    placeholder={condition.indicator === 'EMA' ? '100' : '200'}
+                                  />
+                                </div>
+                              </div>
+                              <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {condition.indicator} {condition.period || 'X'} {condition.operator === 'crosses_above_ma' ? 'crosses above' : condition.operator === 'crosses_below_ma' ? 'crosses below' : condition.operator === 'greater_than_ma' ? 'is greater than' : 'is less than'} {condition.comparisonMaType || 'EMA'} {condition.comparisonPeriod || 'X'}
+                              </p>
+                            </>
                           )}
                           
                           {/* Bollinger Bands Parameters */}
