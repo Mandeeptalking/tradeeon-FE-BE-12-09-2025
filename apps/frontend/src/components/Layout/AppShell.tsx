@@ -49,6 +49,7 @@ const AppShell = () => {
       title: 'Tools',
       items: [
         { path: '/app/connections', label: 'Connections', icon: Link },
+        { path: '/app/dcabot', label: 'DCA Bot', icon: Bot },
         { path: '/app/bots', label: 'Bots', icon: Bot },
         { path: '/clean-charts', label: 'Clean Charts', icon: BarChart3 },
         { path: '/app/backtest', label: 'Backtesting', icon: BarChart3 },

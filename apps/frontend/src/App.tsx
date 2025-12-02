@@ -21,6 +21,7 @@ import Settings from './pages/Settings'
 import CleanCharts from './pages/CleanCharts'
 import BacktestPage from './pages/BacktestPage'
 import Security from './pages/Security'
+import DCABot from './pages/app/DCABot'
 import ErrorBoundary from './components/ErrorBoundary'
 
 function App() {
@@ -104,6 +105,7 @@ function App() {
           <Route index element={<Dashboard />} />
                 <Route path="connections" element={<Connections />} />
           <Route path="portfolio" element={<Portfolio />} />
+          <Route path="dcabot" element={<DCABot />} />
           <Route path="backtest" element={<BacktestPage />} />
           <Route path="activity" element={<Activity />} />
           <Route path="settings" element={<Settings />} />

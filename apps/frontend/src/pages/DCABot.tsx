@@ -1,23 +1,16 @@
 /**
- * DCABot.tsx - Dummy/Placeholder File
+ * This file is deprecated.
+ * The new DCA Bot page is located at: apps/frontend/src/pages/app/DCABot.tsx
  * 
- * This file is kept as a placeholder to prevent git/production deployment issues.
- * The actual DCABot functionality has been moved to DCABotNew.tsx.
- * 
- * This file is intentionally minimal and not imported or used anywhere in the application.
- * 
- * See DCABOT_FEATURES_DOCUMENTATION.md for complete feature documentation.
+ * This file is kept as a placeholder to prevent import errors.
+ * All DCA Bot functionality has been moved to the new page.
  */
 
-import React from 'react';
+import { Navigate } from 'react-router-dom';
 
-/**
- * Dummy DCABot component - not used anywhere
- * Kept only to prevent deployment/git issues
- */
-const DCABot: React.FC = () => {
-  return null;
+const DCABot = () => {
+  // Redirect to the new DCA Bot page
+  return <Navigate to="/app/dcabot" replace />;
 };
 
 export default DCABot;
-
