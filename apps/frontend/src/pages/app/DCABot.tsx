@@ -50,6 +50,7 @@ const DCABot: React.FC = () => {
   const [tradingMode, setTradingMode] = useState<'live' | 'paper'>('paper');
   const [isActive, setIsActive] = useState(false);
   const [selectedSection, setSelectedSection] = useState<string | null>('bot-config');
+  const [expandedEntryCondition, setExpandedEntryCondition] = useState<string | null>(null);
 
   const [config, setConfig] = useState<DCABotConfig>({
     botConfig: {
@@ -293,12 +294,15 @@ const DCABot: React.FC = () => {
               description="Define when the bot should start trading"
             >
               <EntryConditions
+                key="entry-conditions-component"
                 conditions={config.entryConditions}
                 onChange={(newConditions) =>
                   setConfig((prev) => ({ ...prev, entryConditions: newConditions }))
                 }
                 showTitle={false}
                 selectedPairs={config.botConfig.pairs}
+                expandedConditionId={expandedEntryCondition}
+                onExpandedChange={setExpandedEntryCondition}
               />
             </ConfigSection>
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Target,
   Plus,
@@ -62,6 +62,8 @@ export interface EntryConditionsProps {
   className?: string;
   showTitle?: boolean;
   selectedPairs?: string[]; // Trading pairs from bot configuration
+  expandedConditionId?: string | null; // Controlled expanded state from parent
+  onExpandedChange?: (id: string | null) => void; // Callback when expanded state changes
 }
 
 // Predefined entry condition templates
@@ -484,15 +486,27 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
   className = '',
   showTitle = true,
   selectedPairs = [],
+  expandedConditionId,
+  onExpandedChange,
 }) => {
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
-  const [expandedCondition, setExpandedCondition] = useState<string | null>(null);
+  
+  // Use controlled expanded state from parent if provided, otherwise use local state
+  const [localExpandedCondition, setLocalExpandedCondition] = useState<string | null>(null);
   const [showPresets, setShowPresets] = useState(false);
   
-  // Preserve expanded state when conditions change from parent
+  const expandedCondition = expandedConditionId !== undefined ? expandedConditionId : localExpandedCondition;
+  const setExpandedCondition = (id: string | null) => {
+    if (onExpandedChange) {
+      onExpandedChange(id);
+    } else {
+      setLocalExpandedCondition(id);
+    }
+  };
+  
+  // Clear expanded state if condition no longer exists
   useEffect(() => {
-    // If a condition was expanded but no longer exists, clear the expanded state
     if (expandedCondition && !conditions.conditions.find(c => c.id === expandedCondition)) {
       setExpandedCondition(null);
     }
@@ -1036,9 +1050,10 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                       </div>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() =>
-                            setExpandedCondition(isExpanded ? null : condition.id)
-                          }
+                          onClick={() => {
+                            const newExpanded = isExpanded ? null : condition.id;
+                            setExpandedCondition(newExpanded);
+                          }}
                           className={`p-1 rounded transition-colors ${
                             isDark
                               ? 'hover:bg-gray-700 text-gray-400'
@@ -1405,5 +1420,6 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
   );
 };
 
-export default EntryConditions;
+// Memoize component to prevent unnecessary re-renders that cause state loss
+export default React.memo(EntryConditions);
 
