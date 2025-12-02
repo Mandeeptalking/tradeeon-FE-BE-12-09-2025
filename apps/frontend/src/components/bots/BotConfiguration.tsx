@@ -137,6 +137,90 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
     loadPairs();
   }, [config.exchange]);
 
+  // Format pair display helper function (must be defined before useMemo hooks that use it)
+  const formatPairDisplay = useCallback((pair: string) => {
+    // Convert BTCUSDT to BTC/USDT format
+    if (pair.length >= 6) {
+      const quote = pair.slice(-4);
+      const base = pair.slice(0, -4);
+      return `${base}/${quote}`;
+    }
+    return pair;
+  }, []);
+
+  // Popular pairs (most traded)
+  const popularPairs = useMemo(() => {
+    return ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'SOLUSDT', 'XRPUSDT', 'DOGEUSDT', 'MATICUSDT'];
+  }, []);
+
+  // Filter pairs based on search and quote currency with better matching
+  const filteredPairs = useMemo(() => {
+    const searchLower = pairSearch.toLowerCase().trim();
+    
+    return availablePairs.filter((pair) => {
+      // Quote currency filter
+      const matchesQuote = !selectedQuoteCurrency || pair.endsWith(selectedQuoteCurrency);
+      if (!matchesQuote) return false;
+
+      // If no search, return all
+      if (!searchLower) return true;
+
+      // Format pair for display
+      const formatted = formatPairDisplay(pair);
+      const formattedLower = formatted.toLowerCase();
+      
+      // Check if search matches:
+      // 1. Full pair symbol (BTCUSDT)
+      // 2. Formatted pair (BTC/USDT)
+      // 3. Base currency (BTC)
+      // 4. Quote currency (USDT)
+      const base = pair.slice(0, -4).toLowerCase();
+      const quote = pair.slice(-4).toLowerCase();
+      
+      return (
+        pair.toLowerCase().includes(searchLower) ||
+        formattedLower.includes(searchLower) ||
+        base.includes(searchLower) ||
+        quote.includes(searchLower)
+      );
+    }).sort((a, b) => {
+      // Sort: popular pairs first, then alphabetically
+      const aIsPopular = popularPairs.includes(a);
+      const bIsPopular = popularPairs.includes(b);
+      
+      if (aIsPopular && !bIsPopular) return -1;
+      if (!aIsPopular && bIsPopular) return 1;
+      
+      return a.localeCompare(b);
+    });
+  }, [availablePairs, pairSearch, selectedQuoteCurrency, popularPairs, formatPairDisplay]);
+
+  // Validate configuration (must be defined before useEffect hooks that use it)
+  const validateConfig = useCallback((newConfig: BotConfigurationData): boolean => {
+    const newErrors: typeof errors = {};
+
+    // Validate exchange
+    const connectedExchanges = connections.filter(c => c.status === 'connected');
+    if (connectedExchanges.length === 0) {
+      newErrors.exchange = 'No connected exchanges found. Please connect an exchange first.';
+    } else if (!newConfig.exchange) {
+      newErrors.exchange = 'Please select an exchange';
+    }
+
+    // Validate direction (only for futures)
+    if (newConfig.market === 'futures' && !newConfig.direction) {
+      newErrors.direction = 'Please select a direction for futures trading';
+    }
+
+    // Validate pairs
+    if (newConfig.pairs.length === 0) {
+      newErrors.pairs = 'Please select at least one trading pair';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [connections]);
+
   // Focus search input when dropdown opens
   useEffect(() => {
     if (showPairDropdown && searchInputRef.current) {
@@ -190,7 +274,7 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [showPairDropdown, filteredPairs, highlightedIndex, config, onChange]);
+  }, [showPairDropdown, filteredPairs, highlightedIndex, config, onChange, validateConfig]);
 
   // Scroll highlighted item into view
   useEffect(() => {
@@ -223,32 +307,6 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
   useEffect(() => {
     setHighlightedIndex(-1);
   }, [pairSearch, selectedQuoteCurrency]);
-
-  // Validate configuration
-  const validateConfig = (newConfig: BotConfigurationData): boolean => {
-    const newErrors: typeof errors = {};
-
-    // Validate exchange
-    const connectedExchanges = connections.filter(c => c.status === 'connected');
-    if (connectedExchanges.length === 0) {
-      newErrors.exchange = 'No connected exchanges found. Please connect an exchange first.';
-    } else if (!newConfig.exchange) {
-      newErrors.exchange = 'Please select an exchange';
-    }
-
-    // Validate direction (only for futures)
-    if (newConfig.market === 'futures' && !newConfig.direction) {
-      newErrors.direction = 'Please select a direction for futures trading';
-    }
-
-    // Validate pairs
-    if (newConfig.pairs.length === 0) {
-      newErrors.pairs = 'Please select at least one trading pair';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   // Format exchange options from connections
   const getExchangeOptions = () => {
@@ -341,64 +399,6 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
     onChange(newConfig);
     validateConfig(newConfig);
   };
-
-  // Format pair display helper function (must be defined before useMemo hooks that use it)
-  const formatPairDisplay = useCallback((pair: string) => {
-    // Convert BTCUSDT to BTC/USDT format
-    if (pair.length >= 6) {
-      const quote = pair.slice(-4);
-      const base = pair.slice(0, -4);
-      return `${base}/${quote}`;
-    }
-    return pair;
-  }, []);
-
-  // Popular pairs (most traded)
-  const popularPairs = useMemo(() => {
-    return ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'SOLUSDT', 'XRPUSDT', 'DOGEUSDT', 'MATICUSDT'];
-  }, []);
-
-  // Filter pairs based on search and quote currency with better matching
-  const filteredPairs = useMemo(() => {
-    const searchLower = pairSearch.toLowerCase().trim();
-    
-    return availablePairs.filter((pair) => {
-      // Quote currency filter
-      const matchesQuote = !selectedQuoteCurrency || pair.endsWith(selectedQuoteCurrency);
-      if (!matchesQuote) return false;
-
-      // If no search, return all
-      if (!searchLower) return true;
-
-      // Format pair for display
-      const formatted = formatPairDisplay(pair);
-      const formattedLower = formatted.toLowerCase();
-      
-      // Check if search matches:
-      // 1. Full pair symbol (BTCUSDT)
-      // 2. Formatted pair (BTC/USDT)
-      // 3. Base currency (BTC)
-      // 4. Quote currency (USDT)
-      const base = pair.slice(0, -4).toLowerCase();
-      const quote = pair.slice(-4).toLowerCase();
-      
-      return (
-        pair.toLowerCase().includes(searchLower) ||
-        formattedLower.includes(searchLower) ||
-        base.includes(searchLower) ||
-        quote.includes(searchLower)
-      );
-    }).sort((a, b) => {
-      // Sort: popular pairs first, then alphabetically
-      const aIsPopular = popularPairs.includes(a);
-      const bIsPopular = popularPairs.includes(b);
-      
-      if (aIsPopular && !bIsPopular) return -1;
-      if (!aIsPopular && bIsPopular) return 1;
-      
-      return a.localeCompare(b);
-    });
-  }, [availablePairs, pairSearch, selectedQuoteCurrency, popularPairs, formatPairDisplay]);
 
   // Highlight matching text in pair
   const highlightMatch = (pair: string, search: string) => {
