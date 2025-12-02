@@ -43,7 +43,8 @@ export interface EntryConditionsData {
   entryType: 'immediate' | 'conditional'; // How to enter trades
   orderType?: 'market' | 'limit'; // Order type for immediate entry
   limitPrice?: number; // Limit price when orderType is 'limit' (for single pair)
-  limitPrices?: { [pair: string]: number }; // Limit prices per pair (for multiple pairs)
+  limitPrices?: { [pair: string]: number }; // Limit prices per pair (for 2-5 pairs)
+  limitPricePercent?: number; // Percentage offset from current price (for 6+ pairs, e.g., -2 means 2% below)
   enabled: boolean; // For conditional entry
   conditions: EntryCondition[];
   logicGate: 'AND' | 'OR'; // Logic gate between conditions
@@ -380,7 +381,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                   type="button"
                   variant={conditions.orderType === 'market' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => onChange({ ...conditions, orderType: 'market', limitPrice: undefined, limitPrices: undefined })}
+                  onClick={() => onChange({ ...conditions, orderType: 'market', limitPrice: undefined, limitPrices: undefined, limitPricePercent: undefined })}
                   className={`flex-1 ${
                     conditions.orderType === 'market' 
                       ? isDark 
@@ -399,10 +400,15 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                   variant={conditions.orderType === 'limit' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => {
-                    // Initialize limitPrices if multiple pairs, otherwise use limitPrice
+                    // Initialize based on number of pairs
                     const newConditions = { ...conditions, orderType: 'limit' };
-                    if (selectedPairs.length > 1) {
-                      // Initialize limitPrices object for multiple pairs
+                    if (selectedPairs.length === 1) {
+                      // Single pair: use exact limitPrice
+                      newConditions.limitPrice = conditions.limitPrice || 0;
+                      newConditions.limitPrices = undefined;
+                      newConditions.limitPricePercent = undefined;
+                    } else if (selectedPairs.length <= 5) {
+                      // 2-5 pairs: use individual limitPrices
                       const initialLimitPrices: { [pair: string]: number } = {};
                       selectedPairs.forEach(pair => {
                         if (conditions.limitPrices?.[pair]) {
@@ -411,9 +417,11 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                       });
                       newConditions.limitPrices = Object.keys(initialLimitPrices).length > 0 ? initialLimitPrices : undefined;
                       newConditions.limitPrice = undefined;
-                    } else if (selectedPairs.length === 1) {
-                      // Use limitPrice for single pair
-                      newConditions.limitPrice = conditions.limitPrice || 0;
+                      newConditions.limitPricePercent = undefined;
+                    } else {
+                      // 6+ pairs: use percentage offset
+                      newConditions.limitPricePercent = conditions.limitPricePercent || -2; // Default to 2% below
+                      newConditions.limitPrice = undefined;
                       newConditions.limitPrices = undefined;
                     }
                     onChange(newConditions);
@@ -449,7 +457,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                     </p>
                   </div>
                 ) : selectedPairs.length === 1 ? (
-                  // Single pair - show single input
+                  // Single pair - show single exact price input
                   <div>
                     <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
                       Limit Price for {selectedPairs[0].replace(/([A-Z]+)(USDT|BUSD|BTC|ETH)$/, '$1/$2')} <span className="text-red-500">*</span>
@@ -460,7 +468,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                       value={conditions.limitPrice || ''}
                       onChange={(e) => {
                         const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                        onChange({ ...conditions, limitPrice: value, limitPrices: undefined });
+                        onChange({ ...conditions, limitPrice: value, limitPrices: undefined, limitPricePercent: undefined });
                       }}
                       className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
                       placeholder="Enter limit price"
@@ -469,8 +477,8 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                       The order will execute when the market price reaches this limit price
                     </p>
                   </div>
-                ) : (
-                  // Multiple pairs - show table with individual inputs
+                ) : selectedPairs.length <= 5 ? (
+                  // 2-5 pairs - show table with individual inputs
                   <div>
                     <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
                       Limit Prices <span className="text-red-500">*</span>
@@ -515,7 +523,8 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                         onChange({
                                           ...conditions,
                                           limitPrices: Object.keys(newLimitPrices).length > 0 ? newLimitPrices : undefined,
-                                          limitPrice: undefined, // Clear single limitPrice when using multiple
+                                          limitPrice: undefined,
+                                          limitPricePercent: undefined,
                                         });
                                       }}
                                       className={`w-full ${isDark ? 'bg-gray-900 border-gray-700 text-white' : ''}`}
@@ -532,6 +541,77 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                     <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                       Set individual limit prices for each trading pair. Orders will execute when market prices reach these limits.
                     </p>
+                  </div>
+                ) : (
+                  // 6+ pairs - use percentage offset (more practical)
+                  <div>
+                    <div className={`p-3 rounded-lg mb-3 ${isDark ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-blue-50 border border-blue-200'}`}>
+                      <div className="flex items-start gap-2">
+                        <Info className={`w-4 h-4 mt-0.5 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+                        <div>
+                          <p className={`text-xs font-medium ${isDark ? 'text-blue-300' : 'text-blue-800'}`}>
+                            Percentage-Based Limit Orders
+                          </p>
+                          <p className={`text-xs mt-1 ${isDark ? 'text-blue-400/80' : 'text-blue-700'}`}>
+                            With {selectedPairs.length} pairs, limit orders use a percentage offset from current market price. This applies to all selected pairs.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                        Price Offset (%) <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={conditions.limitPricePercent !== undefined ? Math.abs(conditions.limitPricePercent) : ''}
+                          onChange={(e) => {
+                            const value = e.target.value === '' ? undefined : Math.abs(parseFloat(e.target.value));
+                            onChange({
+                              ...conditions,
+                              limitPricePercent: value !== undefined ? -value : undefined, // Negative means below current price
+                              limitPrice: undefined,
+                              limitPrices: undefined,
+                            });
+                          }}
+                          className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                          placeholder="2.5"
+                        />
+                        <Select
+                          value={conditions.limitPricePercent !== undefined && conditions.limitPricePercent < 0 ? 'below' : 'above'}
+                          onValueChange={(value) => {
+                            const currentPercent = Math.abs(conditions.limitPricePercent || 0);
+                            onChange({
+                              ...conditions,
+                              limitPricePercent: value === 'below' ? -currentPercent : currentPercent,
+                            });
+                          }}
+                        >
+                          <SelectTrigger className={`w-32 ${isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="below">Below</SelectItem>
+                            <SelectItem value="above">Above</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {conditions.limitPricePercent !== undefined ? (
+                          <>
+                            Orders will execute when prices are{' '}
+                            <span className="font-medium">
+                              {Math.abs(conditions.limitPricePercent)}% {conditions.limitPricePercent < 0 ? 'below' : 'above'}{' '}
+                            </span>
+                            current market price for all {selectedPairs.length} pairs.
+                          </>
+                        ) : (
+                          'Enter a percentage offset (e.g., 2.5 means 2.5% below/above current price)'
+                        )}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>

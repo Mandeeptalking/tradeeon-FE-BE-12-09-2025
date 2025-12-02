@@ -73,6 +73,7 @@ const DCABot: React.FC = () => {
       orderType: 'market',
       limitPrice: undefined,
       limitPrices: undefined,
+      limitPricePercent: undefined,
       enabled: false,
       conditions: [],
       logicGate: 'AND',
