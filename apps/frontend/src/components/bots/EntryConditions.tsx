@@ -330,19 +330,37 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
             type="button"
             variant={conditions.entryType === 'immediate' ? 'default' : 'outline'}
             onClick={() => onChange({ ...conditions, entryType: 'immediate', orderType: conditions.orderType || 'market' })}
-            className="flex-1"
+            className={`flex-1 ${
+              conditions.entryType === 'immediate' 
+                ? isDark 
+                  ? 'ring-2 ring-yellow-500/50 shadow-lg shadow-yellow-500/20' 
+                  : 'ring-2 ring-yellow-500/30 shadow-md'
+                : ''
+            }`}
           >
-            <Zap className="w-4 h-4 mr-2" />
+            <Zap className={`w-4 h-4 mr-2 ${conditions.entryType === 'immediate' ? 'text-yellow-300' : ''}`} />
             Enter Immediately
+            {conditions.entryType === 'immediate' && (
+              <CheckCircle2 className="w-4 h-4 ml-2" />
+            )}
           </Button>
           <Button
             type="button"
             variant={conditions.entryType === 'conditional' ? 'default' : 'outline'}
             onClick={() => onChange({ ...conditions, entryType: 'conditional', enabled: true })}
-            className="flex-1"
+            className={`flex-1 ${
+              conditions.entryType === 'conditional' 
+                ? isDark 
+                  ? 'ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20' 
+                  : 'ring-2 ring-blue-500/30 shadow-md'
+                : ''
+            }`}
           >
-            <Target className="w-4 h-4 mr-2" />
+            <Target className={`w-4 h-4 mr-2 ${conditions.entryType === 'conditional' ? 'text-blue-300' : ''}`} />
             Wait for Conditions
+            {conditions.entryType === 'conditional' && (
+              <CheckCircle2 className="w-4 h-4 ml-2" />
+            )}
           </Button>
         </div>
 
@@ -359,18 +377,36 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                   variant={conditions.orderType === 'market' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => onChange({ ...conditions, orderType: 'market' })}
-                  className="flex-1"
+                  className={`flex-1 ${
+                    conditions.orderType === 'market' 
+                      ? isDark 
+                        ? 'ring-2 ring-green-500/50 shadow-lg shadow-green-500/20' 
+                        : 'ring-2 ring-green-500/30 shadow-md'
+                      : ''
+                  }`}
                 >
                   Market Order
+                  {conditions.orderType === 'market' && (
+                    <CheckCircle2 className="w-3 h-3 ml-1.5" />
+                  )}
                 </Button>
                 <Button
                   type="button"
                   variant={conditions.orderType === 'limit' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => onChange({ ...conditions, orderType: 'limit' })}
-                  className="flex-1"
+                  className={`flex-1 ${
+                    conditions.orderType === 'limit' 
+                      ? isDark 
+                        ? 'ring-2 ring-orange-500/50 shadow-lg shadow-orange-500/20' 
+                        : 'ring-2 ring-orange-500/30 shadow-md'
+                      : ''
+                  }`}
                 >
                   Limit Order
+                  {conditions.orderType === 'limit' && (
+                    <CheckCircle2 className="w-3 h-3 ml-1.5" />
+                  )}
                 </Button>
               </div>
               <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>

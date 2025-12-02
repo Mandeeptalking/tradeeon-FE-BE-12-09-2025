@@ -10,6 +10,7 @@ import {
   AlertCircle,
   Star,
   Clock,
+  CheckCircle2,
 } from 'lucide-react';
 import { useThemeStore } from '../../store/theme';
 import { Input } from '../ui/input';
@@ -545,6 +546,14 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
         <div>
           <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
             Exchange <span className="text-red-500">*</span>
+            {config.exchange && (
+              <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${
+                isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'
+              }`}>
+                <CheckCircle2 className="w-3 h-3 inline mr-1" />
+                Selected
+              </span>
+            )}
           </label>
           <Select
             value={getCurrentExchangeValue()}
@@ -554,6 +563,8 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
             <SelectTrigger 
               className={`${isDark ? 'bg-gray-800 border-gray-700 text-white' : ''} ${
                 errors.exchange ? 'border-red-500' : ''
+              } ${
+                config.exchange ? (isDark ? 'ring-2 ring-blue-500/50 border-blue-500/50' : 'ring-2 ring-blue-500/30 border-blue-500') : ''
               }`}
             >
               <SelectValue placeholder={loadingConnections ? 'Loading...' : connectedExchanges.length === 0 ? 'No connections' : 'Select exchange'} />
@@ -587,13 +598,23 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
         <div>
           <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
             Market Type
+            {config.market && (
+              <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium capitalize ${
+                isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'
+              }`}>
+                <CheckCircle2 className="w-3 h-3 inline mr-1" />
+                {config.market}
+              </span>
+            )}
           </label>
           <Select
             value={config.market}
             onValueChange={handleMarketChange}
             disabled={!config.exchange}
           >
-            <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
+            <SelectTrigger className={`${isDark ? 'bg-gray-800 border-gray-700 text-white' : ''} ${
+              config.market ? (isDark ? 'ring-2 ring-blue-500/50 border-blue-500/50' : 'ring-2 ring-blue-500/30 border-blue-500') : ''
+            }`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -615,19 +636,37 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
               type="button"
               variant={config.direction === 'long' ? 'default' : 'outline'}
               onClick={() => handleDirectionChange('long')}
-              className="flex-1"
+              className={`flex-1 ${
+                config.direction === 'long' 
+                  ? isDark 
+                    ? 'ring-2 ring-green-500/50 shadow-lg shadow-green-500/20' 
+                    : 'ring-2 ring-green-500/30 shadow-md'
+                  : ''
+              }`}
             >
-              <TrendingUp className="w-4 h-4 mr-2" />
+              <TrendingUp className={`w-4 h-4 mr-2 ${config.direction === 'long' ? 'text-green-300' : ''}`} />
               Long
+              {config.direction === 'long' && (
+                <CheckCircle2 className="w-4 h-4 ml-2" />
+              )}
             </Button>
             <Button
               type="button"
               variant={config.direction === 'short' ? 'default' : 'outline'}
               onClick={() => handleDirectionChange('short')}
-              className="flex-1"
+              className={`flex-1 ${
+                config.direction === 'short' 
+                  ? isDark 
+                    ? 'ring-2 ring-red-500/50 shadow-lg shadow-red-500/20' 
+                    : 'ring-2 ring-red-500/30 shadow-md'
+                  : ''
+              }`}
             >
-              <TrendingDown className="w-4 h-4 mr-2" />
+              <TrendingDown className={`w-4 h-4 mr-2 ${config.direction === 'short' ? 'text-red-300' : ''}`} />
               Short
+              {config.direction === 'short' && (
+                <CheckCircle2 className="w-4 h-4 ml-2" />
+              )}
             </Button>
           </div>
           {errors.direction && (
@@ -651,16 +690,24 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
               variant={config.pairMode === 'single' ? 'default' : 'outline'}
               size="sm"
               onClick={() => handlePairModeChange('single')}
+              className={config.pairMode === 'single' ? (isDark ? 'ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20' : 'ring-2 ring-blue-500/30 shadow-md') : ''}
             >
               Single
+              {config.pairMode === 'single' && (
+                <CheckCircle2 className="w-3 h-3 ml-1.5" />
+              )}
             </Button>
             <Button
               type="button"
               variant={config.pairMode === 'multiple' ? 'default' : 'outline'}
               size="sm"
               onClick={() => handlePairModeChange('multiple')}
+              className={config.pairMode === 'multiple' ? (isDark ? 'ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20' : 'ring-2 ring-blue-500/30 shadow-md') : ''}
             >
               Multiple
+              {config.pairMode === 'multiple' && (
+                <CheckCircle2 className="w-3 h-3 ml-1.5" />
+              )}
             </Button>
           </div>
         </div>
@@ -671,15 +718,16 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
             {config.pairs.map((pair) => (
               <div
                 key={pair}
-                className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${
+                className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 transition-all ${
                   isDark
-                    ? 'border-gray-700 bg-gray-800 text-white'
-                    : 'border-gray-200 bg-white text-gray-900'
-                } ${config.pairMode === 'single' ? 'ring-2 ring-blue-500/30' : ''}`}
+                    ? 'border-blue-500/50 bg-gray-800 text-white ring-2 ring-blue-500/30 shadow-lg shadow-blue-500/10'
+                    : 'border-blue-500 bg-white text-gray-900 ring-2 ring-blue-500/20 shadow-md'
+                } ${config.pairMode === 'single' ? 'ring-2 ring-blue-500/50' : ''}`}
               >
+                <CheckCircle2 className={`w-4 h-4 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
                 <span className="text-sm font-medium">{formatPairDisplay(pair)}</span>
                 {config.pairMode === 'single' && (
-                  <span className={`text-xs px-1.5 py-0.5 rounded ${
+                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
                     isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'
                   }`}>
                     Single
@@ -687,8 +735,8 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
                 )}
                 <button
                   onClick={() => handleRemovePair(pair)}
-                  className={`hover:opacity-70 transition-opacity ${
-                    isDark ? 'text-gray-400' : 'text-gray-600'
+                  className={`hover:opacity-70 transition-opacity ml-auto ${
+                    isDark ? 'text-gray-400 hover:text-red-400' : 'text-gray-600 hover:text-red-600'
                   }`}
                   type="button"
                   title="Remove pair"
