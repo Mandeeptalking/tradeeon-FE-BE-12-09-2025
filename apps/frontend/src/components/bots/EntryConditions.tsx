@@ -42,6 +42,7 @@ export interface EntryCondition {
 export interface EntryConditionsData {
   entryType: 'immediate' | 'conditional'; // How to enter trades
   orderType?: 'market' | 'limit'; // Order type for immediate entry
+  limitPrice?: number; // Limit price when orderType is 'limit'
   enabled: boolean; // For conditional entry
   conditions: EntryCondition[];
   logicGate: 'AND' | 'OR'; // Logic gate between conditions
@@ -376,7 +377,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                   type="button"
                   variant={conditions.orderType === 'market' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => onChange({ ...conditions, orderType: 'market' })}
+                  onClick={() => onChange({ ...conditions, orderType: 'market', limitPrice: undefined })}
                   className={`flex-1 ${
                     conditions.orderType === 'market' 
                       ? isDark 
@@ -394,7 +395,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                   type="button"
                   variant={conditions.orderType === 'limit' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => onChange({ ...conditions, orderType: 'limit' })}
+                  onClick={() => onChange({ ...conditions, orderType: 'limit', limitPrice: conditions.limitPrice || 0 })}
                   className={`flex-1 ${
                     conditions.orderType === 'limit' 
                       ? isDark 
@@ -415,6 +416,29 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                   : 'Order will execute when price reaches your specified limit price'}
               </p>
             </div>
+
+            {/* Limit Price Input - Only show when Limit Order is selected */}
+            {conditions.orderType === 'limit' && (
+              <div>
+                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                  Limit Price <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="number"
+                  step="0.00000001"
+                  value={conditions.limitPrice || ''}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                    onChange({ ...conditions, limitPrice: value });
+                  }}
+                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                  placeholder="Enter limit price"
+                />
+                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  The order will execute when the market price reaches this limit price
+                </p>
+              </div>
+            )}
           </div>
         )}
 

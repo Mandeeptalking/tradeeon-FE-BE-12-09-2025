@@ -71,6 +71,7 @@ const DCABot: React.FC = () => {
     entryConditions: {
       entryType: 'immediate',
       orderType: 'market',
+      limitPrice: undefined,
       enabled: false,
       conditions: [],
       logicGate: 'AND',
