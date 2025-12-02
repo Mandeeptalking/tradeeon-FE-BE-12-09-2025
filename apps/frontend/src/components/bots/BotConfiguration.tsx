@@ -469,8 +469,17 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
   const handlePairModeChange = (mode: 'single' | 'multiple') => {
     let newPairs = config.pairs;
     
-    if (mode === 'single' && config.pairs.length > 1) {
-      newPairs = [config.pairs[0]];
+    // When switching to single mode, keep only the first pair
+    if (mode === 'single') {
+      if (config.pairs.length > 1) {
+        newPairs = [config.pairs[0]];
+      } else if (config.pairs.length === 0) {
+        // If no pairs selected, keep empty array
+        newPairs = [];
+      } else {
+        // Already has one pair, keep it
+        newPairs = config.pairs;
+      }
     }
     
     const newConfig = { ...config, pairMode: mode, pairs: newPairs };
@@ -666,21 +675,36 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
                   isDark
                     ? 'border-gray-700 bg-gray-800 text-white'
                     : 'border-gray-200 bg-white text-gray-900'
-                }`}
+                } ${config.pairMode === 'single' ? 'ring-2 ring-blue-500/30' : ''}`}
               >
                 <span className="text-sm font-medium">{formatPairDisplay(pair)}</span>
+                {config.pairMode === 'single' && (
+                  <span className={`text-xs px-1.5 py-0.5 rounded ${
+                    isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'
+                  }`}>
+                    Single
+                  </span>
+                )}
                 <button
                   onClick={() => handleRemovePair(pair)}
                   className={`hover:opacity-70 transition-opacity ${
                     isDark ? 'text-gray-400' : 'text-gray-600'
                   }`}
                   type="button"
+                  title="Remove pair"
                 >
                   <X className="w-3 h-3" />
                 </button>
               </div>
             ))}
           </div>
+        )}
+        
+        {/* Single mode info */}
+        {config.pairMode === 'single' && config.pairs.length > 0 && (
+          <p className={`text-xs mb-2 ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+            <span className="font-medium">Single mode:</span> Only one pair allowed. Selecting a new pair will replace the current one.
+          </p>
         )}
 
         {/* Add Pair Button and Dropdown */}
@@ -807,20 +831,27 @@ const BotConfiguration: React.FC<BotConfigurationProps> = ({
                           {popularPairs.slice(0, 8).map((pair) => {
                             if (!availablePairs.includes(pair)) return null;
                             const isSelected = config.pairs.includes(pair);
+                            const isDisabled = config.pairMode === 'single' && config.pairs.length > 0 && !isSelected;
                             return (
                               <button
                                 key={pair}
                                 type="button"
-                                onClick={() => handleAddPair(pair)}
+                                onClick={() => !isDisabled && handleAddPair(pair)}
+                                disabled={isDisabled}
                                 className={`px-2 py-1 rounded text-xs transition-colors ${
                                   isSelected
                                     ? isDark
                                       ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                                       : 'bg-blue-50 text-blue-600 border border-blue-200'
+                                    : isDisabled
+                                    ? isDark
+                                      ? 'bg-gray-700/30 text-gray-600 border border-gray-700 cursor-not-allowed opacity-50'
+                                      : 'bg-gray-100 text-gray-400 border border-gray-300 cursor-not-allowed opacity-50'
                                     : isDark
                                     ? 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                                 }`}
+                                title={isDisabled ? 'Only one pair allowed in single mode' : ''}
                               >
                                 {formatPairDisplay(pair)}
                               </button>
