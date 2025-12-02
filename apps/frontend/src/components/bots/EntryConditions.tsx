@@ -125,6 +125,9 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     component: 'histogram',
     operator: 'crosses_above',
     value: 0,
+    fastPeriod: 12,
+    slowPeriod: 26,
+    signalPeriod: 9,
     timeframe: '4h',
   },
   {
@@ -134,6 +137,9 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     component: 'histogram',
     operator: 'crosses_below',
     value: 0,
+    fastPeriod: 12,
+    slowPeriod: 26,
+    signalPeriod: 9,
     timeframe: '4h',
   },
   {
@@ -152,6 +158,44 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     component: 'line',
     operator: 'crosses_below',
     period: 20,
+    timeframe: '1h',
+  },
+  {
+    name: 'Price 2% Above EMA 20',
+    enabled: true,
+    indicator: 'EMA',
+    component: 'line',
+    operator: 'price_percent_above',
+    value: 2,
+    period: 20,
+    timeframe: '1h',
+  },
+  {
+    name: 'Price 3% Below SMA 50',
+    enabled: true,
+    indicator: 'SMA',
+    component: 'line',
+    operator: 'price_percent_below',
+    value: 3,
+    period: 50,
+    timeframe: '4h',
+  },
+  {
+    name: 'Price Crosses Above Bollinger Lower Band',
+    enabled: true,
+    indicator: 'BOLLINGER_BANDS',
+    component: 'lower_band',
+    operator: 'crosses_above',
+    period: 20,
+    timeframe: '1h',
+  },
+  {
+    name: 'Price 5% Above VWAP',
+    enabled: true,
+    indicator: 'VWAP',
+    component: 'vwap_line',
+    operator: 'price_percent_above',
+    value: 5,
     timeframe: '1h',
   },
   {
@@ -387,20 +431,28 @@ const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }
     { value: 'crosses_below', label: 'Price Crosses Below' },
     { value: 'price_above', label: 'Price Above' },
     { value: 'price_below', label: 'Price Below' },
+    { value: 'price_percent_above', label: 'Price % Above' },
+    { value: 'price_percent_below', label: 'Price % Below' },
   ],
   
   // Bollinger Bands
   'upper_band': [
     { value: 'crosses_above', label: 'Price Crosses Above' },
     { value: 'crosses_below', label: 'Price Crosses Below' },
+    { value: 'price_percent_above', label: 'Price % Above' },
+    { value: 'price_percent_below', label: 'Price % Below' },
   ],
   'middle_band': [
     { value: 'crosses_above', label: 'Price Crosses Above' },
     { value: 'crosses_below', label: 'Price Crosses Below' },
+    { value: 'price_percent_above', label: 'Price % Above' },
+    { value: 'price_percent_below', label: 'Price % Below' },
   ],
   'lower_band': [
     { value: 'crosses_above', label: 'Price Crosses Above' },
     { value: 'crosses_below', label: 'Price Crosses Below' },
+    { value: 'price_percent_above', label: 'Price % Above' },
+    { value: 'price_percent_below', label: 'Price % Below' },
   ],
   'bandwidth': [
     { value: 'greater_than', label: 'Greater Than' },
@@ -417,14 +469,20 @@ const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }
   'upper_channel': [
     { value: 'crosses_above', label: 'Price Crosses Above' },
     { value: 'crosses_below', label: 'Price Crosses Below' },
+    { value: 'price_percent_above', label: 'Price % Above' },
+    { value: 'price_percent_below', label: 'Price % Below' },
   ],
   'middle_channel': [
     { value: 'crosses_above', label: 'Price Crosses Above' },
     { value: 'crosses_below', label: 'Price Crosses Below' },
+    { value: 'price_percent_above', label: 'Price % Above' },
+    { value: 'price_percent_below', label: 'Price % Below' },
   ],
   'lower_channel': [
     { value: 'crosses_above', label: 'Price Crosses Above' },
     { value: 'crosses_below', label: 'Price Crosses Below' },
+    { value: 'price_percent_above', label: 'Price % Above' },
+    { value: 'price_percent_below', label: 'Price % Below' },
   ],
   
   // OBV
@@ -439,6 +497,8 @@ const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }
   'vwap_line': [
     { value: 'crosses_above', label: 'Price Crosses Above' },
     { value: 'crosses_below', label: 'Price Crosses Below' },
+    { value: 'price_percent_above', label: 'Price % Above' },
+    { value: 'price_percent_below', label: 'Price % Below' },
   ],
   
   // Price Action
@@ -598,8 +658,14 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       desc += ` ${operator.label}`;
     }
     
+    // Handle different operator types
     if (condition.operator === 'between' && condition.lowerBound !== undefined && condition.upperBound !== undefined) {
       desc += ` ${condition.lowerBound}-${condition.upperBound}`;
+    } else if (condition.operator === 'price_percent_above' || condition.operator === 'price_percent_below') {
+      // Price percentage conditions
+      if (condition.value !== undefined) {
+        desc += ` ${condition.value}%`;
+      }
     } else if (condition.value !== undefined) {
       desc += ` ${condition.value}`;
     }
@@ -1314,10 +1380,37 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               />
                             </div>
                           </div>
+                        ) : condition.operator === 'price_percent_above' || condition.operator === 'price_percent_below' ? (
+                          // Percentage-based price conditions
+                          <div>
+                            <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                              Percentage (%) <span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                              type="number"
+                              step="0.1"
+                              value={condition.value !== undefined ? Math.abs(condition.value) : ''}
+                              onChange={(e) => {
+                                const percent = parseFloat(e.target.value) || undefined;
+                                handleUpdateCondition(condition.id, {
+                                  value: percent !== undefined ? Math.abs(percent) : undefined,
+                                });
+                              }}
+                              className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                              placeholder="2.5"
+                            />
+                            <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                              {condition.operator === 'price_percent_above'
+                                ? `Price must be ${condition.value || 'X'}% above the ${condition.component === 'line' ? 'indicator' : 'band/channel'}`
+                                : `Price must be ${condition.value || 'X'}% below the ${condition.component === 'line' ? 'indicator' : 'band/channel'}`}
+                            </p>
+                          </div>
                         ) : (
                           <div>
                             <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
-                              Value
+                              {condition.operator === 'price_above' || condition.operator === 'price_below' 
+                                ? 'Price Threshold' 
+                                : 'Value'}
                             </label>
                             <Input
                               type="number"
@@ -1329,8 +1422,15 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 })
                               }
                               className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
-                              placeholder="30"
+                              placeholder={condition.operator === 'price_above' || condition.operator === 'price_below' ? "50000" : "30"}
                             />
+                            {condition.operator === 'price_above' || condition.operator === 'price_below' ? (
+                              <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {condition.operator === 'price_above' 
+                                  ? `Price must be above ${condition.value || 'threshold'}`
+                                  : `Price must be below ${condition.value || 'threshold'}`}
+                              </p>
+                            ) : null}
                           </div>
                         )}
                       </div>
