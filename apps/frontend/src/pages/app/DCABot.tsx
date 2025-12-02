@@ -69,6 +69,8 @@ const DCABot: React.FC = () => {
     enableProfitTaking: false,
     enableEmergencyBrake: false,
     entryConditions: {
+      entryType: 'immediate',
+      orderType: 'market',
       enabled: false,
       conditions: [],
       logicGate: 'AND',

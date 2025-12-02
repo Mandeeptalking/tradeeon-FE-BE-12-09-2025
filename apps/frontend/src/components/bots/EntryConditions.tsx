@@ -40,7 +40,9 @@ export interface EntryCondition {
 }
 
 export interface EntryConditionsData {
-  enabled: boolean;
+  entryType: 'immediate' | 'conditional'; // How to enter trades
+  orderType?: 'market' | 'limit'; // Order type for immediate entry
+  enabled: boolean; // For conditional entry
   conditions: EntryCondition[];
   logicGate: 'AND' | 'OR'; // Logic gate between conditions
 }
@@ -318,35 +320,102 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
         </div>
       )}
 
-      {/* Enable/Disable Toggle */}
-      <div className="flex items-center justify-between p-4 rounded-lg border border-gray-700/50">
-        <div>
-          <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Enable Entry Conditions
-          </p>
-          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
-            Wait for technical indicators before starting trades
-          </p>
+      {/* Entry Type Selection */}
+      <div className={`p-4 rounded-lg border ${isDark ? 'border-gray-700/50 bg-gray-800/30' : 'border-gray-200 bg-white'}`}>
+        <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-3 block`}>
+          Entry Type
+        </label>
+        <div className="flex gap-2 mb-4">
+          <Button
+            type="button"
+            variant={conditions.entryType === 'immediate' ? 'default' : 'outline'}
+            onClick={() => onChange({ ...conditions, entryType: 'immediate', orderType: conditions.orderType || 'market' })}
+            className="flex-1"
+          >
+            <Zap className="w-4 h-4 mr-2" />
+            Enter Immediately
+          </Button>
+          <Button
+            type="button"
+            variant={conditions.entryType === 'conditional' ? 'default' : 'outline'}
+            onClick={() => onChange({ ...conditions, entryType: 'conditional', enabled: true })}
+            className="flex-1"
+          >
+            <Target className="w-4 h-4 mr-2" />
+            Wait for Conditions
+          </Button>
         </div>
-        <button
-          onClick={() => onChange({ ...conditions, enabled: !conditions.enabled })}
-          className={`relative w-12 h-6 rounded-full transition-colors ${
-            conditions.enabled
-              ? 'bg-blue-500'
-              : isDark
-              ? 'bg-gray-700'
-              : 'bg-gray-300'
-          }`}
-        >
-          <div
-            className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
-              conditions.enabled ? 'translate-x-6' : ''
-            }`}
-          />
-        </button>
+
+        {/* Immediate Entry Options */}
+        {conditions.entryType === 'immediate' && (
+          <div className={`p-3 rounded-lg ${isDark ? 'bg-gray-800/50' : 'bg-gray-50'} space-y-3`}>
+            <div>
+              <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                Order Type
+              </label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={conditions.orderType === 'market' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onChange({ ...conditions, orderType: 'market' })}
+                  className="flex-1"
+                >
+                  Market Order
+                </Button>
+                <Button
+                  type="button"
+                  variant={conditions.orderType === 'limit' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onChange({ ...conditions, orderType: 'limit' })}
+                  className="flex-1"
+                >
+                  Limit Order
+                </Button>
+              </div>
+              <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                {conditions.orderType === 'market'
+                  ? 'Order will execute immediately at current market price'
+                  : 'Order will execute when price reaches your specified limit price'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Conditional Entry Options */}
+        {conditions.entryType === 'conditional' && (
+          <div className={`p-3 rounded-lg ${isDark ? 'bg-gray-800/50' : 'bg-gray-50'} space-y-3`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Enable Entry Conditions
+                </p>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
+                  Wait for technical indicators before starting trades
+                </p>
+              </div>
+              <button
+                onClick={() => onChange({ ...conditions, enabled: !conditions.enabled })}
+                className={`relative w-12 h-6 rounded-full transition-colors ${
+                  conditions.enabled
+                    ? 'bg-blue-500'
+                    : isDark
+                    ? 'bg-gray-700'
+                    : 'bg-gray-300'
+                }`}
+              >
+                <div
+                  className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                    conditions.enabled ? 'translate-x-6' : ''
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {conditions.enabled && (
+      {conditions.entryType === 'conditional' && conditions.enabled && (
         <>
           {/* Logic Gate Selection */}
           {conditions.conditions.length > 1 && (
