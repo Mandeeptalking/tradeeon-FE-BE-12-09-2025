@@ -42,7 +42,8 @@ export interface EntryCondition {
 export interface EntryConditionsData {
   entryType: 'immediate' | 'conditional'; // How to enter trades
   orderType?: 'market' | 'limit'; // Order type for immediate entry
-  limitPrice?: number; // Limit price when orderType is 'limit'
+  limitPrice?: number; // Limit price when orderType is 'limit' (for single pair)
+  limitPrices?: { [pair: string]: number }; // Limit prices per pair (for multiple pairs)
   enabled: boolean; // For conditional entry
   conditions: EntryCondition[];
   logicGate: 'AND' | 'OR'; // Logic gate between conditions
@@ -53,6 +54,7 @@ export interface EntryConditionsProps {
   onChange: (conditions: EntryConditionsData) => void;
   className?: string;
   showTitle?: boolean;
+  selectedPairs?: string[]; // Trading pairs from bot configuration
 }
 
 // Predefined entry condition templates
@@ -217,6 +219,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
   onChange,
   className = '',
   showTitle = true,
+  selectedPairs = [],
 }) => {
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
@@ -377,7 +380,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                   type="button"
                   variant={conditions.orderType === 'market' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => onChange({ ...conditions, orderType: 'market', limitPrice: undefined })}
+                  onClick={() => onChange({ ...conditions, orderType: 'market', limitPrice: undefined, limitPrices: undefined })}
                   className={`flex-1 ${
                     conditions.orderType === 'market' 
                       ? isDark 
@@ -395,7 +398,26 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                   type="button"
                   variant={conditions.orderType === 'limit' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => onChange({ ...conditions, orderType: 'limit', limitPrice: conditions.limitPrice || 0 })}
+                  onClick={() => {
+                    // Initialize limitPrices if multiple pairs, otherwise use limitPrice
+                    const newConditions = { ...conditions, orderType: 'limit' };
+                    if (selectedPairs.length > 1) {
+                      // Initialize limitPrices object for multiple pairs
+                      const initialLimitPrices: { [pair: string]: number } = {};
+                      selectedPairs.forEach(pair => {
+                        if (conditions.limitPrices?.[pair]) {
+                          initialLimitPrices[pair] = conditions.limitPrices[pair];
+                        }
+                      });
+                      newConditions.limitPrices = Object.keys(initialLimitPrices).length > 0 ? initialLimitPrices : undefined;
+                      newConditions.limitPrice = undefined;
+                    } else if (selectedPairs.length === 1) {
+                      // Use limitPrice for single pair
+                      newConditions.limitPrice = conditions.limitPrice || 0;
+                      newConditions.limitPrices = undefined;
+                    }
+                    onChange(newConditions);
+                  }}
                   className={`flex-1 ${
                     conditions.orderType === 'limit' 
                       ? isDark 
@@ -419,24 +441,99 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
 
             {/* Limit Price Input - Only show when Limit Order is selected */}
             {conditions.orderType === 'limit' && (
-              <div>
-                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
-                  Limit Price <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  type="number"
-                  step="0.00000001"
-                  value={conditions.limitPrice || ''}
-                  onChange={(e) => {
-                    const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                    onChange({ ...conditions, limitPrice: value });
-                  }}
-                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
-                  placeholder="Enter limit price"
-                />
-                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  The order will execute when the market price reaches this limit price
-                </p>
+              <div className="space-y-3">
+                {selectedPairs.length === 0 ? (
+                  <div className={`p-3 rounded-lg ${isDark ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-amber-50 border border-amber-200'}`}>
+                    <p className={`text-xs ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
+                      Please select trading pairs in Bot Configuration first
+                    </p>
+                  </div>
+                ) : selectedPairs.length === 1 ? (
+                  // Single pair - show single input
+                  <div>
+                    <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                      Limit Price for {selectedPairs[0].replace(/([A-Z]+)(USDT|BUSD|BTC|ETH)$/, '$1/$2')} <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.00000001"
+                      value={conditions.limitPrice || ''}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                        onChange({ ...conditions, limitPrice: value, limitPrices: undefined });
+                      }}
+                      className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                      placeholder="Enter limit price"
+                    />
+                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      The order will execute when the market price reaches this limit price
+                    </p>
+                  </div>
+                ) : (
+                  // Multiple pairs - show table with individual inputs
+                  <div>
+                    <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                      Limit Prices <span className="text-red-500">*</span>
+                    </label>
+                    <div className={`rounded-lg border ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-white'} overflow-hidden`}>
+                      <div className="max-h-64 overflow-y-auto">
+                        <table className="w-full">
+                          <thead className={`${isDark ? 'bg-gray-800 border-b border-gray-700' : 'bg-gray-50 border-b border-gray-200'}`}>
+                            <tr>
+                              <th className={`text-left py-2 px-3 text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                Trading Pair
+                              </th>
+                              <th className={`text-left py-2 px-3 text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                Limit Price
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedPairs.map((pair) => {
+                              const formattedPair = pair.replace(/([A-Z]+)(USDT|BUSD|BTC|ETH)$/, '$1/$2');
+                              const pairPrice = conditions.limitPrices?.[pair] || '';
+                              return (
+                                <tr key={pair} className={`border-b ${isDark ? 'border-gray-700/50' : 'border-gray-100'} last:border-0`}>
+                                  <td className={`py-2 px-3 text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                    {formattedPair}
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <Input
+                                      type="number"
+                                      step="0.00000001"
+                                      value={pairPrice}
+                                      onChange={(e) => {
+                                        const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                                        const newLimitPrices = {
+                                          ...(conditions.limitPrices || {}),
+                                          [pair]: value,
+                                        };
+                                        // Remove pair from limitPrices if value is empty
+                                        if (value === undefined) {
+                                          delete newLimitPrices[pair];
+                                        }
+                                        onChange({
+                                          ...conditions,
+                                          limitPrices: Object.keys(newLimitPrices).length > 0 ? newLimitPrices : undefined,
+                                          limitPrice: undefined, // Clear single limitPrice when using multiple
+                                        });
+                                      }}
+                                      className={`w-full ${isDark ? 'bg-gray-900 border-gray-700 text-white' : ''}`}
+                                      placeholder="Enter price"
+                                    />
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Set individual limit prices for each trading pair. Orders will execute when market prices reach these limits.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

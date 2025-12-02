@@ -72,6 +72,7 @@ const DCABot: React.FC = () => {
       entryType: 'immediate',
       orderType: 'market',
       limitPrice: undefined,
+      limitPrices: undefined,
       enabled: false,
       conditions: [],
       logicGate: 'AND',
@@ -292,6 +293,7 @@ const DCABot: React.FC = () => {
                   setConfig((prev) => ({ ...prev, entryConditions: newConditions }))
                 }
                 showTitle={false}
+                selectedPairs={config.botConfig.pairs}
               />
             </ConfigSection>
 
