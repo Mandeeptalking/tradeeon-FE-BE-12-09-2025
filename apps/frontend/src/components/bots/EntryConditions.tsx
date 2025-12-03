@@ -40,6 +40,8 @@ export interface EntryCondition {
   signalPeriod?: number; // For MACD
   stdDeviation?: number; // For Bollinger Bands (default: 2)
   multiplier?: number; // For Keltner Channels ATR multiplier (default: 1.5)
+  kPeriod?: number; // For Stochastic Oscillator %K period (default: 14)
+  dPeriod?: number; // For Stochastic Oscillator %D period (default: 3)
   comparisonPeriod?: number; // For MA crossovers (e.g., EMA 20 vs EMA 100)
   comparisonMaType?: 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL'; // Type of MA to compare against
   overboughtLevel?: number; // Custom overbought level for RSI (default: 70), Stochastic (default: 80), Williams %R (default: -20), CCI (default: +100), and MFI (default: 80)
@@ -2541,6 +2543,54 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 />
                                 <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                   Default: 1.5 (ATR multiplier for channel width)
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Stochastic Oscillator Parameters */}
+                          {condition.indicator === 'STOCHASTIC' && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  %K Period
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max="50"
+                                  value={condition.kPeriod !== undefined ? condition.kPeriod : ''}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      kPeriod: parseInt(e.target.value) || undefined,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="14"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: 14 (lookback period for %K calculation)
+                                </p>
+                              </div>
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  %D Period
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max="20"
+                                  value={condition.dPeriod !== undefined ? condition.dPeriod : ''}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      dPeriod: parseInt(e.target.value) || undefined,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="3"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: 3 (smoothing period for %D, SMA of %K)
                                 </p>
                               </div>
                             </div>
