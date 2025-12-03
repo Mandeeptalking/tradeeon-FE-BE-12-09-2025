@@ -1642,26 +1642,28 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                     {(condition.comparisonMaType || condition.indicator) === condition.indicator ? `${condition.indicator} 2` : 'Comparison MA Type'}
                                   </label>
                                   {(condition.comparisonMaType || condition.indicator) === condition.indicator ? (
-                                    <Input
-                                      type="number"
-                                      min="1"
-                                      value={condition.comparisonPeriod !== undefined && condition.comparisonPeriod !== null ? condition.comparisonPeriod : ''}
-                                      onChange={(e) => {
-                                        const compPeriod = e.target.value ? parseInt(e.target.value) : undefined;
-                                        // Warn if comparisonPeriod equals period for same MA type
-                                        if (compPeriod && compPeriod === condition.period && condition.indicator === condition.comparisonMaType) {
-                                          // Still allow but will show warning
-                                        }
-                                        handleUpdateCondition(condition.id, { comparisonPeriod: compPeriod });
-                                      }}
-                                      className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
-                                      placeholder={condition.indicator === 'EMA' ? '200' : '100'}
-                                    />
-                                    {condition.comparisonPeriod !== undefined && condition.comparisonPeriod <= 0 && (
-                                      <p className={`text-xs mt-1 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                                        ⚠️ Period must be greater than 0
-                                      </p>
-                                    )}
+                                    <>
+                                      <Input
+                                        type="number"
+                                        min="1"
+                                        value={condition.comparisonPeriod !== undefined && condition.comparisonPeriod !== null ? condition.comparisonPeriod : ''}
+                                        onChange={(e) => {
+                                          const compPeriod = e.target.value ? parseInt(e.target.value) : undefined;
+                                          // Warn if comparisonPeriod equals period for same MA type
+                                          if (compPeriod && compPeriod === condition.period && condition.indicator === condition.comparisonMaType) {
+                                            // Still allow but will show warning
+                                          }
+                                          handleUpdateCondition(condition.id, { comparisonPeriod: compPeriod });
+                                        }}
+                                        className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                        placeholder={condition.indicator === 'EMA' ? '200' : '100'}
+                                      />
+                                      {condition.comparisonPeriod !== undefined && condition.comparisonPeriod <= 0 && (
+                                        <p className={`text-xs mt-1 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                                          ⚠️ Period must be greater than 0
+                                        </p>
+                                      )}
+                                    </>
                                   ) : (
                                     <Select
                                       value={condition.comparisonMaType || condition.indicator}
