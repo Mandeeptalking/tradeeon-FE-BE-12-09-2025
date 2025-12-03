@@ -1850,11 +1850,12 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 <Input
                                   type="number"
                                   min="1"
-                                  value={condition.fastPeriod || ''}
+                                  value={condition.fastPeriod !== undefined ? condition.fastPeriod : 12}
                                   onChange={(e) => {
-                                    const fast = parseInt(e.target.value) || undefined;
+                                    const fast = parseInt(e.target.value) || 12;
                                     // Ensure fast < slow if slow is set
-                                    if (fast && condition.slowPeriod && fast >= condition.slowPeriod) {
+                                    const slow = condition.slowPeriod !== undefined ? condition.slowPeriod : 26;
+                                    if (fast >= slow) {
                                       return; // Don't update if invalid
                                     }
                                     handleUpdateCondition(condition.id, { fastPeriod: fast });
@@ -1875,11 +1876,12 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 <Input
                                   type="number"
                                   min="1"
-                                  value={condition.slowPeriod || ''}
+                                  value={condition.slowPeriod !== undefined ? condition.slowPeriod : 26}
                                   onChange={(e) => {
-                                    const slow = parseInt(e.target.value) || undefined;
+                                    const slow = parseInt(e.target.value) || 26;
                                     // Ensure slow > fast if fast is set
-                                    if (slow && condition.fastPeriod && slow <= condition.fastPeriod) {
+                                    const fast = condition.fastPeriod !== undefined ? condition.fastPeriod : 12;
+                                    if (slow <= fast) {
                                       return; // Don't update if invalid
                                     }
                                     handleUpdateCondition(condition.id, { slowPeriod: slow });
@@ -1887,7 +1889,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                   className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
                                   placeholder="26"
                                 />
-                                {condition.fastPeriod && condition.slowPeriod && condition.fastPeriod >= condition.slowPeriod && (
+                                {((condition.fastPeriod !== undefined ? condition.fastPeriod : 12) >= (condition.slowPeriod !== undefined ? condition.slowPeriod : 26)) && (
                                   <p className={`text-xs mt-1 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
                                     ⚠️ Slow period must be greater than fast period
                                   </p>
@@ -1899,10 +1901,11 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 </label>
                                 <Input
                                   type="number"
-                                  value={condition.signalPeriod || ''}
+                                  min="1"
+                                  value={condition.signalPeriod !== undefined ? condition.signalPeriod : 9}
                                   onChange={(e) =>
                                     handleUpdateCondition(condition.id, {
-                                      signalPeriod: parseInt(e.target.value) || undefined,
+                                      signalPeriod: parseInt(e.target.value) || 9,
                                     })
                                   }
                                   className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
