@@ -747,6 +747,19 @@ const priceActionOperatorNeedsCompare = (operator: string): boolean => {
   ].includes(operator);
 };
 
+// Helper function to check if volume operator needs compare value
+const volumeOperatorNeedsCompare = (operator: string): boolean => {
+  return [
+    'crosses_above_level', 'crosses_below_level', 'greater_than',
+    'less_than', 'equal_to', 'not_equal'
+  ].includes(operator);
+};
+
+// Helper function to check if volume operator is spike/drop
+const isVolumeSpikeOperator = (operator: string): boolean => {
+  return ['volume_spike', 'volume_drop'].includes(operator);
+};
+
 // Indicator components - what parts of each indicator can be used in conditions
 const INDICATOR_COMPONENTS: Record<string, Array<{ value: string; label: string; description: string }>> = {
   RSI: [
