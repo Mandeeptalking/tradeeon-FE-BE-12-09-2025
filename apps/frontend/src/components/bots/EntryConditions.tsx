@@ -27,11 +27,51 @@ import {
   SelectValue,
 } from '../ui/select';
 
+// Price Action Types
+export type PriceActionComponent = 'open' | 'close' | 'high' | 'low';
+
+export type PriceActionOperator =
+  // Level-based
+  | 'greater_than'
+  | 'less_than'
+  | 'equal_to'
+  | 'not_equal'
+  | 'crosses_above_level'
+  | 'crosses_below_level'
+  // Price-to-price
+  | 'crosses_above_close'
+  | 'crosses_below_close'
+  | 'crosses_above_high'
+  | 'crosses_below_low'
+  | 'close_gt_prev_close'
+  | 'close_lt_prev_close'
+  // Pattern-based
+  | 'inside_bar'
+  | 'outside_bar'
+  | 'bullish_engulfing'
+  | 'bearish_engulfing'
+  | 'doji'
+  | 'hammer'
+  | 'gap_up'
+  | 'gap_down'
+  | 'higher_high'
+  | 'higher_low'
+  | 'lower_high'
+  | 'lower_low';
+
+export type PriceActionCompareWithType =
+  | 'none'             // for pure patterns like inside bar / doji
+  | 'value'            // static number
+  | 'previous_open'
+  | 'previous_close'
+  | 'previous_high'
+  | 'previous_low';
+
 export interface EntryCondition {
   id: string;
   name: string;
   enabled: boolean;
-  indicator: string; // All indicators from clean charts
+  indicator: string; // All indicators from clean charts, or "Price" for price action, "Volume" for volume
   component?: string; // Component of the indicator (e.g., 'rsi_line', 'macd_line', 'histogram')
   operator: string; // Operator specific to indicator/component
   value?: number;
@@ -58,6 +98,19 @@ export interface EntryCondition {
   // Additional parameters for specific indicators
   maType?: 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'KAMA' | 'MAMA' | 'VWMA' | 'Hull'; // For MA types
   source?: 'close' | 'open' | 'high' | 'low' | 'hlc3' | 'ohlc4'; // Price source
+  // Price Action specific fields (when indicator === "Price")
+  priceField?: PriceActionComponent; // Which price field to use for price action
+  priceActionOperator?: PriceActionOperator; // Price action specific operator
+  priceActionCompareWith?: PriceActionCompareWithType; // What to compare price to
+  compareValue?: number; // Only when compareWithType === "value"
+  // Legacy price action fields (for backward compatibility)
+  compareTo?: 'value' | 'ma' | 'price_level'; // What to compare price to
+  maPeriod?: number; // Moving average period for price action
+  percentage?: number; // Percentage offset from MA (e.g., 5 = 5% above MA)
+  rhsPriceField?: 'close' | 'open' | 'high' | 'low'; // Right-hand side price field for price_level comparison
+  // Volume specific fields
+  compareToVolume?: 'value' | 'avg_volume' | 'previous' | 'indicator'; // What to compare volume to
+  volumePercentage?: number; // Percentage above/below average (e.g., 150 = 150% of average)
 }
 
 export interface EntryConditionsData {
@@ -597,6 +650,71 @@ const INDICATORS = [
   { value: 'Price', label: 'Price Action', category: 'Price', icon: Zap },
 ];
 
+// Price Action Components
+const PRICE_ACTION_COMPONENTS: { value: PriceActionComponent; label: string; description: string }[] = [
+  { value: 'close', label: 'Close Price', description: 'Closing price of the candle' },
+  { value: 'open', label: 'Open Price', description: 'Opening price of the candle' },
+  { value: 'high', label: 'High Price', description: 'Highest price of the candle' },
+  { value: 'low', label: 'Low Price', description: 'Lowest price of the candle' },
+];
+
+// Price Action Operators
+const PRICE_ACTION_OPERATORS: { value: PriceActionOperator; label: string; category: 'level' | 'price-to-price' | 'pattern'; needsCompare: boolean }[] = [
+  // Level-based
+  { value: 'crosses_above_level', label: 'Crosses Above Level', category: 'level', needsCompare: true },
+  { value: 'crosses_below_level', label: 'Crosses Below Level', category: 'level', needsCompare: true },
+  { value: 'greater_than', label: 'Greater Than', category: 'level', needsCompare: true },
+  { value: 'less_than', label: 'Less Than', category: 'level', needsCompare: true },
+  { value: 'equal_to', label: 'Equal To', category: 'level', needsCompare: true },
+  { value: 'not_equal', label: 'Not Equal', category: 'level', needsCompare: true },
+  // Price-to-price
+  { value: 'crosses_above_close', label: 'Crosses Above Close', category: 'price-to-price', needsCompare: false },
+  { value: 'crosses_below_close', label: 'Crosses Below Close', category: 'price-to-price', needsCompare: false },
+  { value: 'crosses_above_high', label: 'Crosses Above High', category: 'price-to-price', needsCompare: false },
+  { value: 'crosses_below_low', label: 'Crosses Below Low', category: 'price-to-price', needsCompare: false },
+  { value: 'close_gt_prev_close', label: 'Close > Previous Close', category: 'price-to-price', needsCompare: false },
+  { value: 'close_lt_prev_close', label: 'Close < Previous Close', category: 'price-to-price', needsCompare: false },
+  // Pattern-based
+  { value: 'inside_bar', label: 'Inside Bar', category: 'pattern', needsCompare: false },
+  { value: 'outside_bar', label: 'Outside Bar', category: 'pattern', needsCompare: false },
+  { value: 'bullish_engulfing', label: 'Bullish Engulfing Candle', category: 'pattern', needsCompare: false },
+  { value: 'bearish_engulfing', label: 'Bearish Engulfing Candle', category: 'pattern', needsCompare: false },
+  { value: 'doji', label: 'Doji', category: 'pattern', needsCompare: false },
+  { value: 'hammer', label: 'Hammer / Pin Bar', category: 'pattern', needsCompare: false },
+  { value: 'gap_up', label: 'Gap Up', category: 'pattern', needsCompare: false },
+  { value: 'gap_down', label: 'Gap Down', category: 'pattern', needsCompare: false },
+  { value: 'higher_high', label: 'Higher High', category: 'pattern', needsCompare: false },
+  { value: 'higher_low', label: 'Higher Low', category: 'pattern', needsCompare: false },
+  { value: 'lower_high', label: 'Lower High', category: 'pattern', needsCompare: false },
+  { value: 'lower_low', label: 'Lower Low', category: 'pattern', needsCompare: false },
+];
+
+// Price Action Compare With Options
+const PRICE_ACTION_COMPARE_WITH: { value: PriceActionCompareWithType; label: string }[] = [
+  { value: 'value', label: 'Value' },
+  { value: 'previous_open', label: 'Previous Open' },
+  { value: 'previous_close', label: 'Previous Close' },
+  { value: 'previous_high', label: 'Previous High' },
+  { value: 'previous_low', label: 'Previous Low' },
+];
+
+// Helper function to check if operator is pattern-based
+const isPatternOperator = (operator: string): boolean => {
+  return [
+    'inside_bar', 'outside_bar', 'bullish_engulfing', 'bearish_engulfing',
+    'doji', 'hammer', 'gap_up', 'gap_down',
+    'higher_high', 'higher_low', 'lower_high', 'lower_low'
+  ].includes(operator);
+};
+
+// Helper function to check if operator needs compare value
+const priceActionOperatorNeedsCompare = (operator: string): boolean => {
+  return [
+    'crosses_above_level', 'crosses_below_level', 'greater_than',
+    'less_than', 'equal_to', 'not_equal'
+  ].includes(operator);
+};
+
 // Indicator components - what parts of each indicator can be used in conditions
 const INDICATOR_COMPONENTS: Record<string, Array<{ value: string; label: string; description: string }>> = {
   RSI: [
@@ -1066,8 +1184,43 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
     }
   }, [conditions.conditions, expandedCondition]);
 
+  // Helper function to handle indicator change - reset Price Action fields when switching away
+  const handleIndicatorChange = (conditionId: string, newIndicator: string, currentCondition: EntryCondition) => {
+    const updates: Partial<EntryCondition> = { indicator: newIndicator };
+    
+    // If switching away from Price Action, clear Price Action specific fields
+    if (currentCondition.indicator === 'Price' && newIndicator !== 'Price') {
+      updates.priceField = undefined;
+      updates.priceActionOperator = undefined;
+      updates.priceActionCompareWith = undefined;
+      updates.compareValue = undefined;
+    }
+    
+    // If switching to Price Action, set defaults
+    if (newIndicator === 'Price' && currentCondition.indicator !== 'Price') {
+      updates.priceField = 'close';
+      updates.component = 'close'; // For backward compatibility
+      const defaultOp = PRICE_ACTION_OPERATORS[0]?.value;
+      if (defaultOp) {
+        updates.operator = defaultOp;
+        updates.priceActionOperator = defaultOp as PriceActionOperator;
+        if (priceActionOperatorNeedsCompare(defaultOp)) {
+          updates.priceActionCompareWith = 'value';
+        } else {
+          updates.priceActionCompareWith = 'none';
+        }
+      }
+    }
+    
+    handleUpdateCondition(conditionId, updates, true);
+  };
+
   // Helper function to determine if an operator needs a value input
   const operatorNeedsValue = (operator: string, indicator: string, component?: string): boolean => {
+    // Price Action operators handled separately
+    if (indicator === 'Price') {
+      return false; // Price Action uses compareValue, not value
+    }
     // Operators that don't need values
     const noValueOperators = [
       'crosses_above_zero',
@@ -1297,6 +1450,74 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
   };
 
   const formatConditionDescription = (condition: EntryCondition): string => {
+    // Special handling for Price Action conditions
+    if (condition.indicator === 'Price') {
+      const priceField = condition.priceField || condition.component || 'close';
+      const operator = condition.priceActionOperator || condition.operator;
+      const compareWith = condition.priceActionCompareWith;
+      
+      const priceFieldLabel = priceField === 'close' ? 'Close Price' : 
+                              priceField === 'open' ? 'Open Price' :
+                              priceField === 'high' ? 'High Price' : 'Low Price';
+      
+      // Pattern-based operators
+      if (isPatternOperator(operator)) {
+        const patternLabels: Record<string, string> = {
+          'inside_bar': 'Inside Bar',
+          'outside_bar': 'Outside Bar',
+          'bullish_engulfing': 'Bullish Engulfing Candle',
+          'bearish_engulfing': 'Bearish Engulfing Candle',
+          'doji': 'Doji',
+          'hammer': 'Hammer / Pin Bar',
+          'gap_up': 'Gap Up',
+          'gap_down': 'Gap Down',
+          'higher_high': 'Higher High',
+          'higher_low': 'Higher Low',
+          'lower_high': 'Lower High',
+          'lower_low': 'Lower Low',
+        };
+        return `${patternLabels[operator] || operator} on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      }
+      
+      // Price-to-price operators
+      if (!priceActionOperatorNeedsCompare(operator)) {
+        const opLabels: Record<string, string> = {
+          'crosses_above_close': 'Crosses Above Close',
+          'crosses_below_close': 'Crosses Below Close',
+          'crosses_above_high': 'Crosses Above High',
+          'crosses_below_low': 'Crosses Below Low',
+          'close_gt_prev_close': 'Close > Previous Close',
+          'close_lt_prev_close': 'Close < Previous Close',
+        };
+        return `${priceFieldLabel} ${opLabels[operator] || operator} on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      }
+      
+      // Level-based operators
+      const opLabels: Record<string, string> = {
+        'crosses_above_level': 'Crosses Above',
+        'crosses_below_level': 'Crosses Below',
+        'greater_than': 'Greater Than',
+        'less_than': 'Less Than',
+        'equal_to': 'Equal To',
+        'not_equal': 'Not Equal',
+      };
+      
+      if (compareWith === 'value') {
+        const level = condition.compareValue || condition.value || 'X';
+        return `${priceFieldLabel} ${opLabels[operator] || operator} ${level} on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (compareWith && compareWith !== 'none') {
+        const compareLabels: Record<string, string> = {
+          'previous_open': 'Previous Open',
+          'previous_close': 'Previous Close',
+          'previous_high': 'Previous High',
+          'previous_low': 'Previous Low',
+        };
+        return `${priceFieldLabel} ${opLabels[operator] || operator} ${compareLabels[compareWith] || compareWith} on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      }
+      
+      return `${priceFieldLabel} ${opLabels[operator] || operator} on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+    }
+    
     const indicator = INDICATORS.find((ind) => ind.value === condition.indicator);
     const component = condition.component 
       ? INDICATOR_COMPONENTS[condition.indicator]?.find((c) => c.value === condition.component)
@@ -2187,8 +2408,54 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                             </Select>
                           </div>
                           
-                          {/* Component Selection */}
-                          {INDICATOR_COMPONENTS[condition.indicator] && INDICATOR_COMPONENTS[condition.indicator].length > 0 && (
+                          {/* Component Selection - Price Action */}
+                          {condition.indicator === 'Price' && (
+                            <div>
+                              <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                Price Component
+                              </label>
+                              <Select
+                                value={condition.priceField || condition.component || 'close'}
+                                onValueChange={(value) => {
+                                  const updates: Partial<EntryCondition> = {
+                                    priceField: value as PriceActionComponent,
+                                    component: value, // Keep for backward compatibility
+                                    // Reset operator and compare settings when component changes
+                                    priceActionOperator: undefined,
+                                    priceActionCompareWith: undefined,
+                                    compareValue: undefined,
+                                  };
+                                  // Set default operator
+                                  const defaultOp = PRICE_ACTION_OPERATORS[0]?.value;
+                                  if (defaultOp) {
+                                    updates.operator = defaultOp;
+                                    updates.priceActionOperator = defaultOp as PriceActionOperator;
+                                    if (!priceActionOperatorNeedsCompare(defaultOp)) {
+                                      updates.priceActionCompareWith = 'none';
+                                    }
+                                  }
+                                  handleUpdateCondition(condition.id, updates, true);
+                                }}
+                              >
+                                <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
+                                  <SelectValue placeholder="Select price component" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {PRICE_ACTION_COMPONENTS.map((comp) => (
+                                    <SelectItem key={comp.value} value={comp.value}>
+                                      <div>
+                                        <div className="font-medium">{comp.label}</div>
+                                        <div className="text-xs text-gray-500">{comp.description}</div>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                          
+                          {/* Component Selection - Regular Indicators */}
+                          {condition.indicator !== 'Price' && INDICATOR_COMPONENTS[condition.indicator] && INDICATOR_COMPONENTS[condition.indicator].length > 0 && (
                             <div>
                               <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
                                 Component
@@ -2231,36 +2498,89 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                         </div>
 
                         <div className="grid grid-cols-3 gap-4">
-                          <div>
-                            <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
-                              Operator
-                            </label>
-                            <Select
-                              value={condition.operator}
-                              onValueChange={(value) => {
-                                const updates: Partial<EntryCondition> = { operator: value };
-                                // If MA crossover operator is selected, default comparisonMaType to same as indicator
-                                if (['crosses_above_ma', 'crosses_below_ma', 'greater_than_ma', 'less_than_ma'].includes(value) && 
-                                    ['EMA', 'SMA', 'WMA', 'TEMA', 'HULL'].includes(condition.indicator) &&
-                                    !condition.comparisonMaType) {
-                                  updates.comparisonMaType = condition.indicator as 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL';
-                                }
+                          {/* Price Action Operator Selection */}
+                          {condition.indicator === 'Price' && (
+                            <div>
+                              <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                Operator
+                              </label>
+                              <Select
+                                value={condition.priceActionOperator || condition.operator || ''}
+                                onValueChange={(value) => {
+                                  const op = value as PriceActionOperator;
+                                  const needsCompare = priceActionOperatorNeedsCompare(op);
+                                  const updates: Partial<EntryCondition> = {
+                                    operator: op,
+                                    priceActionOperator: op,
+                                  };
+                                  
+                                  // Set compareWith based on operator type
+                                  if (isPatternOperator(op)) {
+                                    updates.priceActionCompareWith = 'none';
+                                    updates.compareValue = undefined;
+                                  } else if (needsCompare) {
+                                    // Level-based operators need compareWith
+                                    updates.priceActionCompareWith = condition.priceActionCompareWith || 'value';
+                                  } else {
+                                    // Price-to-price operators don't need compareWith
+                                    updates.priceActionCompareWith = 'none';
+                                    updates.compareValue = undefined;
+                                  }
+                                  
+                                  handleUpdateCondition(condition.id, updates, true);
+                                }}
+                                disabled={!condition.priceField && !condition.component}
+                              >
+                                <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
+                                  <SelectValue placeholder={condition.priceField || condition.component ? "Select operator" : "Select price component first"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {PRICE_ACTION_OPERATORS.map((op) => (
+                                    <SelectItem key={op.value} value={op.value}>
+                                      <div>
+                                        <div className="font-medium">{op.label}</div>
+                                        <div className="text-xs text-gray-500 capitalize">{op.category.replace('-', ' ')}</div>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                          
+                          {/* Regular Indicator Operator Selection */}
+                          {condition.indicator !== 'Price' && (
+                            <div>
+                              <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                Operator
+                              </label>
+                              <Select
+                                value={condition.operator}
+                                onValueChange={(value) => {
+                                  const updates: Partial<EntryCondition> = { operator: value };
+                                  // If MA crossover operator is selected, default comparisonMaType to same as indicator
+                                  if (['crosses_above_ma', 'crosses_below_ma', 'greater_than_ma', 'less_than_ma'].includes(value) && 
+                                      ['EMA', 'SMA', 'WMA', 'TEMA', 'HULL'].includes(condition.indicator) &&
+                                      !condition.comparisonMaType) {
+                                    updates.comparisonMaType = condition.indicator as 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL';
+                                  }
                                   handleUpdateCondition(condition.id, updates, true);
                                 }}
                                 disabled={!condition.component || !COMPONENT_OPERATORS[condition.component]}
-                            >
-                              <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
-                                <SelectValue placeholder={condition.component ? "Select operator" : "Select component first"} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {(condition.component ? COMPONENT_OPERATORS[condition.component] : []).map((op) => (
-                                  <SelectItem key={op.value} value={op.value}>
-                                    {op.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
+                              >
+                                <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
+                                  <SelectValue placeholder={condition.component ? "Select operator" : "Select component first"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {(condition.component ? COMPONENT_OPERATORS[condition.component] : []).map((op) => (
+                                    <SelectItem key={op.value} value={op.value}>
+                                      {op.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
 
                           <div>
                             <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
@@ -2933,6 +3253,128 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                             </div>
                           )}
                         </div>
+
+                        {/* Price Action Compare With & Value Inputs */}
+                        {condition.indicator === 'Price' && condition.priceActionOperator && priceActionOperatorNeedsCompare(condition.priceActionOperator) && (
+                          <div className="space-y-4">
+                            <div>
+                              <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                Compare With
+                              </label>
+                              <Select
+                                value={condition.priceActionCompareWith || 'value'}
+                                onValueChange={(value) => {
+                                  const updates: Partial<EntryCondition> = {
+                                    priceActionCompareWith: value as PriceActionCompareWithType,
+                                  };
+                                  // Clear compareValue if not comparing to value
+                                  if (value !== 'value') {
+                                    updates.compareValue = undefined;
+                                    updates.value = undefined;
+                                  }
+                                  handleUpdateCondition(condition.id, updates, true);
+                                }}
+                              >
+                                <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {PRICE_ACTION_COMPARE_WITH.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            {/* Value Input - only show when comparing to value */}
+                            {condition.priceActionCompareWith === 'value' && (
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Price Level <span className="text-red-500">*</span>
+                                </label>
+                                <Input
+                                  key={`price-action-value-${condition.id}`}
+                                  type="number"
+                                  step="0.01"
+                                  value={condition.compareValue !== undefined ? condition.compareValue : (condition.value !== undefined ? condition.value : '')}
+                                  onChange={(e) => {
+                                    const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                                    handleUpdateCondition(condition.id, {
+                                      compareValue: val,
+                                      value: val, // Keep for backward compatibility
+                                    });
+                                  }}
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="50000"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  {condition.priceField === 'close' && 'Close price'}
+                                  {condition.priceField === 'open' && 'Open price'}
+                                  {condition.priceField === 'high' && 'High price'}
+                                  {condition.priceField === 'low' && 'Low price'}
+                                  {' '}
+                                  {condition.priceActionOperator === 'crosses_above_level' && 'crosses above'}
+                                  {condition.priceActionOperator === 'crosses_below_level' && 'crosses below'}
+                                  {condition.priceActionOperator === 'greater_than' && 'is greater than'}
+                                  {condition.priceActionOperator === 'less_than' && 'is less than'}
+                                  {condition.priceActionOperator === 'equal_to' && 'equals'}
+                                  {condition.priceActionOperator === 'not_equal' && 'does not equal'}
+                                  {' '}
+                                  {condition.compareValue || 'this level'}
+                                </p>
+                              </div>
+                            )}
+                            
+                            {/* Description for previous candle comparisons */}
+                            {condition.priceActionCompareWith && condition.priceActionCompareWith !== 'value' && condition.priceActionCompareWith !== 'none' && (
+                              <div className={`p-3 rounded-lg ${isDark ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-blue-50 border border-blue-200'}`}>
+                                <p className={`text-xs ${isDark ? 'text-blue-300' : 'text-blue-800'}`}>
+                                  {condition.priceField === 'close' && 'Close price'}
+                                  {condition.priceField === 'open' && 'Open price'}
+                                  {condition.priceField === 'high' && 'High price'}
+                                  {condition.priceField === 'low' && 'Low price'}
+                                  {' '}
+                                  {condition.priceActionOperator === 'crosses_above_level' && 'crosses above'}
+                                  {condition.priceActionOperator === 'crosses_below_level' && 'crosses below'}
+                                  {condition.priceActionOperator === 'greater_than' && 'is greater than'}
+                                  {condition.priceActionOperator === 'less_than' && 'is less than'}
+                                  {condition.priceActionOperator === 'equal_to' && 'equals'}
+                                  {condition.priceActionOperator === 'not_equal' && 'does not equal'}
+                                  {' '}
+                                  {condition.priceActionCompareWith === 'previous_open' && 'previous candle\'s open'}
+                                  {condition.priceActionCompareWith === 'previous_close' && 'previous candle\'s close'}
+                                  {condition.priceActionCompareWith === 'previous_high' && 'previous candle\'s high'}
+                                  {condition.priceActionCompareWith === 'previous_low' && 'previous candle\'s low'}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Pattern-based operators description */}
+                        {condition.indicator === 'Price' && condition.priceActionOperator && isPatternOperator(condition.priceActionOperator) && (
+                          <div className={`p-3 rounded-lg ${isDark ? 'bg-purple-500/10 border border-purple-500/30' : 'bg-purple-50 border border-purple-200'}`}>
+                            <p className={`text-xs font-medium ${isDark ? 'text-purple-300' : 'text-purple-800'} mb-1`}>
+                              Pattern Detection
+                            </p>
+                            <p className={`text-xs ${isDark ? 'text-purple-400/80' : 'text-purple-700'}`}>
+                              {condition.priceActionOperator === 'inside_bar' && 'Current candle is completely inside the previous candle\'s range'}
+                              {condition.priceActionOperator === 'outside_bar' && 'Current candle completely engulfs the previous candle\'s range'}
+                              {condition.priceActionOperator === 'bullish_engulfing' && 'Current bullish candle completely engulfs the previous bearish candle'}
+                              {condition.priceActionOperator === 'bearish_engulfing' && 'Current bearish candle completely engulfs the previous bullish candle'}
+                              {condition.priceActionOperator === 'doji' && 'Open and close prices are very close (indecision pattern)'}
+                              {condition.priceActionOperator === 'hammer' && 'Small body at top with long lower wick (potential reversal)'}
+                              {condition.priceActionOperator === 'gap_up' && 'Current candle opens above previous candle\'s high'}
+                              {condition.priceActionOperator === 'gap_down' && 'Current candle opens below previous candle\'s low'}
+                              {condition.priceActionOperator === 'higher_high' && 'Current high is higher than previous high'}
+                              {condition.priceActionOperator === 'higher_low' && 'Current low is higher than previous low'}
+                              {condition.priceActionOperator === 'lower_high' && 'Current high is lower than previous high'}
+                              {condition.priceActionOperator === 'lower_low' && 'Current low is lower than previous low'}
+                            </p>
+                          </div>
+                        )}
 
                         {/* Value Inputs */}
                         {condition.operator === 'between' ? (

@@ -33,6 +33,33 @@ def evaluate_condition(df: pd.DataFrame, row_index: int, condition: Dict[str, An
         operator = condition.get("operator", ">")
         compare_with = condition.get("compareWith", "value")
         
+        # Pre-process volume conditions that need dataframe context
+        if condition_type == "volume" and compare_with == "previous_volume":
+            if row_index > 0:
+                prev_volume = df.iloc[row_index - 1].get("volume")
+                curr_volume = row.get("volume")
+                if prev_volume is not None and curr_volume is not None:
+                    return _apply_operator(float(curr_volume), float(prev_volume), operator)
+            return False
+        
+        # Pre-process volume MA conditions
+        if condition_type == "volume" and compare_with == "indicator_component":
+            rhs = condition.get("rhs")
+            if rhs and rhs.get("indicator") == "VOLUME_MA":
+                period = rhs.get("settings", {}).get("length", 20)
+                # Calculate volume MA if not already in dataframe
+                volume_ma_col = f"VOLUME_MA_{period}"
+                if volume_ma_col not in df.columns:
+                    df[volume_ma_col] = df["volume"].rolling(window=period).mean()
+                rhs_value = row.get(volume_ma_col)
+                volume_value = row.get("volume")
+                if rhs_value is not None and volume_value is not None:
+                    percentage = condition.get("percentage")
+                    if percentage is not None and percentage != 0:
+                        rhs_value = rhs_value * (1 + percentage / 100)
+                    return _apply_operator(float(volume_value), float(rhs_value), operator)
+                return False
+        
         if condition_type == "indicator":
             return _evaluate_indicator_condition(row, condition, operator, compare_with)
         elif condition_type == "price":
@@ -44,7 +71,7 @@ def evaluate_condition(df: pd.DataFrame, row_index: int, condition: Dict[str, An
             return False
             
     except Exception as e:
-        logger.error(f"Error evaluating condition: {e}")
+        logger.error(f"Error evaluating condition: {e}", exc_info=True)
         return False
 
 def _evaluate_indicator_condition(row: pd.Series, condition: Dict[str, Any], operator: str, compare_with: str) -> bool:
@@ -107,6 +134,11 @@ def _evaluate_price_condition(row: pd.Series, condition: Dict[str, Any], operato
     if price_value is None:
         return False
     
+    # Handle pattern-based operators (need previous candle data)
+    pattern_type = condition.get("patternType")
+    if pattern_type:
+        return _evaluate_price_pattern(row, condition, pattern_type)
+    
     if compare_with == "value":
         compare_value = condition.get("compareValue")
         
@@ -150,6 +182,16 @@ def _evaluate_price_condition(row: pd.Series, condition: Dict[str, Any], operato
         
         return _apply_operator(price_value, rhs_value, operator)
     
+    elif compare_with == "price_field":
+        # Compare one price field to another (e.g., close vs open, high vs low)
+        rhs_price_field = condition.get("rhsPriceField", "low")
+        rhs_value = _get_price_value(row, rhs_price_field)
+        
+        if rhs_value is None:
+            return False
+        
+        return _apply_operator(price_value, rhs_value, operator)
+    
     return False
 
 def _evaluate_volume_condition(row: pd.Series, condition: Dict[str, Any], operator: str, compare_with: str) -> bool:
@@ -183,11 +225,36 @@ def _evaluate_volume_condition(row: pd.Series, condition: Dict[str, Any], operat
         rhs_indicator = rhs.get("indicator")
         rhs_component = rhs.get("component", rhs_indicator)
         
-        rhs_value = _get_indicator_value(row, rhs_indicator, rhs_component)
+        # Handle volume moving average calculation
+        if rhs_indicator == "VOLUME_MA":
+            # Calculate volume MA from dataframe (need to pass df)
+            # For now, try to get from row if available
+            period = rhs.get("settings", {}).get("length", 20)
+            volume_ma_col = f"VOLUME_MA_{period}"
+            if volume_ma_col in row.index:
+                rhs_value = row[volume_ma_col]
+            else:
+                # Fallback: try to calculate from available data
+                # This would ideally be done at dataframe level
+                rhs_value = None
+        else:
+            rhs_value = _get_indicator_value(row, rhs_indicator, rhs_component)
+        
         if rhs_value is None:
             return False
         
+        # Handle percentage offset (e.g., volume > 150% of average)
+        percentage = condition.get("percentage")
+        if percentage is not None and percentage != 0:
+            rhs_value = rhs_value * (1 + percentage / 100)
+        
         return _apply_operator(volume_value, rhs_value, operator)
+    
+    elif compare_with == "previous_volume":
+        # Compare to previous bar's volume
+        # This requires dataframe context, so we'll need to handle it differently
+        # For now, return False - this should be handled at dataframe level
+        return False
     
     return False
 
@@ -233,6 +300,94 @@ def _get_indicator_value(row: pd.Series, indicator: str, component: str) -> Opti
                 continue
     
     return None
+
+def _evaluate_price_pattern_with_df(df: pd.DataFrame, row_index: int, condition: Dict[str, Any]) -> bool:
+    """Evaluate price pattern conditions using dataframe (needs previous candle)"""
+    if row_index < 1:  # Need at least 2 candles for patterns
+        return False
+    
+    try:
+        curr_row = df.iloc[row_index]
+        prev_row = df.iloc[row_index - 1]
+        
+        curr_open = _get_price_value(curr_row, "open")
+        curr_high = _get_price_value(curr_row, "high")
+        curr_low = _get_price_value(curr_row, "low")
+        curr_close = _get_price_value(curr_row, "close")
+        
+        prev_open = _get_price_value(prev_row, "open")
+        prev_high = _get_price_value(prev_row, "high")
+        prev_low = _get_price_value(prev_row, "low")
+        prev_close = _get_price_value(prev_row, "close")
+        
+        if any(v is None for v in [curr_open, curr_high, curr_low, curr_close, prev_open, prev_high, prev_low, prev_close]):
+            return False
+        
+        pattern_type = condition.get("patternType", "").lower()
+        
+        # Inside Bar: current candle is completely inside previous candle
+        if pattern_type == "inside_bar":
+            return curr_high <= prev_high and curr_low >= prev_low
+        
+        # Outside Bar: current candle completely engulfs previous candle
+        if pattern_type == "outside_bar":
+            return curr_high >= prev_high and curr_low <= prev_low
+        
+        # Bullish Engulfing: current bullish candle engulfs previous bearish candle
+        if pattern_type == "bullish_engulfing":
+            prev_bearish = prev_close < prev_open
+            curr_bullish = curr_close > curr_open
+            return prev_bearish and curr_bullish and curr_open < prev_close and curr_close > prev_open
+        
+        # Bearish Engulfing: current bearish candle engulfs previous bullish candle
+        if pattern_type == "bearish_engulfing":
+            prev_bullish = prev_close > prev_open
+            curr_bearish = curr_close < curr_open
+            return prev_bullish and curr_bearish and curr_open > prev_close and curr_close < prev_open
+        
+        # Doji: open and close are very close (within 0.1% of range)
+        if pattern_type == "doji":
+            body_size = abs(curr_close - curr_open)
+            candle_range = curr_high - curr_low
+            return candle_range > 0 and (body_size / candle_range) < 0.1
+        
+        # Hammer: small body at top with long lower wick
+        if pattern_type == "hammer":
+            body_size = abs(curr_close - curr_open)
+            lower_wick = min(curr_open, curr_close) - curr_low
+            upper_wick = curr_high - max(curr_open, curr_close)
+            candle_range = curr_high - curr_low
+            return candle_range > 0 and lower_wick > (2 * body_size) and upper_wick < (0.5 * body_size)
+        
+        # Gap Up: current opens above previous high
+        if pattern_type == "gap_up":
+            return curr_open > prev_high
+        
+        # Gap Down: current opens below previous low
+        if pattern_type == "gap_down":
+            return curr_open < prev_low
+        
+        # Higher High: current high > previous high
+        if pattern_type == "higher_high":
+            return curr_high > prev_high
+        
+        # Higher Low: current low > previous low
+        if pattern_type == "higher_low":
+            return curr_low > prev_low
+        
+        # Lower High: current high < previous high
+        if pattern_type == "lower_high":
+            return curr_high < prev_high
+        
+        # Lower Low: current low < previous low
+        if pattern_type == "lower_low":
+            return curr_low < prev_low
+        
+        return False
+        
+    except Exception as e:
+        logger.error(f"Error evaluating price pattern: {e}", exc_info=True)
+        return False
 
 def _get_price_value(row: pd.Series, field: str) -> Optional[float]:
     """Get price/volume value from row data"""
