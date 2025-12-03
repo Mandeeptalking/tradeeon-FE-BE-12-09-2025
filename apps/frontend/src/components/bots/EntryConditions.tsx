@@ -41,6 +41,8 @@ export interface EntryCondition {
   stdDeviation?: number; // For Bollinger Bands (default: 2)
   comparisonPeriod?: number; // For MA crossovers (e.g., EMA 20 vs EMA 100)
   comparisonMaType?: 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL'; // Type of MA to compare against
+  overboughtLevel?: number; // Custom overbought level for RSI (default: 70)
+  oversoldLevel?: number; // Custom oversold level for RSI (default: 30)
   timeframe: string;
   logicGate?: 'AND' | 'OR';
   // Additional parameters for specific indicators
@@ -72,54 +74,44 @@ export interface EntryConditionsProps {
 // Predefined entry condition templates
 const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
   {
-    name: 'RSI Oversold',
+    name: 'RSI Crosses Below Oversold',
     enabled: true,
     indicator: 'RSI',
     component: 'rsi_line',
-    operator: 'crosses_below',
-    value: 30,
+    operator: 'crosses_below_oversold',
     period: 14,
+    oversoldLevel: 30,
     timeframe: '1h',
   },
   {
-    name: 'RSI Overbought',
+    name: 'RSI Crosses Above Overbought',
     enabled: true,
     indicator: 'RSI',
     component: 'rsi_line',
-    operator: 'crosses_above',
-    value: 70,
+    operator: 'crosses_above_overbought',
     period: 14,
+    overboughtLevel: 70,
     timeframe: '1h',
   },
   {
-    name: 'RSI Crosses Below 30',
+    name: 'RSI Below Oversold Level',
     enabled: true,
     indicator: 'RSI',
     component: 'rsi_line',
-    operator: 'crosses_below',
-    value: 30,
+    operator: 'less_than_oversold',
     period: 14,
+    oversoldLevel: 30,
     timeframe: '4h',
   },
   {
-    name: 'RSI Crosses Above 70',
+    name: 'RSI Above Overbought Level',
     enabled: true,
     indicator: 'RSI',
     component: 'rsi_line',
-    operator: 'crosses_above',
-    value: 70,
+    operator: 'greater_than_overbought',
     period: 14,
+    overboughtLevel: 70,
     timeframe: '4h',
-  },
-  {
-    name: 'RSI Below 40',
-    enabled: true,
-    indicator: 'RSI',
-    component: 'rsi_line',
-    operator: 'less_than',
-    value: 40,
-    period: 14,
-    timeframe: '1h',
   },
   {
     name: 'MACD Bullish Crossover',
@@ -359,8 +351,6 @@ const INDICATORS = [
 const INDICATOR_COMPONENTS: Record<string, Array<{ value: string; label: string; description: string }>> = {
   RSI: [
     { value: 'rsi_line', label: 'RSI Line', description: 'RSI value (0-100)' },
-    { value: 'overbought', label: 'Overbought Level', description: 'RSI crosses above overbought level (default: 70)' },
-    { value: 'oversold', label: 'Oversold Level', description: 'RSI crosses below oversold level (default: 30)' },
   ],
   MACD: [
     { value: 'macd_line', label: 'MACD Line', description: 'MACD Line (12-period EMA - 26-period EMA)' },
@@ -441,22 +431,14 @@ const INDICATOR_COMPONENTS: Record<string, Array<{ value: string; label: string;
 const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }>> = {
   // RSI
   'rsi_line': [
-    { value: 'crosses_below', label: 'Crosses Below Level' },
-    { value: 'crosses_above', label: 'Crosses Above Level' },
-    { value: 'crosses_below_oversold', label: 'Crosses Below Oversold (30)' },
-    { value: 'crosses_above_overbought', label: 'Crosses Above Overbought (70)' },
-    { value: 'less_than', label: 'Less Than' },
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'equals', label: 'Equals' },
-    { value: 'between', label: 'Between' },
-  ],
-  'overbought': [
-    { value: 'crosses_above', label: 'RSI Crosses Above Overbought' },
-    { value: 'crosses_below', label: 'RSI Crosses Below Overbought' },
-  ],
-  'oversold': [
-    { value: 'crosses_above', label: 'RSI Crosses Above Oversold' },
-    { value: 'crosses_below', label: 'RSI Crosses Below Oversold' },
+    { value: 'crosses_above_overbought', label: 'Crosses Above Overbought Level' },
+    { value: 'crosses_below_overbought', label: 'Crosses Below Overbought Level' },
+    { value: 'crosses_above_oversold', label: 'Crosses Above Oversold Level' },
+    { value: 'crosses_below_oversold', label: 'Crosses Below Oversold Level' },
+    { value: 'greater_than_overbought', label: 'Greater Than Overbought Level' },
+    { value: 'less_than_overbought', label: 'Less Than Overbought Level' },
+    { value: 'greater_than_oversold', label: 'Greater Than Oversold Level' },
+    { value: 'less_than_oversold', label: 'Less Than Oversold Level' },
   ],
   
   // MACD
@@ -769,13 +751,14 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       'crosses_below_zero',
       'greater_than_zero',
       'less_than_zero',
-      'crosses_above_overbought',
-      'crosses_below_oversold',
-      'crosses_above_oversold',
-      'crosses_below_overbought',
     ];
     
     if (noValueOperators.includes(operator)) {
+      return false;
+    }
+    
+    // RSI operators don't need value field (they use overboughtLevel/oversoldLevel)
+    if (indicator === 'RSI' && ['crosses_above_overbought', 'crosses_below_overbought', 'crosses_above_oversold', 'crosses_below_oversold', 'greater_than_overbought', 'less_than_overbought', 'greater_than_oversold', 'less_than_oversold'].includes(operator)) {
       return false;
     }
     
@@ -855,7 +838,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
   const handleAddCustom = () => {
     const defaultIndicator = 'RSI';
     const defaultComponent = INDICATOR_COMPONENTS[defaultIndicator]?.[0]?.value || '';
-    const defaultOperator = defaultComponent ? COMPONENT_OPERATORS[defaultComponent]?.[0]?.value || 'crosses_below' : 'crosses_below';
+    const defaultOperator = defaultComponent ? COMPONENT_OPERATORS[defaultComponent]?.[0]?.value || 'crosses_below_oversold' : 'crosses_below_oversold';
     
     const newCondition: EntryCondition = {
       id: `condition_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -864,9 +847,12 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       indicator: defaultIndicator,
       component: defaultComponent,
       operator: defaultOperator,
-      value: 30,
       period: 14,
       timeframe: '1h',
+      ...(defaultIndicator === 'RSI' && {
+        overboughtLevel: 70,
+        oversoldLevel: 30,
+      }),
     };
     
     onChange({
@@ -928,6 +914,30 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                           condition.operator === 'greater_than_ma' ? 'Greater Than' :
                           'Less Than';
       return `${indicator.label} ${condition.period} ${operatorText} ${condition.comparisonMaType} ${condition.comparisonPeriod} on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+    }
+    
+    // Special handling for RSI overbought/oversold conditions
+    if (condition.indicator === 'RSI' && condition.component === 'rsi_line') {
+      const overboughtLevel = condition.overboughtLevel ?? 70;
+      const oversoldLevel = condition.oversoldLevel ?? 30;
+      
+      if (condition.operator === 'crosses_above_overbought') {
+        return `RSI ${condition.period || 14} Crosses Above Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'crosses_below_overbought') {
+        return `RSI ${condition.period || 14} Crosses Below Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'crosses_above_oversold') {
+        return `RSI ${condition.period || 14} Crosses Above Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'crosses_below_oversold') {
+        return `RSI ${condition.period || 14} Crosses Below Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'greater_than_overbought') {
+        return `RSI ${condition.period || 14} Greater Than Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'less_than_overbought') {
+        return `RSI ${condition.period || 14} Less Than Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'greater_than_oversold') {
+        return `RSI ${condition.period || 14} Greater Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'less_than_oversold') {
+        return `RSI ${condition.period || 14} Less Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      }
     }
     
     let desc = indicator.label;
@@ -1615,6 +1625,54 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                             </div>
                           )}
                           
+                          {/* RSI Overbought/Oversold Levels */}
+                          {condition.indicator === 'RSI' && condition.component === 'rsi_line' && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Overbought Level
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={condition.overboughtLevel !== undefined ? condition.overboughtLevel : 70}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      overboughtLevel: parseInt(e.target.value) || 70,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="70"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: 70 (typical range: 65-80)
+                                </p>
+                              </div>
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Oversold Level
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={condition.oversoldLevel !== undefined ? condition.oversoldLevel : 30}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      oversoldLevel: parseInt(e.target.value) || 30,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="30"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: 30 (typical range: 20-35)
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
                           {/* Moving Average Crossover Parameters */}
                           {['EMA', 'SMA', 'WMA', 'TEMA', 'HULL'].includes(condition.indicator) && 
                            (condition.operator === 'crosses_above_ma' || condition.operator === 'crosses_below_ma' || 
@@ -1921,12 +1979,18 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               {condition.operator === 'crosses_below' && condition.indicator === 'KELTNER_CHANNELS' && 'Triggers when price crosses below the channel'}
                               {condition.operator === 'crosses_above' && condition.indicator === 'VWAP' && 'Triggers when price crosses above VWAP'}
                               {condition.operator === 'crosses_below' && condition.indicator === 'VWAP' && 'Triggers when price crosses below VWAP'}
-                              {condition.operator === 'crosses_above' && (condition.component === 'overbought' || condition.component === 'oversold') && 'Triggers when indicator crosses above the level'}
-                              {condition.operator === 'crosses_below' && (condition.component === 'overbought' || condition.component === 'oversold') && 'Triggers when indicator crosses below the level'}
-                              {condition.operator === 'crosses_above_overbought' && 'Triggers when indicator crosses above overbought level'}
-                              {condition.operator === 'crosses_below_oversold' && 'Triggers when indicator crosses below oversold level'}
-                              {condition.operator === 'crosses_above_oversold' && 'Triggers when indicator crosses above oversold level'}
-                              {condition.operator === 'crosses_below_overbought' && 'Triggers when indicator crosses below overbought level'}
+                              {condition.operator === 'crosses_above_overbought' && condition.indicator === 'RSI' && `Triggers when RSI crosses above overbought level (${condition.overboughtLevel ?? 70})`}
+                              {condition.operator === 'crosses_below_overbought' && condition.indicator === 'RSI' && `Triggers when RSI crosses below overbought level (${condition.overboughtLevel ?? 70})`}
+                              {condition.operator === 'crosses_above_oversold' && condition.indicator === 'RSI' && `Triggers when RSI crosses above oversold level (${condition.oversoldLevel ?? 30})`}
+                              {condition.operator === 'crosses_below_oversold' && condition.indicator === 'RSI' && `Triggers when RSI crosses below oversold level (${condition.oversoldLevel ?? 30})`}
+                              {condition.operator === 'greater_than_overbought' && condition.indicator === 'RSI' && `Triggers when RSI is greater than overbought level (${condition.overboughtLevel ?? 70})`}
+                              {condition.operator === 'less_than_overbought' && condition.indicator === 'RSI' && `Triggers when RSI is less than overbought level (${condition.overboughtLevel ?? 70})`}
+                              {condition.operator === 'greater_than_oversold' && condition.indicator === 'RSI' && `Triggers when RSI is greater than oversold level (${condition.oversoldLevel ?? 30})`}
+                              {condition.operator === 'less_than_oversold' && condition.indicator === 'RSI' && `Triggers when RSI is less than oversold level (${condition.oversoldLevel ?? 30})`}
+                              {condition.operator === 'crosses_above_overbought' && condition.indicator !== 'RSI' && 'Triggers when indicator crosses above overbought level'}
+                              {condition.operator === 'crosses_below_oversold' && condition.indicator !== 'RSI' && 'Triggers when indicator crosses below oversold level'}
+                              {condition.operator === 'crosses_above_oversold' && condition.indicator !== 'RSI' && 'Triggers when indicator crosses above oversold level'}
+                              {condition.operator === 'crosses_below_overbought' && condition.indicator !== 'RSI' && 'Triggers when indicator crosses below overbought level'}
                               {condition.operator === 'greater_than_zero' && 'Triggers when indicator is greater than zero'}
                               {condition.operator === 'less_than_zero' && 'Triggers when indicator is less than zero'}
                               {condition.operator === 'greater_than_signal' && 'Triggers when MACD Line is greater than Signal Line'}
