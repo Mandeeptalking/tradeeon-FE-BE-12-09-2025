@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Target,
   Plus,
@@ -1224,22 +1224,25 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
     setExpandedCondition(newCondition.id);
   };
 
-  const handleUpdateCondition = (id: string, updates: Partial<EntryCondition>) => {
+  const handleUpdateCondition = useCallback((id: string, updates: Partial<EntryCondition>) => {
     // Preserve expanded state when updating
     const wasExpanded = expandedCondition === id;
     
+    // Create new conditions array without mutating the original
+    const updatedConditions = conditions.conditions.map((c) =>
+      c.id === id ? { ...c, ...updates } : c
+    );
+    
     onChange({
       ...conditions,
-      conditions: conditions.conditions.map((c) =>
-        c.id === id ? { ...c, ...updates } : c
-      ),
+      conditions: updatedConditions,
     });
     
     // Keep the condition expanded after update
     if (wasExpanded) {
       setExpandedCondition(id);
     }
-  };
+  }, [conditions, expandedCondition, onChange, setExpandedCondition]);
 
   const handleRemoveCondition = (id: string) => {
     onChange({
@@ -2086,6 +2089,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 Duration (Bars)
                               </label>
                               <Input
+                                key={`duration-${condition.id}`}
                                 type="number"
                                 min="1"
                                 value={condition.durationBars !== undefined ? condition.durationBars : ''}
@@ -2111,6 +2115,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               Condition Name
                             </label>
                             <Input
+                              key={`name-${condition.id}`}
                               value={condition.name}
                               onChange={(e) =>
                                 handleUpdateCondition(condition.id, { name: e.target.value })
