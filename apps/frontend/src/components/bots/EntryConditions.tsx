@@ -41,8 +41,8 @@ export interface EntryCondition {
   stdDeviation?: number; // For Bollinger Bands (default: 2)
   comparisonPeriod?: number; // For MA crossovers (e.g., EMA 20 vs EMA 100)
   comparisonMaType?: 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL'; // Type of MA to compare against
-  overboughtLevel?: number; // Custom overbought level for RSI (default: 70), Stochastic (default: 80), and Williams %R (default: -20)
-  oversoldLevel?: number; // Custom oversold level for RSI (default: 30), Stochastic (default: 20), and Williams %R (default: -80)
+  overboughtLevel?: number; // Custom overbought level for RSI (default: 70), Stochastic (default: 80), Williams %R (default: -20), and CCI (default: +100)
+  oversoldLevel?: number; // Custom oversold level for RSI (default: 30), Stochastic (default: 20), Williams %R (default: -80), and CCI (default: -100)
   timeframe: string;
   logicGate?: 'AND' | 'OR';
   // Additional parameters for specific indicators
@@ -405,9 +405,7 @@ const INDICATOR_COMPONENTS: Record<string, Array<{ value: string; label: string;
     { value: 'williams_line', label: 'Williams %R', description: 'Williams %R value (-100 to 0)' },
   ],
   CCI: [
-    { value: 'cci_line', label: 'CCI Line', description: 'Commodity Channel Index' },
-    { value: 'overbought', label: 'Overbought', description: 'Above +100' },
-    { value: 'oversold', label: 'Oversold', description: 'Below -100' },
+    { value: 'cci_line', label: 'CCI Line', description: 'Commodity Channel Index (typically -100 to +100, can extend beyond)' },
   ],
   MFI: [
     { value: 'mfi_line', label: 'MFI Line', description: 'Money Flow Index (0-100)' },
@@ -599,16 +597,30 @@ const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }
   
   // CCI
   'cci_line': [
-    { value: 'crosses_above', label: 'Crosses Above Level' },
-    { value: 'crosses_below', label: 'Crosses Below Level' },
+    // Crossovers with Zero Line
     { value: 'crosses_above_zero', label: 'Crosses Above Zero' },
     { value: 'crosses_below_zero', label: 'Crosses Below Zero' },
-    { value: 'crosses_above_overbought', label: 'Crosses Above Overbought (+100)' },
-    { value: 'crosses_below_oversold', label: 'Crosses Below Oversold (-100)' },
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'less_than', label: 'Less Than' },
-    { value: 'equals', label: 'Equals' },
-    { value: 'between', label: 'Between' },
+    // Crossovers with Overbought/Oversold Levels
+    { value: 'crosses_above_overbought', label: 'Crosses Above Overbought Level' },
+    { value: 'crosses_below_overbought', label: 'Crosses Below Overbought Level' },
+    { value: 'crosses_above_oversold', label: 'Crosses Above Oversold Level' },
+    { value: 'crosses_below_oversold', label: 'Crosses Below Oversold Level' },
+    // Comparisons with Zero Line
+    { value: 'greater_than_zero', label: 'Greater Than Zero' },
+    { value: 'less_than_zero', label: 'Less Than Zero' },
+    // Comparisons with Overbought/Oversold Levels
+    { value: 'greater_than_overbought', label: 'Greater Than Overbought Level' },
+    { value: 'less_than_overbought', label: 'Less Than Overbought Level' },
+    { value: 'greater_than_oversold', label: 'Greater Than Oversold Level' },
+    { value: 'less_than_oversold', label: 'Less Than Oversold Level' },
+    // Crossovers with Custom Level
+    { value: 'crosses_above', label: 'Crosses Above Level' },
+    { value: 'crosses_below', label: 'Crosses Below Level' },
+    // Comparisons with Custom Value
+    { value: 'greater_than', label: 'Greater Than Value' },
+    { value: 'less_than', label: 'Less Than Value' },
+    { value: 'equals', label: 'Equals Value' },
+    { value: 'between', label: 'Between Values' },
   ],
   
   // MFI
