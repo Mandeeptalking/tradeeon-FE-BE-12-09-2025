@@ -67,6 +67,30 @@ export type PriceActionCompareWithType =
   | 'previous_high'
   | 'previous_low';
 
+// Volume Types
+export type VolumeOperator =
+  // Level-based
+  | 'greater_than'
+  | 'less_than'
+  | 'equal_to'
+  | 'not_equal'
+  | 'crosses_above_level'
+  | 'crosses_below_level'
+  // Volume-to-volume
+  | 'crosses_above_avg'
+  | 'crosses_below_avg'
+  | 'volume_gt_prev_volume'
+  | 'volume_lt_prev_volume'
+  // Volume spike/drop
+  | 'volume_spike'      // Volume > X% above average
+  | 'volume_drop';      // Volume < X% below average
+
+export type VolumeCompareWithType =
+  | 'value'            // static number
+  | 'avg_volume'       // moving average of volume
+  | 'previous_volume'  // previous candle's volume
+  | 'indicator';       // volume indicator (OBV, VWAP)
+
 export interface EntryCondition {
   id: string;
   name: string;
@@ -108,9 +132,14 @@ export interface EntryCondition {
   maPeriod?: number; // Moving average period for price action
   percentage?: number; // Percentage offset from MA (e.g., 5 = 5% above MA)
   rhsPriceField?: 'close' | 'open' | 'high' | 'low'; // Right-hand side price field for price_level comparison
-  // Volume specific fields
+  // Volume specific fields (when indicator === "Volume")
+  volumeOperator?: VolumeOperator; // Volume specific operator
+  volumeCompareWith?: VolumeCompareWithType; // What to compare volume to
+  volumeCompareValue?: number; // Only when compareWith === "value"
+  volumePercentage?: number; // Percentage above/below average (e.g., 150 = 150% of average, for avg_volume comparisons)
+  volumePeriod?: number; // Period for average volume calculation (default: 20)
+  // Legacy volume fields (for backward compatibility)
   compareToVolume?: 'value' | 'avg_volume' | 'previous' | 'indicator'; // What to compare volume to
-  volumePercentage?: number; // Percentage above/below average (e.g., 150 = 150% of average)
 }
 
 export interface EntryConditionsData {
@@ -1450,6 +1479,58 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
   };
 
   const formatConditionDescription = (condition: EntryCondition): string => {
+    // Special handling for Volume conditions
+    if (condition.indicator === 'Volume') {
+      const operator = condition.volumeOperator || condition.operator;
+      const compareWith = condition.volumeCompareWith || condition.compareToVolume;
+      
+      const opLabels: Record<string, string> = {
+        'crosses_above_level': 'Crosses Above',
+        'crosses_below_level': 'Crosses Below',
+        'greater_than': 'Greater Than',
+        'less_than': 'Less Than',
+        'equal_to': 'Equal To',
+        'not_equal': 'Not Equal',
+        'crosses_above_avg': 'Crosses Above Average',
+        'crosses_below_avg': 'Crosses Below Average',
+        'volume_gt_prev_volume': '> Previous Volume',
+        'volume_lt_prev_volume': '< Previous Volume',
+        'volume_spike': 'Volume Spike',
+        'volume_drop': 'Volume Drop',
+      };
+      
+      // Spike/drop operators
+      if (isVolumeSpikeOperator(operator)) {
+        const percent = condition.volumePercentage !== undefined ? Math.abs(condition.volumePercentage) : 'X';
+        const period = condition.volumePeriod || condition.period || 20;
+        return `Volume ${opLabels[operator] || operator} (${percent}% ${operator === 'volume_spike' ? 'above' : 'below'} ${period}-bar avg) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      }
+      
+      // Volume-to-volume operators
+      if (!volumeOperatorNeedsCompare(operator)) {
+        const period = condition.volumePeriod || condition.period;
+        if (period) {
+          return `Volume ${opLabels[operator] || operator} (${period}-bar avg) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+        }
+        return `Volume ${opLabels[operator] || operator} on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      }
+      
+      // Level-based operators
+      if (compareWith === 'value') {
+        const level = condition.volumeCompareValue || condition.value || 'X';
+        return `Volume ${opLabels[operator] || operator} ${level} on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (compareWith === 'avg_volume') {
+        const period = condition.volumePeriod || condition.period || 20;
+        return `Volume ${opLabels[operator] || operator} ${period}-bar average on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (compareWith === 'previous_volume') {
+        return `Volume ${opLabels[operator] || operator} previous volume on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (compareWith === 'indicator') {
+        return `Volume ${opLabels[operator] || operator} volume indicator on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      }
+      
+      return `Volume ${opLabels[operator] || operator} on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+    }
+    
     // Special handling for Price Action conditions
     if (condition.indicator === 'Price') {
       const priceField = condition.priceField || condition.component || 'close';
@@ -2392,7 +2473,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                             <Select
                               value={condition.indicator}
                               onValueChange={(value: EntryCondition['indicator']) =>
-                                handleUpdateCondition(condition.id, { indicator: value }, true)
+                                handleIndicatorChange(condition.id, value, condition)
                               }
                             >
                               <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
@@ -2455,7 +2536,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                           )}
                           
                           {/* Component Selection - Regular Indicators */}
-                          {condition.indicator !== 'Price' && INDICATOR_COMPONENTS[condition.indicator] && INDICATOR_COMPONENTS[condition.indicator].length > 0 && (
+                          {condition.indicator !== 'Price' && condition.indicator !== 'Volume' && INDICATOR_COMPONENTS[condition.indicator] && INDICATOR_COMPONENTS[condition.indicator].length > 0 && (
                             <div>
                               <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
                                 Component
@@ -2498,6 +2579,59 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                         </div>
 
                         <div className="grid grid-cols-3 gap-4">
+                          {/* Volume Operator Selection */}
+                          {condition.indicator === 'Volume' && (
+                            <div>
+                              <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                Operator
+                              </label>
+                              <Select
+                                value={condition.volumeOperator || condition.operator || ''}
+                                onValueChange={(value) => {
+                                  const op = value as VolumeOperator;
+                                  const needsCompare = volumeOperatorNeedsCompare(op);
+                                  const updates: Partial<EntryCondition> = {
+                                    operator: op,
+                                    volumeOperator: op,
+                                  };
+                                  
+                                  // Set compareWith based on operator type
+                                  if (isVolumeSpikeOperator(op)) {
+                                    // Spike/drop operators use avg_volume with percentage
+                                    updates.volumeCompareWith = 'avg_volume';
+                                    updates.volumePercentage = op === 'volume_spike' ? 50 : -50; // Default 50% above or below
+                                  } else if (needsCompare) {
+                                    // Level-based operators need compareWith
+                                    updates.volumeCompareWith = condition.volumeCompareWith || 'value';
+                                  } else {
+                                    // Volume-to-volume operators
+                                    if (op === 'crosses_above_avg' || op === 'crosses_below_avg') {
+                                      updates.volumeCompareWith = 'avg_volume';
+                                    } else if (op === 'volume_gt_prev_volume' || op === 'volume_lt_prev_volume') {
+                                      updates.volumeCompareWith = 'previous_volume';
+                                    }
+                                  }
+                                  
+                                  handleUpdateCondition(condition.id, updates, true);
+                                }}
+                              >
+                                <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
+                                  <SelectValue placeholder="Select operator" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {VOLUME_OPERATORS.map((op) => (
+                                    <SelectItem key={op.value} value={op.value}>
+                                      <div>
+                                        <div className="font-medium">{op.label}</div>
+                                        <div className="text-xs text-gray-500 capitalize">{op.category.replace('-', ' ')}</div>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                          
                           {/* Price Action Operator Selection */}
                           {condition.indicator === 'Price' && (
                             <div>
@@ -3253,6 +3387,192 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                             </div>
                           )}
                         </div>
+
+                        {/* Volume Compare With & Value Inputs */}
+                        {condition.indicator === 'Volume' && condition.volumeOperator && volumeOperatorNeedsCompare(condition.volumeOperator) && (
+                          <div className="space-y-4">
+                            <div>
+                              <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                Compare With
+                              </label>
+                              <Select
+                                value={condition.volumeCompareWith || condition.compareToVolume || 'value'}
+                                onValueChange={(value) => {
+                                  const updates: Partial<EntryCondition> = {
+                                    volumeCompareWith: value as VolumeCompareWithType,
+                                    compareToVolume: value as VolumeCompareWithType, // Keep for backward compatibility
+                                  };
+                                  // Clear compareValue if not comparing to value
+                                  if (value !== 'value') {
+                                    updates.volumeCompareValue = undefined;
+                                    updates.value = undefined;
+                                  }
+                                  handleUpdateCondition(condition.id, updates, true);
+                                }}
+                              >
+                                <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {VOLUME_COMPARE_WITH.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      <div>
+                                        <div className="font-medium">{option.label}</div>
+                                        <div className="text-xs text-gray-500">{option.description}</div>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            {/* Value Input - only show when comparing to value */}
+                            {condition.volumeCompareWith === 'value' && (
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Volume Level <span className="text-red-500">*</span>
+                                </label>
+                                <Input
+                                  key={`volume-value-${condition.id}`}
+                                  type="number"
+                                  step="0.01"
+                                  value={condition.volumeCompareValue !== undefined ? condition.volumeCompareValue : (condition.value !== undefined ? condition.value : '')}
+                                  onChange={(e) => {
+                                    const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                                    handleUpdateCondition(condition.id, {
+                                      volumeCompareValue: val,
+                                      value: val, // Keep for backward compatibility
+                                    });
+                                  }}
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="1000000"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Volume {condition.volumeOperator === 'crosses_above_level' && 'crosses above'}
+                                  {condition.volumeOperator === 'crosses_below_level' && 'crosses below'}
+                                  {condition.volumeOperator === 'greater_than' && 'is greater than'}
+                                  {condition.volumeOperator === 'less_than' && 'is less than'}
+                                  {condition.volumeOperator === 'equal_to' && 'equals'}
+                                  {condition.volumeOperator === 'not_equal' && 'does not equal'}
+                                  {' '}
+                                  {condition.volumeCompareValue || condition.value || 'this level'}
+                                </p>
+                              </div>
+                            )}
+                            
+                            {/* Average Volume Period Input */}
+                            {condition.volumeCompareWith === 'avg_volume' && (
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Average Period (Bars)
+                                </label>
+                                <Input
+                                  key={`volume-period-${condition.id}`}
+                                  type="number"
+                                  min="1"
+                                  value={condition.volumePeriod !== undefined ? condition.volumePeriod : (condition.period !== undefined ? condition.period : 20)}
+                                  onChange={(e) => {
+                                    const period = e.target.value === '' ? undefined : parseInt(e.target.value);
+                                    handleUpdateCondition(condition.id, {
+                                      volumePeriod: period !== undefined && period > 0 ? period : 20,
+                                      period: period !== undefined && period > 0 ? period : 20, // Keep for backward compatibility
+                                    });
+                                  }}
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="20"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Number of bars to calculate average volume (default: 20)
+                                </p>
+                              </div>
+                            )}
+                            
+                            {/* Description for previous volume comparisons */}
+                            {condition.volumeCompareWith === 'previous_volume' && (
+                              <div className={`p-3 rounded-lg ${isDark ? 'bg-green-500/10 border border-green-500/30' : 'bg-green-50 border border-green-200'}`}>
+                                <p className={`text-xs ${isDark ? 'text-green-300' : 'text-green-800'}`}>
+                                  Volume {condition.volumeOperator === 'volume_gt_prev_volume' && 'is greater than'}
+                                  {condition.volumeOperator === 'volume_lt_prev_volume' && 'is less than'}
+                                  {' '}previous candle's volume
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Volume Spike/Drop Percentage Input */}
+                        {condition.indicator === 'Volume' && condition.volumeOperator && isVolumeSpikeOperator(condition.volumeOperator) && (
+                          <div className="space-y-4">
+                            <div>
+                              <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                Average Period (Bars)
+                              </label>
+                              <Input
+                                key={`volume-spike-period-${condition.id}`}
+                                type="number"
+                                min="1"
+                                value={condition.volumePeriod !== undefined ? condition.volumePeriod : (condition.period !== undefined ? condition.period : 20)}
+                                onChange={(e) => {
+                                  const period = e.target.value === '' ? undefined : parseInt(e.target.value);
+                                  handleUpdateCondition(condition.id, {
+                                    volumePeriod: period !== undefined && period > 0 ? period : 20,
+                                    period: period !== undefined && period > 0 ? period : 20,
+                                  });
+                                }}
+                                className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                placeholder="20"
+                              />
+                            </div>
+                            <div>
+                              <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                Percentage (%) <span className="text-red-500">*</span>
+                              </label>
+                              <Input
+                                key={`volume-spike-percentage-${condition.id}`}
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                value={condition.volumePercentage !== undefined ? Math.abs(condition.volumePercentage) : ''}
+                                onChange={(e) => {
+                                  const percent = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                                  const updates: Partial<EntryCondition> = {
+                                    volumePercentage: percent !== undefined ? (condition.volumeOperator === 'volume_spike' ? Math.abs(percent) : -Math.abs(percent)) : undefined,
+                                  };
+                                  handleUpdateCondition(condition.id, updates);
+                                }}
+                                className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                placeholder={condition.volumeOperator === 'volume_spike' ? '50' : '50'}
+                              />
+                              <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {condition.volumeOperator === 'volume_spike' && 'Volume is greater than'}
+                                {condition.volumeOperator === 'volume_drop' && 'Volume is less than'}
+                                {' '}
+                                {condition.volumePercentage !== undefined ? Math.abs(condition.volumePercentage) : 'X'}%
+                                {' '}
+                                {condition.volumeOperator === 'volume_spike' && 'above'}
+                                {condition.volumeOperator === 'volume_drop' && 'below'}
+                                {' '}average volume
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Volume-to-volume operators description */}
+                        {condition.indicator === 'Volume' && condition.volumeOperator && !volumeOperatorNeedsCompare(condition.volumeOperator) && !isVolumeSpikeOperator(condition.volumeOperator) && (
+                          <div className={`p-3 rounded-lg ${isDark ? 'bg-green-500/10 border border-green-500/30' : 'bg-green-50 border border-green-200'}`}>
+                            <p className={`text-xs ${isDark ? 'text-green-300' : 'text-green-800'}`}>
+                              {condition.volumeOperator === 'crosses_above_avg' && 'Volume crosses above its moving average'}
+                              {condition.volumeOperator === 'crosses_below_avg' && 'Volume crosses below its moving average'}
+                              {condition.volumeOperator === 'volume_gt_prev_volume' && 'Volume is greater than previous candle\'s volume'}
+                              {condition.volumeOperator === 'volume_lt_prev_volume' && 'Volume is less than previous candle\'s volume'}
+                            </p>
+                            {condition.volumeCompareWith === 'avg_volume' && condition.volumePeriod && (
+                              <p className={`text-xs mt-1 ${isDark ? 'text-green-400/80' : 'text-green-700'}`}>
+                                Using {condition.volumePeriod}-bar average
+                              </p>
+                            )}
+                          </div>
+                        )}
 
                         {/* Price Action Compare With & Value Inputs */}
                         {condition.indicator === 'Price' && condition.priceActionOperator && priceActionOperatorNeedsCompare(condition.priceActionOperator) && (

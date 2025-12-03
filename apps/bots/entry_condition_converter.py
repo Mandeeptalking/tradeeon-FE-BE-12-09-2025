@@ -430,21 +430,35 @@ def _convert_volume_condition(entry_condition: Dict[str, Any]) -> Dict[str, Any]
     - Volume indicators (OBV, VWAP)
     """
     indicator = entry_condition.get("indicator", "").upper()
-    operator = entry_condition.get("operator", "")
-    # Use compareToVolume if available, otherwise compareTo, default to value
-    compare_to = entry_condition.get("compareToVolume") or entry_condition.get("compareTo", "value")  # value, avg_volume, previous, indicator
+    operator = entry_condition.get("volumeOperator") or entry_condition.get("operator", "")
+    # Use new volumeCompareWith if available, otherwise legacy compareToVolume/compareTo
+    compare_to = entry_condition.get("volumeCompareWith") or entry_condition.get("compareToVolume") or entry_condition.get("compareTo", "value")
     
-    # Map operator
+    # Map new Volume operators to evaluator operators
     operator_mapping = {
-        "crosses_above": "crosses_above",
-        "crosses_below": "crosses_below",
+        # Level-based
+        "crosses_above_level": "crosses_above",
+        "crosses_below_level": "crosses_below",
         "greater_than": ">",
         "less_than": "<",
+        "equal_to": "equals",
+        "not_equal": "not_equal",
+        # Volume-to-volume
+        "crosses_above_avg": "crosses_above",
+        "crosses_below_avg": "crosses_below",
+        "volume_gt_prev_volume": ">",
+        "volume_lt_prev_volume": "<",
+        # Volume spike/drop
+        "volume_spike": ">",
+        "volume_drop": "<",
+        # Legacy operators
+        "crosses_above": "crosses_above",
+        "crosses_below": "crosses_below",
         "greater_than_or_equal": ">=",
         "less_than_or_equal": "<=",
         "equals": "equals",
         "between": "between",
-        "spike": ">",  # Volume spike = volume > X% above average
+        "spike": ">",
     }
     mapped_operator = operator_mapping.get(operator.lower(), ">")
     
@@ -452,13 +466,50 @@ def _convert_volume_condition(entry_condition: Dict[str, Any]) -> Dict[str, Any]
         "type": "volume",
         "operator": mapped_operator,
         "timeframe": entry_condition.get("timeframe", "1h"),
+        "volumeOperator": operator,  # Keep original for reference
     }
     
+    # Volume spike/drop operators
+    if operator.lower() in ["volume_spike", "volume_drop"]:
+        condition["compareWith"] = "indicator_component"
+        period = entry_condition.get("volumePeriod") or entry_condition.get("period", 20)
+        percentage = entry_condition.get("volumePercentage", 0)
+        if operator.lower() == "volume_spike" and percentage == 0:
+            percentage = 50  # Default 50% above
+        elif operator.lower() == "volume_drop" and percentage == 0:
+            percentage = -50  # Default 50% below
+        
+        condition["rhs"] = {
+            "indicator": "VOLUME_MA",
+            "component": "VOLUME_MA",
+            "settings": {"length": period}
+        }
+        
+        if percentage != 0:
+            condition["percentage"] = percentage
+        return condition
+    
+    # Volume-to-volume operators
+    if operator.lower() in ["crosses_above_avg", "crosses_below_avg"]:
+        condition["compareWith"] = "indicator_component"
+        period = entry_condition.get("volumePeriod") or entry_condition.get("period", 20)
+        condition["rhs"] = {
+            "indicator": "VOLUME_MA",
+            "component": "VOLUME_MA",
+            "settings": {"length": period}
+        }
+        return condition
+    
+    if operator.lower() in ["volume_gt_prev_volume", "volume_lt_prev_volume"]:
+        condition["compareWith"] = "previous_volume"
+        return condition
+    
+    # Level-based operators
     if compare_to == "value":
-        # Compare to fixed value
         condition["compareWith"] = "value"
-        if entry_condition.get("value") is not None:
-            condition["compareValue"] = entry_condition["value"]
+        compare_value = entry_condition.get("volumeCompareValue") or entry_condition.get("value")
+        if compare_value is not None:
+            condition["compareValue"] = compare_value
         
         if mapped_operator == "between":
             if entry_condition.get("lowerBound") is not None:
@@ -468,10 +519,9 @@ def _convert_volume_condition(entry_condition: Dict[str, Any]) -> Dict[str, Any]
             condition.pop("compareValue", None)
     
     elif compare_to == "avg_volume":
-        # Compare to average volume (moving average)
         condition["compareWith"] = "indicator_component"
-        period = entry_condition.get("period", 20)
-        percentage = entry_condition.get("percentage", 0)  # e.g., 150% = 1.5x average
+        period = entry_condition.get("volumePeriod") or entry_condition.get("period", 20)
+        percentage = entry_condition.get("volumePercentage", 0)
         
         condition["rhs"] = {
             "indicator": "VOLUME_MA",
@@ -482,12 +532,10 @@ def _convert_volume_condition(entry_condition: Dict[str, Any]) -> Dict[str, Any]
         if percentage != 0:
             condition["percentage"] = percentage
     
-    elif compare_to == "previous":
-        # Compare to previous bar's volume
+    elif compare_to == "previous_volume" or compare_to == "previous":
         condition["compareWith"] = "previous_volume"
     
     elif compare_to == "indicator" and indicator in ["OBV", "VWAP"]:
-        # Compare volume to volume indicator
         condition["compareWith"] = "indicator_component"
         condition["rhs"] = {
             "indicator": indicator,
