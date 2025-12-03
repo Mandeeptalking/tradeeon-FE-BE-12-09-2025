@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Target,
   Plus,
@@ -1224,24 +1224,64 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
     setExpandedCondition(newCondition.id);
   };
 
-  const handleUpdateCondition = useCallback((id: string, updates: Partial<EntryCondition>) => {
-    // Use functional update pattern to avoid dependency on conditions
-    onChange((prevConditions) => {
-      const updatedConditions = prevConditions.conditions.map((c) =>
-        c.id === id ? { ...c, ...updates } : c
-      );
+  // Debounce timers ref
+  const debounceTimersRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
+
+  const handleUpdateCondition = useCallback((id: string, updates: Partial<EntryCondition>, immediate = false) => {
+    // For immediate updates (like dropdowns), update right away
+    if (immediate) {
+      onChange((prevConditions) => {
+        const updatedConditions = prevConditions.conditions.map((c) =>
+          c.id === id ? { ...c, ...updates } : c
+        );
+        
+        return {
+          ...prevConditions,
+          conditions: updatedConditions,
+        };
+      });
       
-      return {
-        ...prevConditions,
-        conditions: updatedConditions,
-      };
-    });
-    
-    // Keep the condition expanded after update
-    if (expandedCondition === id) {
-      setExpandedCondition(id);
+      if (expandedCondition === id) {
+        setExpandedCondition(id);
+      }
+      return;
     }
+
+    // For text inputs, debounce the update
+    const timerKey = `${id}-${Object.keys(updates)[0]}`;
+    
+    // Clear existing timer for this field
+    if (debounceTimersRef.current[timerKey]) {
+      clearTimeout(debounceTimersRef.current[timerKey]);
+    }
+
+    // Set new timer
+    debounceTimersRef.current[timerKey] = setTimeout(() => {
+      onChange((prevConditions) => {
+        const updatedConditions = prevConditions.conditions.map((c) =>
+          c.id === id ? { ...c, ...updates } : c
+        );
+        
+        return {
+          ...prevConditions,
+          conditions: updatedConditions,
+        };
+      });
+      
+      if (expandedCondition === id) {
+        setExpandedCondition(id);
+      }
+      
+      delete debounceTimersRef.current[timerKey];
+    }, 300); // 300ms debounce
   }, [expandedCondition, onChange, setExpandedCondition]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(debounceTimersRef.current).forEach(timer => clearTimeout(timer));
+    };
+  }, []);
 
   const handleRemoveCondition = (id: string) => {
     onChange({
@@ -2131,7 +2171,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                             <Select
                               value={condition.indicator}
                               onValueChange={(value: EntryCondition['indicator']) =>
-                                handleUpdateCondition(condition.id, { indicator: value })
+                                handleUpdateCondition(condition.id, { indicator: value }, true)
                               }
                             >
                               <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
@@ -2169,7 +2209,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                       ['EMA', 'SMA', 'WMA', 'TEMA', 'HULL'].includes(condition.indicator)) {
                                     updates.comparisonMaType = condition.indicator as 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL';
                                   }
-                                  handleUpdateCondition(condition.id, updates);
+                                  handleUpdateCondition(condition.id, updates, true);
                                 }}
                               >
                                 <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
@@ -2205,9 +2245,9 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                     !condition.comparisonMaType) {
                                   updates.comparisonMaType = condition.indicator as 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL';
                                 }
-                                handleUpdateCondition(condition.id, updates);
-                              }}
-                              disabled={!condition.component || !COMPONENT_OPERATORS[condition.component]}
+                                  handleUpdateCondition(condition.id, updates, true);
+                                }}
+                                disabled={!condition.component || !COMPONENT_OPERATORS[condition.component]}
                             >
                               <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
                                 <SelectValue placeholder={condition.component ? "Select operator" : "Select component first"} />
@@ -2229,7 +2269,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                             <Select
                               value={condition.timeframe}
                               onValueChange={(value) =>
-                                handleUpdateCondition(condition.id, { timeframe: value })
+                                handleUpdateCondition(condition.id, { timeframe: value }, true)
                               }
                             >
                               <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
@@ -2609,7 +2649,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                     <Select
                                       value={condition.comparisonMaType || condition.indicator}
                                       onValueChange={(value: 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL') =>
-                                        handleUpdateCondition(condition.id, { comparisonMaType: value })
+                                        handleUpdateCondition(condition.id, { comparisonMaType: value }, true)
                                       }
                                     >
                                       <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}>
