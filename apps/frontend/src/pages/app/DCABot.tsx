@@ -146,6 +146,13 @@ const DCABot: React.FC = () => {
     );
   };
 
+  const handleEntryConditionsChange = useCallback((newConditions: EntryConditionsData | ((prev: EntryConditionsData) => EntryConditionsData)) => {
+    setConfig((prev) => ({
+      ...prev,
+      entryConditions: typeof newConditions === 'function' ? newConditions(prev.entryConditions) : newConditions,
+    }));
+  }, []);
+
   return (
     <div
       className={`min-h-screen pb-20 ${
