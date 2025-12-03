@@ -296,12 +296,7 @@ const DCABot: React.FC = () => {
               <EntryConditions
                 key="entry-conditions-component"
                 conditions={config.entryConditions}
-                onChange={useCallback((newConditions: EntryConditionsData | ((prev: EntryConditionsData) => EntryConditionsData)) => {
-                  setConfig((prev) => ({
-                    ...prev,
-                    entryConditions: typeof newConditions === 'function' ? newConditions(prev.entryConditions) : newConditions,
-                  }));
-                }, [])}
+                onChange={handleEntryConditionsChange}
                 showTitle={false}
                 selectedPairs={config.botConfig.pairs}
                 expandedConditionId={expandedEntryCondition}
