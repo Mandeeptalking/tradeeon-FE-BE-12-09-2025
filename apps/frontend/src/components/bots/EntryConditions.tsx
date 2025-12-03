@@ -293,6 +293,46 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     timeframe: '1h',
   },
   {
+    name: 'Williams %R Crosses Below Oversold',
+    enabled: true,
+    indicator: 'WILLIAMS_R',
+    component: 'williams_line',
+    operator: 'crosses_below_oversold',
+    period: 14,
+    oversoldLevel: -80,
+    timeframe: '1h',
+  },
+  {
+    name: 'Williams %R Crosses Above Overbought',
+    enabled: true,
+    indicator: 'WILLIAMS_R',
+    component: 'williams_line',
+    operator: 'crosses_above_overbought',
+    period: 14,
+    overboughtLevel: -20,
+    timeframe: '1h',
+  },
+  {
+    name: 'Williams %R Below Oversold Level',
+    enabled: true,
+    indicator: 'WILLIAMS_R',
+    component: 'williams_line',
+    operator: 'less_than_oversold',
+    period: 14,
+    oversoldLevel: -80,
+    timeframe: '4h',
+  },
+  {
+    name: 'Williams %R Above Overbought Level',
+    enabled: true,
+    indicator: 'WILLIAMS_R',
+    component: 'williams_line',
+    operator: 'greater_than_overbought',
+    period: 14,
+    overboughtLevel: -20,
+    timeframe: '4h',
+  },
+  {
     name: 'EMA 20 Crosses Above EMA 100',
     enabled: true,
     indicator: 'EMA',
@@ -2239,10 +2279,18 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               {condition.operator === 'less_than_overbought' && condition.indicator === 'RSI' && `Triggers when RSI is less than overbought level (${condition.overboughtLevel ?? 70})`}
                               {condition.operator === 'greater_than_oversold' && condition.indicator === 'RSI' && `Triggers when RSI is greater than oversold level (${condition.oversoldLevel ?? 30})`}
                               {condition.operator === 'less_than_oversold' && condition.indicator === 'RSI' && `Triggers when RSI is less than oversold level (${condition.oversoldLevel ?? 30})`}
-                              {condition.operator === 'crosses_above_overbought' && condition.indicator !== 'RSI' && 'Triggers when indicator crosses above overbought level'}
-                              {condition.operator === 'crosses_below_oversold' && condition.indicator !== 'RSI' && 'Triggers when indicator crosses below oversold level'}
-                              {condition.operator === 'crosses_above_oversold' && condition.indicator !== 'RSI' && 'Triggers when indicator crosses above oversold level'}
-                              {condition.operator === 'crosses_below_overbought' && condition.indicator !== 'RSI' && 'Triggers when indicator crosses below overbought level'}
+                              {condition.operator === 'crosses_above_overbought' && condition.indicator === 'WILLIAMS_R' && `Triggers when Williams %R crosses above overbought level (${condition.overboughtLevel ?? -20})`}
+                              {condition.operator === 'crosses_below_overbought' && condition.indicator === 'WILLIAMS_R' && `Triggers when Williams %R crosses below overbought level (${condition.overboughtLevel ?? -20})`}
+                              {condition.operator === 'crosses_above_oversold' && condition.indicator === 'WILLIAMS_R' && `Triggers when Williams %R crosses above oversold level (${condition.oversoldLevel ?? -80})`}
+                              {condition.operator === 'crosses_below_oversold' && condition.indicator === 'WILLIAMS_R' && `Triggers when Williams %R crosses below oversold level (${condition.oversoldLevel ?? -80})`}
+                              {condition.operator === 'greater_than_overbought' && condition.indicator === 'WILLIAMS_R' && `Triggers when Williams %R is greater than overbought level (${condition.overboughtLevel ?? -20})`}
+                              {condition.operator === 'less_than_overbought' && condition.indicator === 'WILLIAMS_R' && `Triggers when Williams %R is less than overbought level (${condition.overboughtLevel ?? -20})`}
+                              {condition.operator === 'greater_than_oversold' && condition.indicator === 'WILLIAMS_R' && `Triggers when Williams %R is greater than oversold level (${condition.oversoldLevel ?? -80})`}
+                              {condition.operator === 'less_than_oversold' && condition.indicator === 'WILLIAMS_R' && `Triggers when Williams %R is less than oversold level (${condition.oversoldLevel ?? -80})`}
+                              {condition.operator === 'crosses_above_overbought' && condition.indicator !== 'RSI' && condition.indicator !== 'STOCHASTIC' && condition.indicator !== 'WILLIAMS_R' && 'Triggers when indicator crosses above overbought level'}
+                              {condition.operator === 'crosses_below_oversold' && condition.indicator !== 'RSI' && condition.indicator !== 'STOCHASTIC' && condition.indicator !== 'WILLIAMS_R' && 'Triggers when indicator crosses below oversold level'}
+                              {condition.operator === 'crosses_above_oversold' && condition.indicator !== 'RSI' && condition.indicator !== 'STOCHASTIC' && condition.indicator !== 'WILLIAMS_R' && 'Triggers when indicator crosses above oversold level'}
+                              {condition.operator === 'crosses_below_overbought' && condition.indicator !== 'RSI' && condition.indicator !== 'STOCHASTIC' && condition.indicator !== 'WILLIAMS_R' && 'Triggers when indicator crosses below overbought level'}
                               {condition.operator === 'crosses_above' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line crosses above Signal Line'}
                               {condition.operator === 'crosses_below' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line crosses below Signal Line'}
                               {condition.operator === 'crosses_above_zero' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line crosses above zero'}
