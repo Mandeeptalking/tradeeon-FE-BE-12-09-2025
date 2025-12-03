@@ -41,8 +41,8 @@ export interface EntryCondition {
   stdDeviation?: number; // For Bollinger Bands (default: 2)
   comparisonPeriod?: number; // For MA crossovers (e.g., EMA 20 vs EMA 100)
   comparisonMaType?: 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL'; // Type of MA to compare against
-  overboughtLevel?: number; // Custom overbought level for RSI (default: 70)
-  oversoldLevel?: number; // Custom oversold level for RSI (default: 30)
+  overboughtLevel?: number; // Custom overbought level for RSI (default: 70) and Stochastic (default: 80)
+  oversoldLevel?: number; // Custom oversold level for RSI (default: 30) and Stochastic (default: 20)
   timeframe: string;
   logicGate?: 'AND' | 'OR';
   // Additional parameters for specific indicators
@@ -358,10 +358,8 @@ const INDICATOR_COMPONENTS: Record<string, Array<{ value: string; label: string;
     { value: 'histogram', label: 'Histogram', description: 'MACD Histogram (MACD Line - Signal Line)' },
   ],
   STOCHASTIC: [
-    { value: 'k_percent', label: '%K Line', description: 'Stochastic %K line' },
-    { value: 'd_percent', label: '%D Line', description: 'Stochastic %D line (SMA of %K)' },
-    { value: 'overbought', label: 'Overbought', description: 'Above 80' },
-    { value: 'oversold', label: 'Oversold', description: 'Below 20' },
+    { value: 'k_percent', label: '%K Line', description: 'Stochastic %K line (0-100)' },
+    { value: 'd_percent', label: '%D Line', description: 'Stochastic %D line (SMA of %K, 0-100)' },
   ],
   WILLIAMS_R: [
     { value: 'williams_line', label: 'Williams %R', description: 'Williams %R value (-100 to 0)' },
@@ -493,28 +491,50 @@ const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }
   
   // Stochastic
   'k_percent': [
+    // Crossovers with %D Line
     { value: 'crosses_above', label: 'Crosses Above %D Line' },
     { value: 'crosses_below', label: 'Crosses Below %D Line' },
-    { value: 'crosses_above_overbought', label: 'Crosses Above Overbought (80)' },
-    { value: 'crosses_below_oversold', label: 'Crosses Below Oversold (20)' },
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'less_than', label: 'Less Than' },
-    { value: 'equals', label: 'Equals' },
-    { value: 'between', label: 'Between' },
-    { value: 'greater_than_d', label: 'Greater Than %D' },
-    { value: 'less_than_d', label: 'Less Than %D' },
+    // Crossovers with Overbought/Oversold Levels
+    { value: 'crosses_above_overbought', label: 'Crosses Above Overbought Level' },
+    { value: 'crosses_below_overbought', label: 'Crosses Below Overbought Level' },
+    { value: 'crosses_above_oversold', label: 'Crosses Above Oversold Level' },
+    { value: 'crosses_below_oversold', label: 'Crosses Below Oversold Level' },
+    // Comparisons with Overbought/Oversold Levels
+    { value: 'greater_than_overbought', label: 'Greater Than Overbought Level' },
+    { value: 'less_than_overbought', label: 'Less Than Overbought Level' },
+    { value: 'greater_than_oversold', label: 'Greater Than Oversold Level' },
+    { value: 'less_than_oversold', label: 'Less Than Oversold Level' },
+    // Comparisons with %D Line
+    { value: 'greater_than_d', label: 'Greater Than %D Line' },
+    { value: 'less_than_d', label: 'Less Than %D Line' },
+    // Comparisons with Custom Value
+    { value: 'greater_than', label: 'Greater Than Value' },
+    { value: 'less_than', label: 'Less Than Value' },
+    { value: 'equals', label: 'Equals Value' },
+    { value: 'between', label: 'Between Values' },
   ],
   'd_percent': [
+    // Crossovers with %K Line
     { value: 'crosses_above', label: 'Crosses Above %K Line' },
     { value: 'crosses_below', label: 'Crosses Below %K Line' },
-    { value: 'crosses_above_overbought', label: 'Crosses Above Overbought (80)' },
-    { value: 'crosses_below_oversold', label: 'Crosses Below Oversold (20)' },
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'less_than', label: 'Less Than' },
-    { value: 'equals', label: 'Equals' },
-    { value: 'between', label: 'Between' },
-    { value: 'greater_than_k', label: 'Greater Than %K' },
-    { value: 'less_than_k', label: 'Less Than %K' },
+    // Crossovers with Overbought/Oversold Levels
+    { value: 'crosses_above_overbought', label: 'Crosses Above Overbought Level' },
+    { value: 'crosses_below_overbought', label: 'Crosses Below Overbought Level' },
+    { value: 'crosses_above_oversold', label: 'Crosses Above Oversold Level' },
+    { value: 'crosses_below_oversold', label: 'Crosses Below Oversold Level' },
+    // Comparisons with Overbought/Oversold Levels
+    { value: 'greater_than_overbought', label: 'Greater Than Overbought Level' },
+    { value: 'less_than_overbought', label: 'Less Than Overbought Level' },
+    { value: 'greater_than_oversold', label: 'Greater Than Oversold Level' },
+    { value: 'less_than_oversold', label: 'Less Than Oversold Level' },
+    // Comparisons with %K Line
+    { value: 'greater_than_k', label: 'Greater Than %K Line' },
+    { value: 'less_than_k', label: 'Less Than %K Line' },
+    // Comparisons with Custom Value
+    { value: 'greater_than', label: 'Greater Than Value' },
+    { value: 'less_than', label: 'Less Than Value' },
+    { value: 'equals', label: 'Equals Value' },
+    { value: 'between', label: 'Between Values' },
   ],
   
   // Williams %R
@@ -772,6 +792,11 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       return false;
     }
     
+    // Stochastic operators don't need value field (they use overboughtLevel/oversoldLevel)
+    if (indicator === 'STOCHASTIC' && ['crosses_above_overbought', 'crosses_below_overbought', 'crosses_above_oversold', 'crosses_below_oversold', 'greater_than_overbought', 'less_than_overbought', 'greater_than_oversold', 'less_than_oversold'].includes(operator)) {
+      return false;
+    }
+    
     // Component crossover operators (comparing components to each other)
     if (operator === 'crosses_above' || operator === 'crosses_below') {
       if (indicator === 'MACD' && component === 'macd_line') return false; // MACD line crosses signal
@@ -963,6 +988,31 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       macdDesc += ` on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
       
       return macdDesc;
+    }
+    
+    // Special handling for Stochastic overbought/oversold conditions
+    if (condition.indicator === 'STOCHASTIC' && (condition.component === 'k_percent' || condition.component === 'd_percent')) {
+      const overboughtLevel = condition.overboughtLevel ?? 80;
+      const oversoldLevel = condition.oversoldLevel ?? 20;
+      const componentLabel = condition.component === 'k_percent' ? '%K' : '%D';
+      
+      if (condition.operator === 'crosses_above_overbought') {
+        return `Stochastic ${componentLabel} ${condition.period || 14} Crosses Above Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'crosses_below_overbought') {
+        return `Stochastic ${componentLabel} ${condition.period || 14} Crosses Below Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'crosses_above_oversold') {
+        return `Stochastic ${componentLabel} ${condition.period || 14} Crosses Above Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'crosses_below_oversold') {
+        return `Stochastic ${componentLabel} ${condition.period || 14} Crosses Below Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'greater_than_overbought') {
+        return `Stochastic ${componentLabel} ${condition.period || 14} Greater Than Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'less_than_overbought') {
+        return `Stochastic ${componentLabel} ${condition.period || 14} Less Than Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'greater_than_oversold') {
+        return `Stochastic ${componentLabel} ${condition.period || 14} Greater Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'less_than_oversold') {
+        return `Stochastic ${componentLabel} ${condition.period || 14} Less Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      }
     }
     
     // Special handling for RSI overbought/oversold conditions
@@ -1715,6 +1765,102 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 />
                                 <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                   Default: 30 (typical range: 20-35)
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Stochastic Overbought/Oversold Levels */}
+                          {condition.indicator === 'STOCHASTIC' && (condition.component === 'k_percent' || condition.component === 'd_percent') && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Overbought Level
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={condition.overboughtLevel !== undefined ? condition.overboughtLevel : 80}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      overboughtLevel: parseInt(e.target.value) || 80,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="80"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: 80 (typical range: 75-85)
+                                </p>
+                              </div>
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Oversold Level
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={condition.oversoldLevel !== undefined ? condition.oversoldLevel : 20}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      oversoldLevel: parseInt(e.target.value) || 20,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="20"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: 20 (typical range: 15-25)
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Stochastic Overbought/Oversold Levels */}
+                          {condition.indicator === 'STOCHASTIC' && (condition.component === 'k_percent' || condition.component === 'd_percent') && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Overbought Level
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={condition.overboughtLevel !== undefined ? condition.overboughtLevel : 80}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      overboughtLevel: parseInt(e.target.value) || 80,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="80"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: 80 (typical range: 75-85)
+                                </p>
+                              </div>
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Oversold Level
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={condition.oversoldLevel !== undefined ? condition.oversoldLevel : 20}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      oversoldLevel: parseInt(e.target.value) || 20,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="20"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: 20 (typical range: 15-25)
                                 </p>
                               </div>
                             </div>
