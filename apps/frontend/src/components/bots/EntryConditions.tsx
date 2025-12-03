@@ -11,6 +11,10 @@ import {
   ChevronUp,
   Info,
   CheckCircle2,
+  ArrowUp,
+  ArrowDown,
+  Clock,
+  GripVertical,
 } from 'lucide-react';
 import { useThemeStore } from '../../store/theme';
 import { Button } from '../ui/button';
@@ -48,6 +52,9 @@ export interface EntryCondition {
   oversoldLevel?: number; // Custom oversold level for RSI (default: 30), Stochastic (default: 20), Williams %R (default: -80), CCI (default: -100), and MFI (default: 20)
   timeframe: string;
   logicGate?: 'AND' | 'OR';
+  // Condition sequencing and duration
+  order?: number; // Order/sequence in which condition should be evaluated (1 = first, 2 = second, etc.)
+  durationBars?: number; // Number of bars the condition must stay true before next condition can be evaluated
   // Additional parameters for specific indicators
   maType?: 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'KAMA' | 'MAMA' | 'VWMA' | 'Hull'; // For MA types
   source?: 'close' | 'open' | 'high' | 'low' | 'hlc3' | 'ohlc4'; // Price source
