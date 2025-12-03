@@ -937,6 +937,34 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       return `${indicator.label} ${condition.period} ${operatorText} ${condition.comparisonMaType} ${condition.comparisonPeriod} on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
     }
     
+    // Special handling for MACD conditions - show Fast, Slow, Signal periods
+    if (condition.indicator === 'MACD') {
+      const fastPeriod = condition.fastPeriod !== undefined ? condition.fastPeriod : 12;
+      const slowPeriod = condition.slowPeriod !== undefined ? condition.slowPeriod : 26;
+      const signalPeriod = condition.signalPeriod !== undefined ? condition.signalPeriod : 9;
+      
+      let macdDesc = indicator.label;
+      if (component) {
+        macdDesc += ` ${component.label}`;
+      }
+      if (operator) {
+        macdDesc += ` ${operator.label}`;
+      }
+      
+      // Handle value-based operators
+      if (condition.operator === 'between' && condition.lowerBound !== undefined && condition.upperBound !== undefined) {
+        macdDesc += ` ${condition.lowerBound}-${condition.upperBound}`;
+      } else if (condition.value !== undefined) {
+        macdDesc += ` ${condition.value}`;
+      }
+      
+      // Add MACD parameters
+      macdDesc += ` (Fast: ${fastPeriod}, Slow: ${slowPeriod}, Signal: ${signalPeriod})`;
+      macdDesc += ` on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      
+      return macdDesc;
+    }
+    
     // Special handling for RSI overbought/oversold conditions
     if (condition.indicator === 'RSI' && condition.component === 'rsi_line') {
       const overboughtLevel = condition.overboughtLevel ?? 70;
@@ -1002,15 +1030,13 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       desc += ` ${condition.value}`;
     }
     
-    if (condition.period) {
+    // Don't show period for MACD (handled separately above)
+    if (condition.period && condition.indicator !== 'MACD') {
       if (condition.indicator === 'BOLLINGER_BANDS' && condition.stdDeviation !== undefined) {
         desc += ` (Period: ${condition.period}, StdDev: ${condition.stdDeviation})`;
       } else {
         desc += ` (Period: ${condition.period})`;
       }
-    }
-    if (condition.fastPeriod && condition.slowPeriod) {
-      desc += ` (Fast: ${condition.fastPeriod}, Slow: ${condition.slowPeriod})`;
     }
     if (condition.indicator === 'BOLLINGER_BANDS' && condition.stdDeviation !== undefined && !condition.period) {
       desc += ` (StdDev: ${condition.stdDeviation})`;
