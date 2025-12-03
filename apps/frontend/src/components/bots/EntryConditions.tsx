@@ -869,14 +869,16 @@ const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }
     { value: 'crosses_below', label: 'Crosses Below Level' },
   ],
   
-  // ATR
+  // ATR (Average True Range - measures volatility)
   'atr_line': [
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'less_than', label: 'Less Than' },
-    { value: 'equals', label: 'Equals' },
-    { value: 'between', label: 'Between' },
+    // Volatility expansion/contraction thresholds
     { value: 'crosses_above', label: 'Crosses Above Level' },
     { value: 'crosses_below', label: 'Crosses Below Level' },
+    // Comparisons with Custom Value
+    { value: 'greater_than', label: 'Greater Than Value' },
+    { value: 'less_than', label: 'Less Than Value' },
+    { value: 'equals', label: 'Equals Value' },
+    { value: 'between', label: 'Between Values' },
   ],
   
   // Keltner Channels
@@ -899,17 +901,22 @@ const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }
     { value: 'price_percent_below', label: 'Price % Below' },
   ],
   
-  // OBV
+  // OBV (On-Balance Volume - cumulative volume indicator)
   'obv_line': [
-    { value: 'crosses_above', label: 'Crosses Above Level' },
-    { value: 'crosses_below', label: 'Crosses Below Level' },
+    // Zero line crossovers (important for OBV)
     { value: 'crosses_above_zero', label: 'Crosses Above Zero' },
     { value: 'crosses_below_zero', label: 'Crosses Below Zero' },
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'less_than', label: 'Less Than' },
-    { value: 'equals', label: 'Equals' },
+    // Comparisons with Zero Line
     { value: 'greater_than_zero', label: 'Greater Than Zero' },
     { value: 'less_than_zero', label: 'Less Than Zero' },
+    // Crossovers with Custom Level
+    { value: 'crosses_above', label: 'Crosses Above Level' },
+    { value: 'crosses_below', label: 'Crosses Below Level' },
+    // Comparisons with Custom Value
+    { value: 'greater_than', label: 'Greater Than Value' },
+    { value: 'less_than', label: 'Less Than Value' },
+    { value: 'equals', label: 'Equals Value' },
+    { value: 'between', label: 'Between Values' },
   ],
   
   // VWAP
