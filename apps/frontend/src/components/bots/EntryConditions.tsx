@@ -41,8 +41,8 @@ export interface EntryCondition {
   stdDeviation?: number; // For Bollinger Bands (default: 2)
   comparisonPeriod?: number; // For MA crossovers (e.g., EMA 20 vs EMA 100)
   comparisonMaType?: 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL'; // Type of MA to compare against
-  overboughtLevel?: number; // Custom overbought level for RSI (default: 70) and Stochastic (default: 80)
-  oversoldLevel?: number; // Custom oversold level for RSI (default: 30) and Stochastic (default: 20)
+  overboughtLevel?: number; // Custom overbought level for RSI (default: 70), Stochastic (default: 80), and Williams %R (default: -20)
+  oversoldLevel?: number; // Custom oversold level for RSI (default: 30), Stochastic (default: 20), and Williams %R (default: -80)
   timeframe: string;
   logicGate?: 'AND' | 'OR';
   // Additional parameters for specific indicators
@@ -363,8 +363,6 @@ const INDICATOR_COMPONENTS: Record<string, Array<{ value: string; label: string;
   ],
   WILLIAMS_R: [
     { value: 'williams_line', label: 'Williams %R', description: 'Williams %R value (-100 to 0)' },
-    { value: 'overbought', label: 'Overbought', description: 'Above -20' },
-    { value: 'oversold', label: 'Oversold', description: 'Below -80' },
   ],
   CCI: [
     { value: 'cci_line', label: 'CCI Line', description: 'Commodity Channel Index' },
@@ -539,14 +537,24 @@ const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }
   
   // Williams %R
   'williams_line': [
+    // Crossovers with Overbought/Oversold Levels
+    { value: 'crosses_above_overbought', label: 'Crosses Above Overbought Level' },
+    { value: 'crosses_below_overbought', label: 'Crosses Below Overbought Level' },
+    { value: 'crosses_above_oversold', label: 'Crosses Above Oversold Level' },
+    { value: 'crosses_below_oversold', label: 'Crosses Below Oversold Level' },
+    // Comparisons with Overbought/Oversold Levels
+    { value: 'greater_than_overbought', label: 'Greater Than Overbought Level' },
+    { value: 'less_than_overbought', label: 'Less Than Overbought Level' },
+    { value: 'greater_than_oversold', label: 'Greater Than Oversold Level' },
+    { value: 'less_than_oversold', label: 'Less Than Oversold Level' },
+    // Crossovers with Custom Level
     { value: 'crosses_above', label: 'Crosses Above Level' },
     { value: 'crosses_below', label: 'Crosses Below Level' },
-    { value: 'crosses_above_oversold', label: 'Crosses Above Oversold (-80)' },
-    { value: 'crosses_below_overbought', label: 'Crosses Below Overbought (-20)' },
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'less_than', label: 'Less Than' },
-    { value: 'equals', label: 'Equals' },
-    { value: 'between', label: 'Between' },
+    // Comparisons with Custom Value
+    { value: 'greater_than', label: 'Greater Than Value' },
+    { value: 'less_than', label: 'Less Than Value' },
+    { value: 'equals', label: 'Equals Value' },
+    { value: 'between', label: 'Between Values' },
   ],
   
   // CCI
@@ -1861,6 +1869,54 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 />
                                 <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                   Default: 20 (typical range: 15-25)
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Williams %R Overbought/Oversold Levels */}
+                          {condition.indicator === 'WILLIAMS_R' && condition.component === 'williams_line' && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Overbought Level
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="-100"
+                                  max="0"
+                                  value={condition.overboughtLevel !== undefined ? condition.overboughtLevel : -20}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      overboughtLevel: parseInt(e.target.value) || -20,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="-20"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: -20 (typical range: -10 to -30, closer to 0 = overbought)
+                                </p>
+                              </div>
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Oversold Level
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="-100"
+                                  max="0"
+                                  value={condition.oversoldLevel !== undefined ? condition.oversoldLevel : -80}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      oversoldLevel: parseInt(e.target.value) || -80,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="-80"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: -80 (typical range: -70 to -90, closer to -100 = oversold)
                                 </p>
                               </div>
                             </div>
