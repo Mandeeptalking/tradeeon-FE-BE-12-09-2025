@@ -1,10 +1,9 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Target,
   Plus,
   X,
   Sparkles,
-  TrendingDown,
   TrendingUp,
   BarChart3,
   Zap,
@@ -1678,12 +1677,18 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                         if (value === undefined) {
                                           delete newLimitPrices[pair];
                                         }
-                                        onChange({
-                                          ...conditions,
-                                          limitPrices: Object.keys(newLimitPrices).length > 0 ? newLimitPrices : undefined,
-                                          limitPrice: undefined,
-                                          limitPricePercent: undefined,
-                                        });
+                        const filteredLimitPrices: { [pair: string]: number } = {};
+                        Object.keys(newLimitPrices).forEach((pair) => {
+                          if (newLimitPrices[pair] !== undefined) {
+                            filteredLimitPrices[pair] = newLimitPrices[pair]!;
+                          }
+                        });
+                        onChange({
+                          ...conditions,
+                          limitPrices: Object.keys(filteredLimitPrices).length > 0 ? filteredLimitPrices : undefined,
+                          limitPrice: undefined,
+                          limitPricePercent: undefined,
+                        });
                                       }}
                                       className={`w-full ${isDark ? 'bg-gray-900 border-gray-700 text-white' : ''}`}
                                       placeholder="Enter price"
@@ -1981,7 +1986,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                   const newComponent = value;
                                   const availableOps = COMPONENT_OPERATORS[newComponent] || [];
                                   const newOperator = availableOps[0]?.value || condition.operator;
-                                  const updates: any = {
+                                  const updates: Partial<EntryCondition> = {
                                     component: newComponent,
                                     operator: newOperator,
                                   };
@@ -2019,7 +2024,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                             <Select
                               value={condition.operator}
                               onValueChange={(value) => {
-                                const updates: any = { operator: value };
+                                const updates: Partial<EntryCondition> = { operator: value };
                                 // If MA crossover operator is selected, default comparisonMaType to same as indicator
                                 if (['crosses_above_ma', 'crosses_below_ma', 'greater_than_ma', 'less_than_ma'].includes(value) && 
                                     ['EMA', 'SMA', 'WMA', 'TEMA', 'HULL'].includes(condition.indicator) &&
