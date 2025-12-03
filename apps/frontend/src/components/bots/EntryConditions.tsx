@@ -39,6 +39,7 @@ export interface EntryCondition {
   slowPeriod?: number; // For MACD
   signalPeriod?: number; // For MACD
   stdDeviation?: number; // For Bollinger Bands (default: 2)
+  multiplier?: number; // For Keltner Channels ATR multiplier (default: 1.5)
   comparisonPeriod?: number; // For MA crossovers (e.g., EMA 20 vs EMA 100)
   comparisonMaType?: 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL'; // Type of MA to compare against
   overboughtLevel?: number; // Custom overbought level for RSI (default: 70), Stochastic (default: 80), Williams %R (default: -20), CCI (default: +100), and MFI (default: 80)
