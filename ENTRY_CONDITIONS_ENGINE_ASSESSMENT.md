@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document assesses how the `EntryConditions` component integrates with the existing central trading engine. The component provides a comprehensive UI for defining entry conditions using technical indicators, but requires backend integration to evaluate and execute these conditions.
+This document assesses how the `EntryConditions` component integrates with the existing central trading engine. **The evaluator engine already exists** (`backend/evaluator.py` and `apps/bots/condition_evaluator.py`), so integration is primarily about mapping the frontend `EntryCondition` format to the existing evaluator's expected format.
 
 ---
 
@@ -25,6 +25,17 @@ This document assesses how the `EntryConditions` component integrates with the e
   - WebSocket streaming
   - Ring buffer storage for kline data
   - Indicator registry system
+
+### Backend Evaluator (`evaluator.py` & `condition_evaluator.py`)
+- **Location**: `backend/evaluator.py` and `apps/bots/condition_evaluator.py`
+- **Purpose**: **EXISTING** condition evaluation engine
+- **Capabilities**:
+  - ✅ `evaluate_condition()` - Evaluates single conditions
+  - ✅ `evaluate_playbook()` - Evaluates condition playbooks with AND/OR logic
+  - ✅ Supports indicator, price, and volume conditions
+  - ✅ Supports operators: `>`, `<`, `>=`, `<=`, `equals`, `crosses_above`, `crosses_below`, `between`
+  - ✅ CentralizedConditionEvaluator - Continuous evaluation service
+  - ✅ Already integrated with DCA executor (`dca_executor._evaluate_entry_conditions()`)
 
 ### Backend API (`bots.py`)
 - **Location**: `apps/api/routers/bots.py`
@@ -192,44 +203,36 @@ For each enabled condition:
 
 ## 5. Technical Implementation Requirements
 
-### 5.1 Backend Services Needed
+### 5.1 Existing Infrastructure ✅
 
-#### A. Condition Evaluator Service
-```python
-# apps/api/services/condition_evaluator.py
+**The evaluator engine already exists!** No need to build from scratch:
 
-class ConditionEvaluator:
-    def __init__(self, indicator_engine: IndicatorEngine):
-        self.indicator_engine = indicator_engine
-        self.active_conditions = {}
-        self.condition_states = {}  # Track condition history for sequencing
-    
-    def register_bot_conditions(self, bot_id: str, conditions: List[EntryCondition]):
-        """Register conditions for a bot"""
-        # Parse and store conditions
-        # Subscribe to required market data streams
-    
-    def evaluate_condition(self, condition: EntryCondition, symbol: str) -> bool:
-        """Evaluate a single condition"""
-        # Get indicator value
-        # Apply operator logic
-        # Return boolean result
-    
-    def evaluate_all_conditions(self, bot_id: str, symbol: str) -> bool:
-        """Evaluate all conditions for a bot with logic gate"""
-        # Evaluate each condition
-        # Apply AND/OR logic
-        # Handle sequencing
-        # Return final result
-    
-    def on_bar_close(self, symbol: str, timeframe: str):
-        """Called when a bar closes"""
-        # Re-evaluate all conditions for this symbol/timeframe
-        # Update condition states
-        # Trigger entry signals if conditions met
-```
+#### A. Core Evaluator (`backend/evaluator.py`)
+- ✅ `evaluate_condition(df, row_index, condition)` - Evaluates single conditions
+- ✅ `evaluate_playbook(df, playbook, condition_states)` - Evaluates playbooks with AND/OR logic
+- ✅ Supports indicator, price, volume conditions
+- ✅ Supports all required operators
+- ✅ Handles condition sequencing and validity duration
 
-#### B. Condition Parser
+#### B. Centralized Evaluator Service (`apps/bots/condition_evaluator.py`)
+- ✅ `CentralizedConditionEvaluator` - Continuous evaluation service
+- ✅ Fetches market data once per symbol/timeframe
+- ✅ Calculates indicators once and reuses
+- ✅ Evaluates all conditions using shared data
+- ✅ Publishes trigger events to event bus
+
+#### C. DCA Executor Integration (`apps/bots/dca_executor.py`)
+- ✅ Already calls `_evaluate_entry_conditions()` 
+- ✅ Uses `backend.evaluator.evaluate_playbook()`
+- ✅ Handles entry condition evaluation before placing orders
+
+### 5.2 What's Needed: Condition Format Converter
+
+**Only missing piece**: Converter from frontend `EntryCondition` format to evaluator's expected format.
+
+**Note**: There's already an `alert_converter.py` that converts some bot entry conditions to alert format. We need to extend this or create a similar converter for the new `EntryCondition` format.
+
+#### Condition Parser/Converter
 ```python
 # apps/api/services/condition_parser.py
 
@@ -487,9 +490,19 @@ The `EntryConditions` component is well-designed and provides a comprehensive UI
 
 The existing architecture (IndicatorEngine, bot storage, WebSocket streaming) provides a solid foundation. The main work is building the evaluation layer that connects the frontend conditions to the backend execution engine.
 
-**Estimated Effort**: 4-6 weeks for full implementation
-**Complexity**: Medium-High (due to sequencing logic and multi-timeframe support)
-**Risk**: Low-Medium (well-defined interfaces, existing infrastructure)
+**Estimated Effort**: 1-2 weeks (much simpler since evaluator exists!)
+**Complexity**: Low-Medium (mainly format conversion and operator mapping)
+**Risk**: Low (evaluator already proven, just needs format adapter)
+
+### Key Finding: Evaluator Already Exists! ✅
+
+The system already has:
+- ✅ `backend/evaluator.py` - Core evaluation functions
+- ✅ `apps/bots/condition_evaluator.py` - Centralized evaluation service  
+- ✅ `apps/bots/dca_executor.py` - Already uses evaluator for entry conditions
+- ✅ `apps/bots/alert_converter.py` - Partial converter (needs extension)
+
+**What's needed**: Extend `alert_converter.py` or create new converter to map frontend `EntryCondition` format to evaluator's expected format.
 
 ---
 
