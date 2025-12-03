@@ -1933,7 +1933,23 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                           )}
                         </button>
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <GripVertical className={`w-4 h-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+                            {condition.order !== undefined && (
+                              <span className={`text-xs font-medium px-2 py-0.5 rounded ${
+                                isDark ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-blue-100 text-blue-700 border border-blue-300'
+                              }`}>
+                                Order {condition.order}
+                              </span>
+                            )}
+                            {condition.durationBars !== undefined && condition.durationBars > 0 && (
+                              <span className={`text-xs font-medium px-2 py-0.5 rounded flex items-center gap-1 ${
+                                isDark ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-purple-100 text-purple-700 border border-purple-300'
+                              }`}>
+                                <Clock className="w-3 h-3" />
+                                {condition.durationBars} bar{condition.durationBars !== 1 ? 's' : ''}
+                              </span>
+                            )}
                             <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                               {condition.name}
                             </span>
