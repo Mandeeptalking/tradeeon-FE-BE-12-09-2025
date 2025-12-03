@@ -1450,6 +1450,16 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       desc += ` (StdDev: ${condition.stdDeviation})`;
     }
     
+    // Special handling for Keltner Channels - show period, ATR period, and multiplier
+    if (condition.indicator === 'KELTNER_CHANNELS') {
+      const period = condition.period || 20;
+      const atrPeriod = condition.atrPeriod || 5;
+      const multiplier = condition.multiplier || 1.5;
+      if (condition.period !== undefined || condition.atrPeriod !== undefined || condition.multiplier !== undefined) {
+        desc += ` (EMA Period: ${period}, ATR Period: ${atrPeriod}, Multiplier: ${multiplier})`;
+      }
+    }
+    
     desc += ` on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
     
     return desc;
@@ -2512,10 +2522,10 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                           
                           {/* Keltner Channels Parameters */}
                           {condition.indicator === 'KELTNER_CHANNELS' && (
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-3 gap-4">
                               <div>
                                 <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
-                                  Period (Length)
+                                  EMA Period
                                 </label>
                                 <Input
                                   type="number"
@@ -2535,7 +2545,27 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               </div>
                               <div>
                                 <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
-                                  Multiplier (ATR)
+                                  ATR Period
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={condition.atrPeriod !== undefined ? condition.atrPeriod : ''}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      atrPeriod: parseInt(e.target.value) || undefined,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="5"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: 5 (ATR period for channel width)
+                                </p>
+                              </div>
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Multiplier
                                 </label>
                                 <Input
                                   type="number"
