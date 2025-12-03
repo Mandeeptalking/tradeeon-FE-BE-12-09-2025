@@ -40,6 +40,7 @@ export interface EntryCondition {
   signalPeriod?: number; // For MACD
   stdDeviation?: number; // For Bollinger Bands (default: 2)
   multiplier?: number; // For Keltner Channels ATR multiplier (default: 1.5)
+  atrPeriod?: number; // For Keltner Channels ATR period (default: 5)
   kPeriod?: number; // For Stochastic Oscillator %K period (default: 14)
   dPeriod?: number; // For Stochastic Oscillator %D period (default: 3)
   comparisonPeriod?: number; // For MA crossovers (e.g., EMA 20 vs EMA 100)
@@ -934,18 +935,24 @@ const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }
     { value: 'crosses_below', label: 'Price Crosses Below' },
     { value: 'price_percent_above', label: 'Price % Above' },
     { value: 'price_percent_below', label: 'Price % Below' },
+    { value: 'price_closes_percent_above', label: 'Price Closes % Above' },
+    { value: 'price_closes_percent_below', label: 'Price Closes % Below' },
   ],
   'middle_channel': [
     { value: 'crosses_above', label: 'Price Crosses Above' },
     { value: 'crosses_below', label: 'Price Crosses Below' },
     { value: 'price_percent_above', label: 'Price % Above' },
     { value: 'price_percent_below', label: 'Price % Below' },
+    { value: 'price_closes_percent_above', label: 'Price Closes % Above' },
+    { value: 'price_closes_percent_below', label: 'Price Closes % Below' },
   ],
   'lower_channel': [
     { value: 'crosses_above', label: 'Price Crosses Above' },
     { value: 'crosses_below', label: 'Price Crosses Below' },
     { value: 'price_percent_above', label: 'Price % Above' },
     { value: 'price_percent_below', label: 'Price % Below' },
+    { value: 'price_closes_percent_above', label: 'Price Closes % Above' },
+    { value: 'price_closes_percent_below', label: 'Price Closes % Below' },
   ],
   
   // OBV (On-Balance Volume - cumulative volume indicator)
