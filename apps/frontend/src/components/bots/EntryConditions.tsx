@@ -352,6 +352,46 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     timeframe: '4h',
   },
   {
+    name: 'MFI Crosses Below Oversold',
+    enabled: true,
+    indicator: 'MFI',
+    component: 'mfi_line',
+    operator: 'crosses_below_oversold',
+    period: 14,
+    oversoldLevel: 20,
+    timeframe: '1h',
+  },
+  {
+    name: 'MFI Crosses Above Overbought',
+    enabled: true,
+    indicator: 'MFI',
+    component: 'mfi_line',
+    operator: 'crosses_above_overbought',
+    period: 14,
+    overboughtLevel: 80,
+    timeframe: '1h',
+  },
+  {
+    name: 'MFI Below Oversold Level',
+    enabled: true,
+    indicator: 'MFI',
+    component: 'mfi_line',
+    operator: 'less_than_oversold',
+    period: 14,
+    oversoldLevel: 20,
+    timeframe: '4h',
+  },
+  {
+    name: 'MFI Above Overbought Level',
+    enabled: true,
+    indicator: 'MFI',
+    component: 'mfi_line',
+    operator: 'greater_than_overbought',
+    period: 14,
+    overboughtLevel: 80,
+    timeframe: '4h',
+  },
+  {
     name: 'OBV Crosses Above Zero',
     enabled: true,
     indicator: 'OBV',
@@ -1194,6 +1234,30 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
         return `CCI ${condition.period || 20} Greater Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
       } else if (condition.operator === 'less_than_oversold') {
         return `CCI ${condition.period || 20} Less Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      }
+    }
+    
+    // Special handling for MFI overbought/oversold conditions
+    if (condition.indicator === 'MFI' && condition.component === 'mfi_line') {
+      const overboughtLevel = condition.overboughtLevel ?? 80;
+      const oversoldLevel = condition.oversoldLevel ?? 20;
+      
+      if (condition.operator === 'crosses_above_overbought') {
+        return `MFI ${condition.period || 14} Crosses Above Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'crosses_below_overbought') {
+        return `MFI ${condition.period || 14} Crosses Below Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'crosses_above_oversold') {
+        return `MFI ${condition.period || 14} Crosses Above Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'crosses_below_oversold') {
+        return `MFI ${condition.period || 14} Crosses Below Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'greater_than_overbought') {
+        return `MFI ${condition.period || 14} Greater Than Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'less_than_overbought') {
+        return `MFI ${condition.period || 14} Less Than Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'greater_than_oversold') {
+        return `MFI ${condition.period || 14} Greater Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'less_than_oversold') {
+        return `MFI ${condition.period || 14} Less Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
       }
     }
     
@@ -2135,6 +2199,54 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 />
                                 <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                   Default: -100 (typical range: -150 to -80)
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* MFI Overbought/Oversold Levels */}
+                          {condition.indicator === 'MFI' && condition.component === 'mfi_line' && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Overbought Level
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={condition.overboughtLevel !== undefined ? condition.overboughtLevel : 80}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      overboughtLevel: parseInt(e.target.value) || 80,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="80"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: 80 (typical range: 75-85, volume-weighted overbought)
+                                </p>
+                              </div>
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Oversold Level
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={condition.oversoldLevel !== undefined ? condition.oversoldLevel : 20}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      oversoldLevel: parseInt(e.target.value) || 20,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="20"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: 20 (typical range: 15-25, volume-weighted oversold)
                                 </p>
                               </div>
                             </div>
