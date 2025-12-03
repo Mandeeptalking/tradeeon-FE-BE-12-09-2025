@@ -246,7 +246,8 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     indicator: 'STOCHASTIC',
     component: 'k_percent',
     operator: 'crosses_above',
-    period: 14,
+    kPeriod: 14,
+    dPeriod: 3,
     timeframe: '1h',
   },
   {
@@ -256,7 +257,8 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     component: 'k_percent',
     operator: 'less_than',
     value: 20,
-    period: 14,
+    kPeriod: 14,
+    dPeriod: 3,
     timeframe: '1h',
   },
   {
@@ -1106,6 +1108,14 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       if (indicator === 'ADX' && component === 'minus_di') return false; // -DI crosses +DI
       // Price crossing indicators (for moving averages, bands, channels, VWAP)
       if (['EMA', 'SMA', 'WMA', 'TEMA', 'HULL', 'BOLLINGER_BANDS', 'KELTNER_CHANNELS', 'VWAP'].includes(indicator)) {
+        // Keltner Channels price_closes_percent operators need value
+        if (indicator === 'KELTNER_CHANNELS' && ['price_closes_percent_above', 'price_closes_percent_below'].includes(operator)) {
+          return true;
+        }
+        // Price percentage operators (price_percent_above/below) also need value
+        if (['price_percent_above', 'price_percent_below'].includes(operator)) {
+          return true;
+        }
         return false; // Price crosses indicator - no value needed
       }
       // Price action crossovers (comparing price components to each other)
@@ -1407,10 +1417,11 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
     // Handle different operator types
     if (condition.operator === 'between' && condition.lowerBound !== undefined && condition.upperBound !== undefined) {
       desc += ` ${condition.lowerBound}-${condition.upperBound}`;
-    } else if (condition.operator === 'price_percent_above' || condition.operator === 'price_percent_below') {
+    } else if (condition.operator === 'price_percent_above' || condition.operator === 'price_percent_below' || condition.operator === 'price_closes_percent_above' || condition.operator === 'price_closes_percent_below') {
       // Price percentage conditions
       if (condition.value !== undefined) {
-        desc += ` ${condition.value}%`;
+        const operatorText = condition.operator.includes('closes') ? 'closes' : 'is';
+        desc += ` ${operatorText} ${condition.value}%`;
       }
     } else if (condition.operator === 'crosses_above_zero' || condition.operator === 'crosses_below_zero') {
       // Zero crossover conditions
@@ -2703,11 +2714,12 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                   type="number"
                                   min="1"
                                   value={condition.signalPeriod !== undefined ? condition.signalPeriod : 9}
-                                  onChange={(e) =>
+                                  onChange={(e) => {
+                                    const signal = e.target.value === '' ? 9 : parseInt(e.target.value);
                                     handleUpdateCondition(condition.id, {
-                                      signalPeriod: parseInt(e.target.value) || 9,
-                                    })
-                                  }
+                                      signalPeriod: signal > 0 ? signal : 9,
+                                    });
+                                  }}
                                   className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
                                   placeholder="9"
                                 />
@@ -2725,15 +2737,22 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               </label>
                               <Input
                                 type="number"
-                                value={condition.lowerBound || ''}
-                                onChange={(e) =>
+                                step="0.1"
+                                value={condition.lowerBound !== undefined ? condition.lowerBound : ''}
+                                onChange={(e) => {
+                                  const lower = e.target.value === '' ? undefined : parseFloat(e.target.value);
                                   handleUpdateCondition(condition.id, {
-                                    lowerBound: parseFloat(e.target.value) || undefined,
-                                  })
-                                }
+                                    lowerBound: lower,
+                                  });
+                                }}
                                 className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
                                 placeholder="25"
                               />
+                              {condition.lowerBound !== undefined && condition.upperBound !== undefined && condition.lowerBound >= condition.upperBound && (
+                                <p className={`text-xs mt-1 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                                  ⚠️ Lower bound must be less than upper bound
+                                </p>
+                              )}
                             </div>
                             <div>
                               <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
@@ -2741,18 +2760,25 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               </label>
                               <Input
                                 type="number"
-                                value={condition.upperBound || ''}
-                                onChange={(e) =>
+                                step="0.1"
+                                value={condition.upperBound !== undefined ? condition.upperBound : ''}
+                                onChange={(e) => {
+                                  const upper = e.target.value === '' ? undefined : parseFloat(e.target.value);
                                   handleUpdateCondition(condition.id, {
-                                    upperBound: parseFloat(e.target.value) || undefined,
-                                  })
-                                }
+                                    upperBound: upper,
+                                  });
+                                }}
                                 className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
                                 placeholder="35"
                               />
+                              {condition.lowerBound !== undefined && condition.upperBound !== undefined && condition.lowerBound >= condition.upperBound && (
+                                <p className={`text-xs mt-1 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                                  ⚠️ Upper bound must be greater than lower bound
+                                </p>
+                              )}
                             </div>
                           </div>
-                        ) : condition.operator === 'price_percent_above' || condition.operator === 'price_percent_below' ? (
+                        ) : condition.operator === 'price_percent_above' || condition.operator === 'price_percent_below' || condition.operator === 'price_closes_percent_above' || condition.operator === 'price_closes_percent_below' ? (
                           // Percentage-based price conditions
                           <div>
                             <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
@@ -2761,9 +2787,10 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                             <Input
                               type="number"
                               step="0.1"
+                              min="0"
                               value={condition.value !== undefined ? Math.abs(condition.value) : ''}
                               onChange={(e) => {
-                                const percent = parseFloat(e.target.value) || undefined;
+                                const percent = e.target.value === '' ? undefined : parseFloat(e.target.value);
                                 handleUpdateCondition(condition.id, {
                                   value: percent !== undefined ? Math.abs(percent) : undefined,
                                 });
@@ -2772,9 +2799,9 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               placeholder="2.5"
                             />
                             <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                              {condition.operator === 'price_percent_above'
-                                ? `Price must be ${condition.value || 'X'}% above the ${condition.component === 'line' ? 'indicator' : 'band/channel'}`
-                                : `Price must be ${condition.value || 'X'}% below the ${condition.component === 'line' ? 'indicator' : 'band/channel'}`}
+                              {condition.operator === 'price_percent_above' || condition.operator === 'price_closes_percent_above'
+                                ? `Price ${condition.operator.includes('closes') ? 'closes' : 'must be'} ${condition.value || 'X'}% above the ${condition.component === 'line' ? 'indicator' : condition.component === 'upper_channel' ? 'upper channel' : condition.component === 'lower_channel' ? 'lower channel' : condition.component === 'middle_channel' ? 'middle channel' : 'band/channel'}`
+                                : `Price ${condition.operator.includes('closes') ? 'closes' : 'must be'} ${condition.value || 'X'}% below the ${condition.component === 'line' ? 'indicator' : condition.component === 'upper_channel' ? 'upper channel' : condition.component === 'lower_channel' ? 'lower channel' : condition.component === 'middle_channel' ? 'middle channel' : 'band/channel'}`}
                             </p>
                           </div>
                         ) : !operatorNeedsValue(condition.operator, condition.indicator, condition.component) ? (
@@ -2801,6 +2828,8 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               {condition.operator === 'crosses_below' && condition.indicator === 'BOLLINGER_BANDS' && 'Triggers when price crosses below the band'}
                               {condition.operator === 'crosses_above' && condition.indicator === 'KELTNER_CHANNELS' && 'Triggers when price crosses above the channel'}
                               {condition.operator === 'crosses_below' && condition.indicator === 'KELTNER_CHANNELS' && 'Triggers when price crosses below the channel'}
+                              {condition.operator === 'price_closes_percent_above' && condition.indicator === 'KELTNER_CHANNELS' && `Triggers when closing price is ${condition.value || 'X'}% above the ${condition.component === 'upper_channel' ? 'upper' : condition.component === 'lower_channel' ? 'lower' : 'middle'} channel`}
+                              {condition.operator === 'price_closes_percent_below' && condition.indicator === 'KELTNER_CHANNELS' && `Triggers when closing price is ${condition.value || 'X'}% below the ${condition.component === 'upper_channel' ? 'upper' : condition.component === 'lower_channel' ? 'lower' : 'middle'} channel`}
                               {condition.operator === 'crosses_above' && condition.indicator === 'VWAP' && 'Triggers when price crosses above VWAP'}
                               {condition.operator === 'crosses_below' && condition.indicator === 'VWAP' && 'Triggers when price crosses below VWAP'}
                               {condition.operator === 'crosses_above_overbought' && condition.indicator === 'RSI' && `Triggers when RSI crosses above overbought level (${condition.overboughtLevel ?? 70})`}
