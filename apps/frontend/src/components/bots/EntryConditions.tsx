@@ -2499,6 +2499,53 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                             </div>
                           )}
                           
+                          {/* Keltner Channels Parameters */}
+                          {condition.indicator === 'KELTNER_CHANNELS' && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Period (Length)
+                                </label>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={condition.period !== undefined ? condition.period : ''}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      period: parseInt(e.target.value) || undefined,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="20"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: 20 (EMA period for middle channel)
+                                </p>
+                              </div>
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Multiplier (ATR)
+                                </label>
+                                <Input
+                                  type="number"
+                                  step="0.1"
+                                  min="0.1"
+                                  value={condition.multiplier !== undefined ? condition.multiplier : ''}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      multiplier: parseFloat(e.target.value) || undefined,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="1.5"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: 1.5 (ATR multiplier for channel width)
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
                           {/* MACD Parameters */}
                           {condition.indicator === 'MACD' && (
                             <div className="grid grid-cols-3 gap-2">
