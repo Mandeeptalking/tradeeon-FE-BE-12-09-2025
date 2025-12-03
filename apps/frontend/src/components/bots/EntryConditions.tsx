@@ -677,6 +677,9 @@ const INDICATORS = [
   
   // Price Action
   { value: 'Price', label: 'Price Action', category: 'Price', icon: Zap },
+  
+  // Volume (pure volume conditions)
+  { value: 'Volume', label: 'Volume', category: 'Volume', icon: BarChart3 },
 ];
 
 // Price Action Components
