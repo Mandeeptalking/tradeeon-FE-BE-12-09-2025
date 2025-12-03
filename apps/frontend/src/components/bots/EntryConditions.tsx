@@ -126,8 +126,7 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     enabled: true,
     indicator: 'MACD',
     component: 'histogram',
-    operator: 'crosses_above',
-    value: 0,
+    operator: 'crosses_above_zero',
     fastPeriod: 12,
     slowPeriod: 26,
     signalPeriod: 9,
@@ -138,8 +137,7 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     enabled: true,
     indicator: 'MACD',
     component: 'histogram',
-    operator: 'crosses_below',
-    value: 0,
+    operator: 'crosses_below_zero',
     fastPeriod: 12,
     slowPeriod: 26,
     signalPeriod: 9,
@@ -219,7 +217,6 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     indicator: 'MACD',
     component: 'macd_line',
     operator: 'crosses_above_zero',
-    value: 0,
     fastPeriod: 12,
     slowPeriod: 26,
     signalPeriod: 9,
@@ -243,7 +240,6 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     indicator: 'MACD',
     component: 'histogram',
     operator: 'crosses_below_zero',
-    value: 0,
     fastPeriod: 12,
     slowPeriod: 26,
     signalPeriod: 9,
@@ -293,7 +289,6 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     indicator: 'CCI',
     component: 'cci_line',
     operator: 'crosses_above_overbought',
-    value: 100,
     period: 20,
     timeframe: '1h',
   },
@@ -303,7 +298,6 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     indicator: 'OBV',
     component: 'obv_line',
     operator: 'crosses_above_zero',
-    value: 0,
     timeframe: '1h',
   },
   {
@@ -692,26 +686,32 @@ const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }
   
   // Price Action
   'close': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'Crosses Above Level' },
+    { value: 'crosses_below', label: 'Crosses Below Level' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'crosses_above_open', label: 'Crosses Above Open' },
+    { value: 'crosses_below_open', label: 'Crosses Below Open' },
+    { value: 'crosses_above_high', label: 'Crosses Above High' },
+    { value: 'crosses_below_low', label: 'Crosses Below Low' },
   ],
   'open': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'Crosses Above Level' },
+    { value: 'crosses_below', label: 'Crosses Below Level' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
+    { value: 'crosses_above_close', label: 'Crosses Above Close' },
+    { value: 'crosses_below_close', label: 'Crosses Below Close' },
   ],
   'high': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'Crosses Above Level' },
+    { value: 'crosses_below', label: 'Crosses Below Level' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
   ],
   'low': [
-    { value: 'crosses_above', label: 'Crosses Above' },
-    { value: 'crosses_below', label: 'Crosses Below' },
+    { value: 'crosses_above', label: 'Crosses Above Level' },
+    { value: 'crosses_below', label: 'Crosses Below Level' },
     { value: 'greater_than', label: 'Greater Than' },
     { value: 'less_than', label: 'Less Than' },
   ],
@@ -790,6 +790,10 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       // Price crossing indicators (for moving averages, bands, channels, VWAP)
       if (['EMA', 'SMA', 'WMA', 'TEMA', 'HULL', 'BOLLINGER_BANDS', 'KELTNER_CHANNELS', 'VWAP'].includes(indicator)) {
         return false; // Price crosses indicator - no value needed
+      }
+      // Price action crossovers (comparing price components to each other)
+      if (indicator === 'Price' && ['crosses_above_open', 'crosses_below_open', 'crosses_above_close', 'crosses_below_close', 'crosses_above_high', 'crosses_below_low'].includes(operator)) {
+        return false; // Price component crosses another price component - no value needed
       }
     }
     
@@ -1588,7 +1592,8 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                           </div>
 
                           {/* Period/Parameters based on indicator type */}
-                          {['RSI', 'EMA', 'SMA', 'WMA', 'TEMA', 'HULL', 'CCI', 'MFI', 'STOCHASTIC', 'WILLIAMS_R', 'ATR', 'ADX', 'OBV'].includes(condition.indicator) && 
+                          {/* OBV and VWAP don't need periods - OBV is cumulative, VWAP is session-based */}
+                          {['RSI', 'EMA', 'SMA', 'WMA', 'TEMA', 'HULL', 'CCI', 'MFI', 'STOCHASTIC', 'WILLIAMS_R', 'ATR', 'ADX'].includes(condition.indicator) && 
                            !(['EMA', 'SMA', 'WMA', 'TEMA', 'HULL'].includes(condition.indicator) && 
                              (condition.operator === 'crosses_above_ma' || condition.operator === 'crosses_below_ma' || 
                               condition.operator === 'greater_than_ma' || condition.operator === 'less_than_ma')) && (
@@ -1639,15 +1644,24 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                   {(condition.comparisonMaType || condition.indicator) === condition.indicator ? (
                                     <Input
                                       type="number"
+                                      min="1"
                                       value={condition.comparisonPeriod !== undefined && condition.comparisonPeriod !== null ? condition.comparisonPeriod : ''}
-                                      onChange={(e) =>
-                                        handleUpdateCondition(condition.id, {
-                                          comparisonPeriod: e.target.value ? parseInt(e.target.value) : undefined,
-                                        })
-                                      }
+                                      onChange={(e) => {
+                                        const compPeriod = e.target.value ? parseInt(e.target.value) : undefined;
+                                        // Warn if comparisonPeriod equals period for same MA type
+                                        if (compPeriod && compPeriod === condition.period && condition.indicator === condition.comparisonMaType) {
+                                          // Still allow but will show warning
+                                        }
+                                        handleUpdateCondition(condition.id, { comparisonPeriod: compPeriod });
+                                      }}
                                       className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
                                       placeholder={condition.indicator === 'EMA' ? '200' : '100'}
                                     />
+                                    {condition.comparisonPeriod !== undefined && condition.comparisonPeriod <= 0 && (
+                                      <p className={`text-xs mt-1 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                                        ⚠️ Period must be greater than 0
+                                      </p>
+                                    )}
                                   ) : (
                                     <Select
                                       value={condition.comparisonMaType || condition.indicator}
@@ -1676,19 +1690,29 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                   </label>
                                   <Input
                                     type="number"
+                                    min="1"
                                     value={condition.comparisonPeriod !== undefined && condition.comparisonPeriod !== null ? condition.comparisonPeriod : ''}
-                                    onChange={(e) =>
-                                      handleUpdateCondition(condition.id, {
-                                        comparisonPeriod: e.target.value ? parseInt(e.target.value) : undefined,
-                                      })
-                                    }
+                                    onChange={(e) => {
+                                      const compPeriod = e.target.value ? parseInt(e.target.value) : undefined;
+                                      handleUpdateCondition(condition.id, { comparisonPeriod: compPeriod });
+                                    }}
                                     className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
                                     placeholder={condition.comparisonMaType === 'EMA' ? '100' : '200'}
                                   />
+                                  {condition.comparisonPeriod !== undefined && condition.comparisonPeriod <= 0 && (
+                                    <p className={`text-xs mt-1 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                                      ⚠️ Period must be greater than 0
+                                    </p>
+                                  )}
                                 </div>
                               )}
                               <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                 {condition.indicator} {condition.period !== undefined && condition.period !== null ? condition.period : 'X'} {condition.operator === 'crosses_above_ma' ? 'crosses above' : condition.operator === 'crosses_below_ma' ? 'crosses below' : condition.operator === 'greater_than_ma' ? 'is greater than' : 'is less than'} {condition.comparisonMaType || condition.indicator} {condition.comparisonPeriod !== undefined && condition.comparisonPeriod !== null ? condition.comparisonPeriod : 'X'}
+                                {condition.period === condition.comparisonPeriod && condition.indicator === condition.comparisonMaType && condition.period !== undefined && condition.comparisonPeriod !== undefined && (
+                                  <span className={`ml-2 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                                    ⚠️ Both periods are the same
+                                  </span>
+                                )}
                               </p>
                             </>
                           )}
@@ -1744,15 +1768,24 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 </label>
                                 <Input
                                   type="number"
+                                  min="1"
                                   value={condition.fastPeriod || ''}
-                                  onChange={(e) =>
-                                    handleUpdateCondition(condition.id, {
-                                      fastPeriod: parseInt(e.target.value) || undefined,
-                                    })
-                                  }
+                                  onChange={(e) => {
+                                    const fast = parseInt(e.target.value) || undefined;
+                                    // Ensure fast < slow if slow is set
+                                    if (fast && condition.slowPeriod && fast >= condition.slowPeriod) {
+                                      return; // Don't update if invalid
+                                    }
+                                    handleUpdateCondition(condition.id, { fastPeriod: fast });
+                                  }}
                                   className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
                                   placeholder="12"
                                 />
+                                {condition.fastPeriod && condition.slowPeriod && condition.fastPeriod >= condition.slowPeriod && (
+                                  <p className={`text-xs mt-1 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                                    ⚠️ Fast period must be less than slow period
+                                  </p>
+                                )}
                               </div>
                               <div>
                                 <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
@@ -1760,15 +1793,24 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 </label>
                                 <Input
                                   type="number"
+                                  min="1"
                                   value={condition.slowPeriod || ''}
-                                  onChange={(e) =>
-                                    handleUpdateCondition(condition.id, {
-                                      slowPeriod: parseInt(e.target.value) || undefined,
-                                    })
-                                  }
+                                  onChange={(e) => {
+                                    const slow = parseInt(e.target.value) || undefined;
+                                    // Ensure slow > fast if fast is set
+                                    if (slow && condition.fastPeriod && slow <= condition.fastPeriod) {
+                                      return; // Don't update if invalid
+                                    }
+                                    handleUpdateCondition(condition.id, { slowPeriod: slow });
+                                  }}
                                   className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
                                   placeholder="26"
                                 />
+                                {condition.fastPeriod && condition.slowPeriod && condition.fastPeriod >= condition.slowPeriod && (
+                                  <p className={`text-xs mt-1 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                                    ⚠️ Slow period must be greater than fast period
+                                  </p>
+                                )}
                               </div>
                               <div>
                                 <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
