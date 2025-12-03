@@ -276,13 +276,80 @@ const PREDEFINED_CONDITIONS: Omit<EntryCondition, 'id'>[] = [
     timeframe: '4h',
   },
   {
-    name: 'CCI Crosses Above +100',
+    name: 'CCI Crosses Above Zero',
+    enabled: true,
+    indicator: 'CCI',
+    component: 'cci_line',
+    operator: 'crosses_above_zero',
+    period: 20,
+    timeframe: '1h',
+  },
+  {
+    name: 'CCI Crosses Below Zero',
+    enabled: true,
+    indicator: 'CCI',
+    component: 'cci_line',
+    operator: 'crosses_below_zero',
+    period: 20,
+    timeframe: '1h',
+  },
+  {
+    name: 'CCI Crosses Above Overbought',
     enabled: true,
     indicator: 'CCI',
     component: 'cci_line',
     operator: 'crosses_above_overbought',
     period: 20,
+    overboughtLevel: 100,
     timeframe: '1h',
+  },
+  {
+    name: 'CCI Crosses Below Oversold',
+    enabled: true,
+    indicator: 'CCI',
+    component: 'cci_line',
+    operator: 'crosses_below_oversold',
+    period: 20,
+    oversoldLevel: -100,
+    timeframe: '1h',
+  },
+  {
+    name: 'CCI Above Overbought Level',
+    enabled: true,
+    indicator: 'CCI',
+    component: 'cci_line',
+    operator: 'greater_than_overbought',
+    period: 20,
+    overboughtLevel: 100,
+    timeframe: '4h',
+  },
+  {
+    name: 'CCI Below Oversold Level',
+    enabled: true,
+    indicator: 'CCI',
+    component: 'cci_line',
+    operator: 'less_than_oversold',
+    period: 20,
+    oversoldLevel: -100,
+    timeframe: '4h',
+  },
+  {
+    name: 'CCI Above Zero',
+    enabled: true,
+    indicator: 'CCI',
+    component: 'cci_line',
+    operator: 'greater_than_zero',
+    period: 20,
+    timeframe: '4h',
+  },
+  {
+    name: 'CCI Below Zero',
+    enabled: true,
+    indicator: 'CCI',
+    component: 'cci_line',
+    operator: 'less_than_zero',
+    period: 20,
+    timeframe: '4h',
   },
   {
     name: 'OBV Crosses Above Zero',
@@ -1072,6 +1139,38 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
         return `Stochastic ${componentLabel} ${condition.period || 14} Greater Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
       } else if (condition.operator === 'less_than_oversold') {
         return `Stochastic ${componentLabel} ${condition.period || 14} Less Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      }
+    }
+    
+    // Special handling for CCI overbought/oversold and zero conditions
+    if (condition.indicator === 'CCI' && condition.component === 'cci_line') {
+      const overboughtLevel = condition.overboughtLevel ?? 100;
+      const oversoldLevel = condition.oversoldLevel ?? -100;
+      
+      if (condition.operator === 'crosses_above_zero') {
+        return `CCI ${condition.period || 20} Crosses Above Zero on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'crosses_below_zero') {
+        return `CCI ${condition.period || 20} Crosses Below Zero on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'greater_than_zero') {
+        return `CCI ${condition.period || 20} Greater Than Zero on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'less_than_zero') {
+        return `CCI ${condition.period || 20} Less Than Zero on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'crosses_above_overbought') {
+        return `CCI ${condition.period || 20} Crosses Above Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'crosses_below_overbought') {
+        return `CCI ${condition.period || 20} Crosses Below Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'crosses_above_oversold') {
+        return `CCI ${condition.period || 20} Crosses Above Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'crosses_below_oversold') {
+        return `CCI ${condition.period || 20} Crosses Below Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'greater_than_overbought') {
+        return `CCI ${condition.period || 20} Greater Than Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'less_than_overbought') {
+        return `CCI ${condition.period || 20} Less Than Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'greater_than_oversold') {
+        return `CCI ${condition.period || 20} Greater Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+      } else if (condition.operator === 'less_than_oversold') {
+        return `CCI ${condition.period || 20} Less Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
       }
     }
     
@@ -1974,6 +2073,50 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                             </div>
                           )}
                           
+                          {/* CCI Overbought/Oversold Levels */}
+                          {condition.indicator === 'CCI' && condition.component === 'cci_line' && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Overbought Level
+                                </label>
+                                <Input
+                                  type="number"
+                                  value={condition.overboughtLevel !== undefined ? condition.overboughtLevel : 100}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      overboughtLevel: parseInt(e.target.value) || 100,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="100"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: +100 (typical range: +80 to +150)
+                                </p>
+                              </div>
+                              <div>
+                                <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                  Oversold Level
+                                </label>
+                                <Input
+                                  type="number"
+                                  value={condition.oversoldLevel !== undefined ? condition.oversoldLevel : -100}
+                                  onChange={(e) =>
+                                    handleUpdateCondition(condition.id, {
+                                      oversoldLevel: parseInt(e.target.value) || -100,
+                                    })
+                                  }
+                                  className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                  placeholder="-100"
+                                />
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Default: -100 (typical range: -150 to -80)
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
                           {/* Moving Average Crossover Parameters */}
                           {['EMA', 'SMA', 'WMA', 'TEMA', 'HULL'].includes(condition.indicator) && 
                            (condition.operator === 'crosses_above_ma' || condition.operator === 'crosses_below_ma' || 
@@ -2299,10 +2442,22 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               {condition.operator === 'less_than_overbought' && condition.indicator === 'WILLIAMS_R' && `Triggers when Williams %R is less than overbought level (${condition.overboughtLevel ?? -20})`}
                               {condition.operator === 'greater_than_oversold' && condition.indicator === 'WILLIAMS_R' && `Triggers when Williams %R is greater than oversold level (${condition.oversoldLevel ?? -80})`}
                               {condition.operator === 'less_than_oversold' && condition.indicator === 'WILLIAMS_R' && `Triggers when Williams %R is less than oversold level (${condition.oversoldLevel ?? -80})`}
-                              {condition.operator === 'crosses_above_overbought' && condition.indicator !== 'RSI' && condition.indicator !== 'STOCHASTIC' && condition.indicator !== 'WILLIAMS_R' && 'Triggers when indicator crosses above overbought level'}
-                              {condition.operator === 'crosses_below_oversold' && condition.indicator !== 'RSI' && condition.indicator !== 'STOCHASTIC' && condition.indicator !== 'WILLIAMS_R' && 'Triggers when indicator crosses below oversold level'}
-                              {condition.operator === 'crosses_above_oversold' && condition.indicator !== 'RSI' && condition.indicator !== 'STOCHASTIC' && condition.indicator !== 'WILLIAMS_R' && 'Triggers when indicator crosses above oversold level'}
-                              {condition.operator === 'crosses_below_overbought' && condition.indicator !== 'RSI' && condition.indicator !== 'STOCHASTIC' && condition.indicator !== 'WILLIAMS_R' && 'Triggers when indicator crosses below overbought level'}
+                              {condition.operator === 'crosses_above_zero' && condition.indicator === 'CCI' && 'Triggers when CCI crosses above zero (bullish signal)'}
+                              {condition.operator === 'crosses_below_zero' && condition.indicator === 'CCI' && 'Triggers when CCI crosses below zero (bearish signal)'}
+                              {condition.operator === 'greater_than_zero' && condition.indicator === 'CCI' && 'Triggers when CCI is greater than zero (bullish territory)'}
+                              {condition.operator === 'less_than_zero' && condition.indicator === 'CCI' && 'Triggers when CCI is less than zero (bearish territory)'}
+                              {condition.operator === 'crosses_above_overbought' && condition.indicator === 'CCI' && `Triggers when CCI crosses above overbought level (${condition.overboughtLevel ?? 100})`}
+                              {condition.operator === 'crosses_below_overbought' && condition.indicator === 'CCI' && `Triggers when CCI crosses below overbought level (${condition.overboughtLevel ?? 100})`}
+                              {condition.operator === 'crosses_above_oversold' && condition.indicator === 'CCI' && `Triggers when CCI crosses above oversold level (${condition.oversoldLevel ?? -100})`}
+                              {condition.operator === 'crosses_below_oversold' && condition.indicator === 'CCI' && `Triggers when CCI crosses below oversold level (${condition.oversoldLevel ?? -100})`}
+                              {condition.operator === 'greater_than_overbought' && condition.indicator === 'CCI' && `Triggers when CCI is greater than overbought level (${condition.overboughtLevel ?? 100})`}
+                              {condition.operator === 'less_than_overbought' && condition.indicator === 'CCI' && `Triggers when CCI is less than overbought level (${condition.overboughtLevel ?? 100})`}
+                              {condition.operator === 'greater_than_oversold' && condition.indicator === 'CCI' && `Triggers when CCI is greater than oversold level (${condition.oversoldLevel ?? -100})`}
+                              {condition.operator === 'less_than_oversold' && condition.indicator === 'CCI' && `Triggers when CCI is less than oversold level (${condition.oversoldLevel ?? -100})`}
+                              {condition.operator === 'crosses_above_overbought' && condition.indicator !== 'RSI' && condition.indicator !== 'STOCHASTIC' && condition.indicator !== 'WILLIAMS_R' && condition.indicator !== 'CCI' && 'Triggers when indicator crosses above overbought level'}
+                              {condition.operator === 'crosses_below_oversold' && condition.indicator !== 'RSI' && condition.indicator !== 'STOCHASTIC' && condition.indicator !== 'WILLIAMS_R' && condition.indicator !== 'CCI' && 'Triggers when indicator crosses below oversold level'}
+                              {condition.operator === 'crosses_above_oversold' && condition.indicator !== 'RSI' && condition.indicator !== 'STOCHASTIC' && condition.indicator !== 'WILLIAMS_R' && condition.indicator !== 'CCI' && 'Triggers when indicator crosses above oversold level'}
+                              {condition.operator === 'crosses_below_overbought' && condition.indicator !== 'RSI' && condition.indicator !== 'STOCHASTIC' && condition.indicator !== 'WILLIAMS_R' && condition.indicator !== 'CCI' && 'Triggers when indicator crosses below overbought level'}
                               {condition.operator === 'crosses_above' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line crosses above Signal Line'}
                               {condition.operator === 'crosses_below' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line crosses below Signal Line'}
                               {condition.operator === 'crosses_above_zero' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line crosses above zero'}
