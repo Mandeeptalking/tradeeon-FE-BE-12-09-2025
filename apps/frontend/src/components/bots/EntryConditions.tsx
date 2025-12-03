@@ -730,6 +730,33 @@ const PRICE_ACTION_COMPARE_WITH: { value: PriceActionCompareWithType; label: str
   { value: 'previous_low', label: 'Previous Low' },
 ];
 
+// Volume Operators
+const VOLUME_OPERATORS: { value: VolumeOperator; label: string; category: 'level' | 'volume-to-volume' | 'spike'; needsCompare: boolean }[] = [
+  // Level-based
+  { value: 'crosses_above_level', label: 'Crosses Above Level', category: 'level', needsCompare: true },
+  { value: 'crosses_below_level', label: 'Crosses Below Level', category: 'level', needsCompare: true },
+  { value: 'greater_than', label: 'Greater Than', category: 'level', needsCompare: true },
+  { value: 'less_than', label: 'Less Than', category: 'level', needsCompare: true },
+  { value: 'equal_to', label: 'Equal To', category: 'level', needsCompare: true },
+  { value: 'not_equal', label: 'Not Equal', category: 'level', needsCompare: true },
+  // Volume-to-volume
+  { value: 'crosses_above_avg', label: 'Crosses Above Average', category: 'volume-to-volume', needsCompare: false },
+  { value: 'crosses_below_avg', label: 'Crosses Below Average', category: 'volume-to-volume', needsCompare: false },
+  { value: 'volume_gt_prev_volume', label: 'Volume > Previous Volume', category: 'volume-to-volume', needsCompare: false },
+  { value: 'volume_lt_prev_volume', label: 'Volume < Previous Volume', category: 'volume-to-volume', needsCompare: false },
+  // Volume spike/drop
+  { value: 'volume_spike', label: 'Volume Spike (% Above Average)', category: 'spike', needsCompare: false },
+  { value: 'volume_drop', label: 'Volume Drop (% Below Average)', category: 'spike', needsCompare: false },
+];
+
+// Volume Compare With Options
+const VOLUME_COMPARE_WITH: { value: VolumeCompareWithType; label: string; description: string }[] = [
+  { value: 'value', label: 'Value', description: 'Compare to a fixed volume value' },
+  { value: 'avg_volume', label: 'Average Volume', description: 'Compare to moving average of volume' },
+  { value: 'previous_volume', label: 'Previous Volume', description: 'Compare to previous candle\'s volume' },
+  { value: 'indicator', label: 'Volume Indicator', description: 'Compare to OBV or VWAP indicator' },
+];
+
 // Helper function to check if operator is pattern-based
 const isPatternOperator = (operator: string): boolean => {
   return [
