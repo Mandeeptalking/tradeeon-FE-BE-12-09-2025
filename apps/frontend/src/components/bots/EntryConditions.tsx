@@ -2198,7 +2198,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 if (['crosses_above_ma', 'crosses_below_ma', 'greater_than_ma', 'less_than_ma'].includes(value) && 
                                     ['EMA', 'SMA', 'WMA', 'TEMA', 'HULL'].includes(condition.indicator) &&
                                     !condition.comparisonMaType) {
-                                  updates.comparisonMaType = condition.indicator;
+                                  updates.comparisonMaType = condition.indicator as 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL';
                                 }
                                 handleUpdateCondition(condition.id, updates);
                               }}
