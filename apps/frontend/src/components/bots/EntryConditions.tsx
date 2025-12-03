@@ -1288,23 +1288,25 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       const overboughtLevel = condition.overboughtLevel ?? 80;
       const oversoldLevel = condition.oversoldLevel ?? 20;
       const componentLabel = condition.component === 'k_percent' ? '%K' : '%D';
+      const kPeriod = condition.kPeriod ?? 14;
+      const dPeriod = condition.dPeriod ?? 3;
       
       if (condition.operator === 'crosses_above_overbought') {
-        return `Stochastic ${componentLabel} ${condition.period || 14} Crosses Above Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+        return `Stochastic ${componentLabel} (K: ${kPeriod}, D: ${dPeriod}) Crosses Above Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
       } else if (condition.operator === 'crosses_below_overbought') {
-        return `Stochastic ${componentLabel} ${condition.period || 14} Crosses Below Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+        return `Stochastic ${componentLabel} (K: ${kPeriod}, D: ${dPeriod}) Crosses Below Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
       } else if (condition.operator === 'crosses_above_oversold') {
-        return `Stochastic ${componentLabel} ${condition.period || 14} Crosses Above Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+        return `Stochastic ${componentLabel} (K: ${kPeriod}, D: ${dPeriod}) Crosses Above Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
       } else if (condition.operator === 'crosses_below_oversold') {
-        return `Stochastic ${componentLabel} ${condition.period || 14} Crosses Below Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+        return `Stochastic ${componentLabel} (K: ${kPeriod}, D: ${dPeriod}) Crosses Below Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
       } else if (condition.operator === 'greater_than_overbought') {
-        return `Stochastic ${componentLabel} ${condition.period || 14} Greater Than Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+        return `Stochastic ${componentLabel} (K: ${kPeriod}, D: ${dPeriod}) Greater Than Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
       } else if (condition.operator === 'less_than_overbought') {
-        return `Stochastic ${componentLabel} ${condition.period || 14} Less Than Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+        return `Stochastic ${componentLabel} (K: ${kPeriod}, D: ${dPeriod}) Less Than Overbought Level (${overboughtLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
       } else if (condition.operator === 'greater_than_oversold') {
-        return `Stochastic ${componentLabel} ${condition.period || 14} Greater Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+        return `Stochastic ${componentLabel} (K: ${kPeriod}, D: ${dPeriod}) Greater Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
       } else if (condition.operator === 'less_than_oversold') {
-        return `Stochastic ${componentLabel} ${condition.period || 14} Less Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
+        return `Stochastic ${componentLabel} (K: ${kPeriod}, D: ${dPeriod}) Less Than Oversold Level (${oversoldLevel}) on ${TIMEFRAMES.find((tf) => tf.value === condition.timeframe)?.label || condition.timeframe}`;
       }
     }
     
