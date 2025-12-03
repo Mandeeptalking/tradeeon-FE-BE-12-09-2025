@@ -1576,7 +1576,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                   size="sm"
                   onClick={() => {
                     // Initialize based on number of pairs
-                    const newConditions = { ...conditions, orderType: 'limit' };
+                    const newConditions: EntryConditionsData = { ...conditions, orderType: 'limit' };
                     if (selectedPairs.length === 1) {
                       // Single pair: use exact limitPrice
                       newConditions.limitPrice = conditions.limitPrice || 0;
@@ -2000,6 +2000,111 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                     {/* Expanded Configuration */}
                     {isExpanded && (
                       <div className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-700/50' : 'border-gray-200'} space-y-4`}>
+                        {/* Condition Sequencing and Duration */}
+                        <div className={`p-3 rounded-lg ${isDark ? 'bg-gray-800/50 border border-gray-700' : 'bg-gray-50 border border-gray-200'}`}>
+                          <div className="flex items-center gap-2 mb-3">
+                            <Clock className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                            <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                              Condition Sequence & Duration
+                            </label>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                Execution Order
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const currentOrder = condition.order || conditions.conditions.length;
+                                    if (currentOrder > 1) {
+                                      const prevCondition = conditions.conditions.find(c => (c.order || 0) === currentOrder - 1);
+                                      if (prevCondition) {
+                                        handleUpdateCondition(condition.id, { order: currentOrder - 1 });
+                                        handleUpdateCondition(prevCondition.id, { order: currentOrder });
+                                      } else {
+                                        handleUpdateCondition(condition.id, { order: currentOrder - 1 });
+                                      }
+                                    }
+                                  }}
+                                  className={`${isDark ? 'bg-gray-800 border-gray-700 text-white hover:bg-gray-700' : ''}`}
+                                  disabled={!condition.order || condition.order <= 1}
+                                >
+                                  <ArrowUp className="w-3 h-3" />
+                                </Button>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={condition.order !== undefined ? condition.order : ''}
+                                  onChange={(e) => {
+                                    const order = e.target.value === '' ? undefined : parseInt(e.target.value);
+                                    if (order !== undefined && order > 0) {
+                                      const existingCondition = conditions.conditions.find(c => c.id !== condition.id && (c.order || 0) === order);
+                                      if (existingCondition) {
+                                        handleUpdateCondition(existingCondition.id, { order: condition.order || conditions.conditions.length });
+                                      }
+                                      handleUpdateCondition(condition.id, { order });
+                                    } else {
+                                      handleUpdateCondition(condition.id, { order: undefined });
+                                    }
+                                  }}
+                                  className={`flex-1 ${isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
+                                  placeholder="Auto"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const currentOrder = condition.order || conditions.conditions.length;
+                                    const maxOrder = Math.max(...conditions.conditions.map(c => c.order || 0), conditions.conditions.length);
+                                    if (currentOrder < maxOrder) {
+                                      const nextCondition = conditions.conditions.find(c => (c.order || 0) === currentOrder + 1);
+                                      if (nextCondition) {
+                                        handleUpdateCondition(condition.id, { order: currentOrder + 1 });
+                                        handleUpdateCondition(nextCondition.id, { order: currentOrder });
+                                      } else {
+                                        handleUpdateCondition(condition.id, { order: currentOrder + 1 });
+                                      }
+                                    }
+                                  }}
+                                  className={`${isDark ? 'bg-gray-800 border-gray-700 text-white hover:bg-gray-700' : ''}`}
+                                  disabled={!condition.order || condition.order >= Math.max(...conditions.conditions.map(c => c.order || 0), conditions.conditions.length)}
+                                >
+                                  <ArrowDown className="w-3 h-3" />
+                                </Button>
+                              </div>
+                              <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                Lower numbers execute first
+                              </p>
+                            </div>
+                            <div>
+                              <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+                                Duration (Bars)
+                              </label>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={condition.durationBars !== undefined ? condition.durationBars : ''}
+                                onChange={(e) => {
+                                  const durationBars = e.target.value === '' ? undefined : parseInt(e.target.value);
+                                  handleUpdateCondition(condition.id, {
+                                    durationBars: durationBars !== undefined && durationBars > 0 ? durationBars : undefined,
+                                  });
+                                }}
+                                className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
+                                placeholder="Optional"
+                              />
+                              <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                How long condition must stay true before next condition can be evaluated
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
@@ -2057,7 +2162,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                   // If MA crossover operator is selected, default comparisonMaType to same as indicator
                                   if (['crosses_above_ma', 'crosses_below_ma', 'greater_than_ma', 'less_than_ma'].includes(newOperator) && 
                                       ['EMA', 'SMA', 'WMA', 'TEMA', 'HULL'].includes(condition.indicator)) {
-                                    updates.comparisonMaType = condition.indicator;
+                                    updates.comparisonMaType = condition.indicator as 'EMA' | 'SMA' | 'WMA' | 'TEMA' | 'HULL';
                                   }
                                   handleUpdateCondition(condition.id, updates);
                                 }}
