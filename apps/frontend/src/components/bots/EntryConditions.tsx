@@ -1831,7 +1831,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
           {/* Logic Gate Selection */}
           {conditions.conditions.length > 1 && (
             <div className={`p-4 rounded-lg border ${isDark ? 'border-gray-700/50 bg-gray-800/30' : 'border-gray-200 bg-white'}`}>
-              <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+              <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-3 block`}>
                 Logic Gate
               </label>
               <div className="flex gap-2">
@@ -1839,23 +1839,53 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                   type="button"
                   variant={conditions.logicGate === 'AND' ? 'default' : 'outline'}
                   onClick={() => onChange({ ...conditions, logicGate: 'AND' })}
-                  className="flex-1"
+                  className={`flex-1 transition-all ${
+                    conditions.logicGate === 'AND'
+                      ? isDark
+                        ? 'ring-2 ring-green-500/50 shadow-lg shadow-green-500/20 bg-green-600 hover:bg-green-700 text-white'
+                        : 'ring-2 ring-green-500/30 shadow-md bg-green-600 hover:bg-green-700 text-white'
+                      : isDark
+                      ? 'hover:bg-gray-700/50 border-gray-600'
+                      : 'hover:bg-gray-50 border-gray-300'
+                  }`}
                 >
-                  ALL (AND)
+                  <div className="flex items-center justify-center gap-2">
+                    <CheckCircle2 className={`w-4 h-4 ${conditions.logicGate === 'AND' ? 'text-white' : isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                    ALL (AND)
+                  </div>
                 </Button>
                 <Button
                   type="button"
                   variant={conditions.logicGate === 'OR' ? 'default' : 'outline'}
                   onClick={() => onChange({ ...conditions, logicGate: 'OR' })}
-                  className="flex-1"
+                  className={`flex-1 transition-all ${
+                    conditions.logicGate === 'OR'
+                      ? isDark
+                        ? 'ring-2 ring-orange-500/50 shadow-lg shadow-orange-500/20 bg-orange-600 hover:bg-orange-700 text-white'
+                        : 'ring-2 ring-orange-500/30 shadow-md bg-orange-600 hover:bg-orange-700 text-white'
+                      : isDark
+                      ? 'hover:bg-gray-700/50 border-gray-600'
+                      : 'hover:bg-gray-50 border-gray-300'
+                  }`}
                 >
-                  ANY (OR)
+                  <div className="flex items-center justify-center gap-2">
+                    <Sparkles className={`w-4 h-4 ${conditions.logicGate === 'OR' ? 'text-white' : isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                    ANY (OR)
+                  </div>
                 </Button>
               </div>
-              <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                {conditions.logicGate === 'AND'
-                  ? 'All enabled conditions must be true for entry'
-                  : 'At least one enabled condition must be true for entry'}
+              <p className={`text-xs mt-3 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                {conditions.logicGate === 'AND' ? (
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-green-500" />
+                    All enabled conditions must be true for entry
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-orange-500" />
+                    At least one enabled condition must be true for entry
+                  </span>
+                )}
               </p>
             </div>
           )}
