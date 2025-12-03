@@ -73,7 +73,7 @@ export interface EntryConditionsData {
 
 export interface EntryConditionsProps {
   conditions: EntryConditionsData;
-  onChange: (conditions: EntryConditionsData) => void;
+  onChange: (conditions: EntryConditionsData | ((prev: EntryConditionsData) => EntryConditionsData)) => void;
   className?: string;
   showTitle?: boolean;
   selectedPairs?: string[]; // Trading pairs from bot configuration
@@ -1225,24 +1225,23 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
   };
 
   const handleUpdateCondition = useCallback((id: string, updates: Partial<EntryCondition>) => {
-    // Preserve expanded state when updating
-    const wasExpanded = expandedCondition === id;
-    
-    // Create new conditions array without mutating the original
-    const updatedConditions = conditions.conditions.map((c) =>
-      c.id === id ? { ...c, ...updates } : c
-    );
-    
-    onChange({
-      ...conditions,
-      conditions: updatedConditions,
+    // Use functional update pattern to avoid dependency on conditions
+    onChange((prevConditions) => {
+      const updatedConditions = prevConditions.conditions.map((c) =>
+        c.id === id ? { ...c, ...updates } : c
+      );
+      
+      return {
+        ...prevConditions,
+        conditions: updatedConditions,
+      };
     });
     
     // Keep the condition expanded after update
-    if (wasExpanded) {
+    if (expandedCondition === id) {
       setExpandedCondition(id);
     }
-  }, [conditions, expandedCondition, onChange, setExpandedCondition]);
+  }, [expandedCondition, onChange, setExpandedCondition]);
 
   const handleRemoveCondition = (id: string) => {
     onChange({

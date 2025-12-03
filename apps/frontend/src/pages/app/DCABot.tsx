@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Bot,
   Play,
@@ -296,9 +296,12 @@ const DCABot: React.FC = () => {
               <EntryConditions
                 key="entry-conditions-component"
                 conditions={config.entryConditions}
-                onChange={(newConditions) =>
-                  setConfig((prev) => ({ ...prev, entryConditions: newConditions }))
-                }
+                onChange={useCallback((newConditions: EntryConditionsData | ((prev: EntryConditionsData) => EntryConditionsData)) => {
+                  setConfig((prev) => ({
+                    ...prev,
+                    entryConditions: typeof newConditions === 'function' ? newConditions(prev.entryConditions) : newConditions,
+                  }));
+                }, [])}
                 showTitle={false}
                 selectedPairs={config.botConfig.pairs}
                 expandedConditionId={expandedEntryCondition}
