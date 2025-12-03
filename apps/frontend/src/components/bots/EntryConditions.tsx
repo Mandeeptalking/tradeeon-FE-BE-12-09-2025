@@ -356,7 +356,6 @@ const INDICATOR_COMPONENTS: Record<string, Array<{ value: string; label: string;
     { value: 'macd_line', label: 'MACD Line', description: 'MACD Line (12-period EMA - 26-period EMA)' },
     { value: 'signal_line', label: 'Signal Line', description: 'Signal Line (9-period EMA of MACD Line)' },
     { value: 'histogram', label: 'Histogram', description: 'MACD Histogram (MACD Line - Signal Line)' },
-    { value: 'zero_line', label: 'Zero Line', description: 'Zero Line crossover' },
   ],
   STOCHASTIC: [
     { value: 'k_percent', label: '%K Line', description: 'Stochastic %K line' },
@@ -443,42 +442,53 @@ const COMPONENT_OPERATORS: Record<string, Array<{ value: string; label: string }
   
   // MACD
   'macd_line': [
+    // Crossovers with Signal Line
     { value: 'crosses_above', label: 'Crosses Above Signal Line' },
     { value: 'crosses_below', label: 'Crosses Below Signal Line' },
+    // Crossovers with Zero
     { value: 'crosses_above_zero', label: 'Crosses Above Zero' },
     { value: 'crosses_below_zero', label: 'Crosses Below Zero' },
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'less_than', label: 'Less Than' },
-    { value: 'equals', label: 'Equals' },
-    { value: 'greater_than_signal', label: 'Greater Than Signal Line' },
-    { value: 'less_than_signal', label: 'Less Than Signal Line' },
-  ],
-  'signal_line': [
-    { value: 'crosses_above', label: 'Crosses Above MACD Line' },
-    { value: 'crosses_below', label: 'Crosses Below MACD Line' },
-    { value: 'crosses_above_zero', label: 'Crosses Above Zero' },
-    { value: 'crosses_below_zero', label: 'Crosses Below Zero' },
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'less_than', label: 'Less Than' },
-    { value: 'equals', label: 'Equals' },
-    { value: 'greater_than_macd', label: 'Greater Than MACD Line' },
-    { value: 'less_than_macd', label: 'Less Than MACD Line' },
-  ],
-  'histogram': [
-    { value: 'crosses_above_zero', label: 'Crosses Above Zero' },
-    { value: 'crosses_below_zero', label: 'Crosses Below Zero' },
-    { value: 'greater_than', label: 'Greater Than' },
-    { value: 'less_than', label: 'Less Than' },
-    { value: 'equals', label: 'Equals' },
+    // Comparisons with Zero
     { value: 'greater_than_zero', label: 'Greater Than Zero' },
     { value: 'less_than_zero', label: 'Less Than Zero' },
-    { value: 'between', label: 'Between' },
+    // Comparisons with Signal Line
+    { value: 'greater_than_signal', label: 'Greater Than Signal Line' },
+    { value: 'less_than_signal', label: 'Less Than Signal Line' },
+    // Comparisons with Custom Value
+    { value: 'greater_than', label: 'Greater Than Value' },
+    { value: 'less_than', label: 'Less Than Value' },
+    { value: 'equals', label: 'Equals Value' },
   ],
-  'zero_line': [
-    { value: 'crosses_above', label: 'MACD Crosses Above Zero' },
-    { value: 'crosses_below', label: 'MACD Crosses Below Zero' },
-    { value: 'signal_crosses_above', label: 'Signal Crosses Above Zero' },
-    { value: 'signal_crosses_below', label: 'Signal Crosses Below Zero' },
+  'signal_line': [
+    // Crossovers with MACD Line
+    { value: 'crosses_above', label: 'Crosses Above MACD Line' },
+    { value: 'crosses_below', label: 'Crosses Below MACD Line' },
+    // Crossovers with Zero
+    { value: 'crosses_above_zero', label: 'Crosses Above Zero' },
+    { value: 'crosses_below_zero', label: 'Crosses Below Zero' },
+    // Comparisons with Zero
+    { value: 'greater_than_zero', label: 'Greater Than Zero' },
+    { value: 'less_than_zero', label: 'Less Than Zero' },
+    // Comparisons with MACD Line
+    { value: 'greater_than_macd', label: 'Greater Than MACD Line' },
+    { value: 'less_than_macd', label: 'Less Than MACD Line' },
+    // Comparisons with Custom Value
+    { value: 'greater_than', label: 'Greater Than Value' },
+    { value: 'less_than', label: 'Less Than Value' },
+    { value: 'equals', label: 'Equals Value' },
+  ],
+  'histogram': [
+    // Crossovers with Zero
+    { value: 'crosses_above_zero', label: 'Crosses Above Zero' },
+    { value: 'crosses_below_zero', label: 'Crosses Below Zero' },
+    // Comparisons with Zero
+    { value: 'greater_than_zero', label: 'Greater Than Zero' },
+    { value: 'less_than_zero', label: 'Less Than Zero' },
+    // Comparisons with Custom Value
+    { value: 'greater_than', label: 'Greater Than Value' },
+    { value: 'less_than', label: 'Less Than Value' },
+    { value: 'equals', label: 'Equals Value' },
+    { value: 'between', label: 'Between Values' },
   ],
   
   // Stochastic
@@ -777,6 +787,17 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       // Price action crossovers (comparing price components to each other)
       if (indicator === 'Price' && ['crosses_above_open', 'crosses_below_open', 'crosses_above_close', 'crosses_below_close', 'crosses_above_high', 'crosses_below_low'].includes(operator)) {
         return false; // Price component crosses another price component - no value needed
+      }
+    }
+    
+    // MACD zero crossover and comparison operators don't need values
+    if (indicator === 'MACD') {
+      if (['crosses_above_zero', 'crosses_below_zero', 'greater_than_zero', 'less_than_zero'].includes(operator)) {
+        return false;
+      }
+      // Component comparison operators (MACD vs Signal, Signal vs MACD)
+      if (['crosses_above', 'crosses_below', 'greater_than_signal', 'less_than_signal', 'greater_than_macd', 'less_than_macd'].includes(operator)) {
+        return false;
       }
     }
     
@@ -1991,12 +2012,28 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                               {condition.operator === 'crosses_below_oversold' && condition.indicator !== 'RSI' && 'Triggers when indicator crosses below oversold level'}
                               {condition.operator === 'crosses_above_oversold' && condition.indicator !== 'RSI' && 'Triggers when indicator crosses above oversold level'}
                               {condition.operator === 'crosses_below_overbought' && condition.indicator !== 'RSI' && 'Triggers when indicator crosses below overbought level'}
-                              {condition.operator === 'greater_than_zero' && 'Triggers when indicator is greater than zero'}
-                              {condition.operator === 'less_than_zero' && 'Triggers when indicator is less than zero'}
-                              {condition.operator === 'greater_than_signal' && 'Triggers when MACD Line is greater than Signal Line'}
-                              {condition.operator === 'less_than_signal' && 'Triggers when MACD Line is less than Signal Line'}
-                              {condition.operator === 'greater_than_macd' && 'Triggers when Signal Line is greater than MACD Line'}
-                              {condition.operator === 'less_than_macd' && 'Triggers when Signal Line is less than MACD Line'}
+                              {condition.operator === 'crosses_above' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line crosses above Signal Line'}
+                              {condition.operator === 'crosses_below' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line crosses below Signal Line'}
+                              {condition.operator === 'crosses_above_zero' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line crosses above zero'}
+                              {condition.operator === 'crosses_below_zero' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line crosses below zero'}
+                              {condition.operator === 'greater_than_zero' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line is greater than zero'}
+                              {condition.operator === 'less_than_zero' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line is less than zero'}
+                              {condition.operator === 'greater_than_signal' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line is greater than Signal Line'}
+                              {condition.operator === 'less_than_signal' && condition.indicator === 'MACD' && condition.component === 'macd_line' && 'Triggers when MACD Line is less than Signal Line'}
+                              {condition.operator === 'crosses_above' && condition.indicator === 'MACD' && condition.component === 'signal_line' && 'Triggers when Signal Line crosses above MACD Line'}
+                              {condition.operator === 'crosses_below' && condition.indicator === 'MACD' && condition.component === 'signal_line' && 'Triggers when Signal Line crosses below MACD Line'}
+                              {condition.operator === 'crosses_above_zero' && condition.indicator === 'MACD' && condition.component === 'signal_line' && 'Triggers when Signal Line crosses above zero'}
+                              {condition.operator === 'crosses_below_zero' && condition.indicator === 'MACD' && condition.component === 'signal_line' && 'Triggers when Signal Line crosses below zero'}
+                              {condition.operator === 'greater_than_zero' && condition.indicator === 'MACD' && condition.component === 'signal_line' && 'Triggers when Signal Line is greater than zero'}
+                              {condition.operator === 'less_than_zero' && condition.indicator === 'MACD' && condition.component === 'signal_line' && 'Triggers when Signal Line is less than zero'}
+                              {condition.operator === 'greater_than_macd' && condition.indicator === 'MACD' && condition.component === 'signal_line' && 'Triggers when Signal Line is greater than MACD Line'}
+                              {condition.operator === 'less_than_macd' && condition.indicator === 'MACD' && condition.component === 'signal_line' && 'Triggers when Signal Line is less than MACD Line'}
+                              {condition.operator === 'crosses_above_zero' && condition.indicator === 'MACD' && condition.component === 'histogram' && 'Triggers when Histogram crosses above zero'}
+                              {condition.operator === 'crosses_below_zero' && condition.indicator === 'MACD' && condition.component === 'histogram' && 'Triggers when Histogram crosses below zero'}
+                              {condition.operator === 'greater_than_zero' && condition.indicator === 'MACD' && condition.component === 'histogram' && 'Triggers when Histogram is greater than zero'}
+                              {condition.operator === 'less_than_zero' && condition.indicator === 'MACD' && condition.component === 'histogram' && 'Triggers when Histogram is less than zero'}
+                              {condition.operator === 'greater_than_zero' && condition.indicator !== 'MACD' && 'Triggers when indicator is greater than zero'}
+                              {condition.operator === 'less_than_zero' && condition.indicator !== 'MACD' && 'Triggers when indicator is less than zero'}
                               {condition.operator === 'greater_than_d' && 'Triggers when %K is greater than %D'}
                               {condition.operator === 'less_than_d' && 'Triggers when %K is less than %D'}
                               {condition.operator === 'greater_than_k' && 'Triggers when %D is greater than %K'}
