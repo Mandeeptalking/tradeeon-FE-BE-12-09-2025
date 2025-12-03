@@ -924,6 +924,16 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
       return false;
     }
     
+    // Williams %R operators don't need value field (they use overboughtLevel/oversoldLevel)
+    if (indicator === 'WILLIAMS_R' && ['crosses_above_overbought', 'crosses_below_overbought', 'crosses_above_oversold', 'crosses_below_oversold', 'greater_than_overbought', 'less_than_overbought', 'greater_than_oversold', 'less_than_oversold'].includes(operator)) {
+      return false;
+    }
+    
+    // CCI operators don't need value field (they use overboughtLevel/oversoldLevel or zero)
+    if (indicator === 'CCI' && ['crosses_above_overbought', 'crosses_below_overbought', 'crosses_above_oversold', 'crosses_below_oversold', 'greater_than_overbought', 'less_than_overbought', 'greater_than_oversold', 'less_than_oversold', 'crosses_above_zero', 'crosses_below_zero', 'greater_than_zero', 'less_than_zero'].includes(operator)) {
+      return false;
+    }
+    
     // Component crossover operators (comparing components to each other)
     if (operator === 'crosses_above' || operator === 'crosses_below') {
       if (indicator === 'MACD' && component === 'macd_line') return false; // MACD line crosses signal
