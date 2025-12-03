@@ -2039,6 +2039,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                   <ArrowUp className="w-3 h-3" />
                                 </Button>
                                 <Input
+                                  key={`order-${condition.id}`}
                                   type="number"
                                   min="1"
                                   value={condition.order !== undefined ? condition.order : ''}
@@ -2256,6 +2257,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                 Period
                               </label>
                               <Input
+                                key={`period-${condition.id}`}
                                 type="number"
                                 value={condition.period || ''}
                                 onChange={(e) =>
@@ -2277,6 +2279,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                   Overbought Level
                                 </label>
                                 <Input
+                                  key={`overbought-rsi-${condition.id}`}
                                   type="number"
                                   min="0"
                                   max="100"
@@ -2298,6 +2301,7 @@ const EntryConditions: React.FC<EntryConditionsProps> = ({
                                   Oversold Level
                                 </label>
                                 <Input
+                                  key={`oversold-rsi-${condition.id}`}
                                   type="number"
                                   min="0"
                                   max="100"
