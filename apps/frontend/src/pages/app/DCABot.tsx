@@ -448,24 +448,17 @@ const DCABot: React.FC = () => {
             </ConfigSection>
 
             {/* Advanced Features */}
-            <ConfigSection
-              id="advanced-features"
-              title="Advanced Features"
-              icon={Sparkles}
-              description="Market regime detection, dynamic scaling, profit taking"
-            >
-              <AdvancedFeatures
-                value={config.advancedFeatures}
-                onChange={(features) =>
-                  setConfig((prev) => ({
-                    ...prev,
-                    advancedFeatures: typeof features === 'function' ? features(prev.advancedFeatures) : features,
-                  }))
-                }
-                baseOrderCurrency="USDT"
-                entryConditions={config.entryConditions}
-              />
-            </ConfigSection>
+            <AdvancedFeatures
+              value={config.advancedFeatures}
+              onChange={(features) =>
+                setConfig((prev) => ({
+                  ...prev,
+                  advancedFeatures: typeof features === 'function' ? features(prev.advancedFeatures) : features,
+                }))
+              }
+              baseOrderCurrency="USDT"
+              entryConditions={config.entryConditions}
+            />
           </div>
 
           {/* Right Column - Summary & Stats */}
