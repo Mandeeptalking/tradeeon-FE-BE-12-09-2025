@@ -778,8 +778,11 @@ async def get_bot_logs(
         if not db_service.enabled or not db_service.supabase:
             return {
                 "success": True,
-                "events": [],
+                "logs": [],
                 "total": 0,
+                "limit": limit,
+                "offset": offset,
+                "has_more": False,
                 "message": "Database service not available"
             }
         
