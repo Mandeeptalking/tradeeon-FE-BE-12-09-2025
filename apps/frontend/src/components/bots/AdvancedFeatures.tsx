@@ -529,51 +529,20 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
   return (
     <div className="space-y-4">
       {/* Market Regime Detection */}
-      <div className={`rounded-lg border p-4 ${
-        isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-      }`}>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              🧠 Smart Market Regime Detection
-            </h2>
-            <span className={`text-xs px-2 py-0.5 rounded ${
-              isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'
-            }`}>
-              Phase 1
-            </span>
-            <Tooltip
-              content={
-                "Market Regime Detection automatically pauses/resumes your bot based on market conditions:\n\n" +
-                "⏸️ PAUSE Conditions (Bear Market):\n" +
-                "• Price below Moving Average + RSI below threshold\n" +
-                "• Volume decrease + consolidation\n" +
-                "Bot stops buying when bear market detected\n\n" +
-                "▶️ RESUME Conditions (Accumulation Zone):\n" +
-                "• Volume decreases (selling pressure reduces)\n" +
-                "• Price consolidates in range\n" +
-                "Bot resumes when accumulation detected\n\n" +
-                "⚠️ Important: If pause conditions conflict with your entry conditions (e.g., you want to buy below 200 EMA but pause triggers below 200 MA), pause will override entry. The conflict warning will alert you to this."
-              }
-            />
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={value.enableMarketRegime}
-              onChange={(e) => handleUpdate({ enableMarketRegime: e.target.checked })}
-              className="sr-only peer"
-            />
-            <div className={`w-11 h-6 rounded-full peer ${
-              isDark 
-                ? 'bg-gray-700 peer-checked:bg-blue-600' 
-                : 'bg-gray-200 peer-checked:bg-blue-600'
-            } peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600`}></div>
-          </label>
-        </div>
-        
+      <div>
+        <ToggleSwitch
+          enabled={value.enableMarketRegime}
+          onToggle={(enabled) => handleUpdate({ enableMarketRegime: enabled })}
+          label="Market Regime Detection"
+          description="Automatically adjust strategy based on market conditions"
+        />
         {value.enableMarketRegime && (
-          <div className="space-y-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <div className="mt-3 space-y-4 pl-4 border-l-2 border-purple-200 dark:border-purple-800 transition-all duration-200">
+            <SectionHeader
+              title="Market Regime Configuration"
+              icon={Gauge}
+            />
+            <div className="mt-3 space-y-4 pl-8">
                 <div>
                   <Label className={isDark ? 'text-gray-300' : 'text-gray-700'}>
                     Regime Timeframe
@@ -859,56 +828,26 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
                     Enable notifications for regime changes
                   </Label>
                 </div>
+              </div>
           </div>
         )}
       </div>
 
       {/* Dynamic Scaling */}
-      <div className={`rounded-lg border p-4 ${
-        isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-      }`}>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              📈 Dynamic DCA Amount Scaling
-            </h2>
-            <span className={`text-xs px-2 py-0.5 rounded ${
-              isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'
-            }`}>
-              Phase 1
-            </span>
-            <Tooltip
-              content={
-                "Dynamically adjusts DCA amounts based on market conditions:\n\n" +
-                "📊 Volatility-Based Scaling:\n" +
-                "• Low volatility: Increase DCA amounts (more aggressive)\n" +
-                "• High volatility: Decrease DCA amounts (more conservative)\n\n" +
-                "🎯 Support/Resistance Scaling:\n" +
-                "• Near strong support: Increase DCA amounts\n" +
-                "• Near resistance: Decrease DCA amounts\n\n" +
-                "😱 Fear & Greed Index:\n" +
-                "• Extreme fear: Scale up (buy the dip)\n" +
-                "• Extreme greed: Scale down (take profits)"
-              }
-            />
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={value.enableDynamicScaling}
-              onChange={(e) => handleUpdate({ enableDynamicScaling: e.target.checked })}
-              className="sr-only peer"
-            />
-            <div className={`w-11 h-6 rounded-full peer ${
-              isDark 
-                ? 'bg-gray-700 peer-checked:bg-blue-600' 
-                : 'bg-gray-200 peer-checked:bg-blue-600'
-            } peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600`}></div>
-          </label>
-        </div>
-        
+      <div>
+        <ToggleSwitch
+          enabled={value.enableDynamicScaling}
+          onToggle={(enabled) => handleUpdate({ enableDynamicScaling: enabled })}
+          label="Dynamic DCA Amount Scaling"
+          description="Dynamically adjusts DCA amounts based on market conditions"
+        />
         {value.enableDynamicScaling && (
-          <div className="space-y-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <div className="mt-3 space-y-4 pl-4 border-l-2 border-blue-200 dark:border-blue-800 transition-all duration-200">
+            <SectionHeader
+              title="Dynamic Scaling Configuration"
+              icon={LineChart}
+            />
+            <div className="mt-3 space-y-4 pl-8">
                 {/* Volatility-Based Scaling */}
                 <div>
                   <h4 className={`text-sm font-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
