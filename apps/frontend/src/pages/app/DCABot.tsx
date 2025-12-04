@@ -436,7 +436,6 @@ const DCABot: React.FC = () => {
               description="Market regime detection, dynamic scaling, profit taking"
             >
               <AdvancedFeatures
-                key="advanced-features-component"
                 value={config.advancedFeatures}
                 onChange={(features) =>
                   setConfig((prev) => ({

@@ -127,7 +127,9 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
 }) => {
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  // Use ref to persist expanded sections across re-renders
+  const expandedSectionsRef = useRef<Set<string>>(new Set());
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   
   // Local state for text inputs to prevent focus loss
   const [localValues, setLocalValues] = useState<{ [key: string]: number | string }>({});
@@ -268,6 +270,23 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
     focusedInputRef.current = null;
   }, [localValues]);
 
+  const toggleSection = useCallback((id: string) => {
+    setExpandedSections((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      expandedSectionsRef.current = newSet;
+      return newSet;
+    });
+  }, []);
+
+  const isSectionExpanded = useCallback((id: string) => {
+    return expandedSections.has(id);
+  }, [expandedSections]);
+
   const SectionHeader = ({
     id,
     title,
@@ -279,13 +298,21 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
     icon: any;
     description?: string;
   }) => {
-    const isOpen = expandedSection === id;
+    const isOpen = isSectionExpanded(id);
     return (
       <button
         type="button"
-        onClick={() => setExpandedSection(isOpen ? null : id)}
-        className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
-          isDark
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleSection(id);
+        }}
+        className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
+          isOpen
+            ? isDark
+              ? 'bg-gray-800/70 border-gray-600'
+              : 'bg-gray-100 border-gray-300'
+            : isDark
             ? 'hover:bg-gray-800/50 border border-gray-700/50'
             : 'hover:bg-gray-50 border border-gray-200'
         }`}
@@ -305,11 +332,9 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
             )}
           </div>
         </div>
-        {isOpen ? (
-          <ChevronUp className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-        ) : (
+        <div className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
           <ChevronDown className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-        )}
+        </div>
       </button>
     );
   };
@@ -326,34 +351,41 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
     description?: string;
   }) => {
     return (
-      <div className={`flex items-center justify-between p-3 rounded-lg border ${isDark ? 'border-gray-700/50' : 'border-gray-200'}`}>
-        <div className="flex items-center gap-3">
-          <div>
-            <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+      <div className={`flex items-center justify-between p-4 rounded-lg border transition-all duration-200 ${
+        enabled 
+          ? isDark ? 'border-blue-500/30 bg-blue-500/5' : 'border-blue-200 bg-blue-50/50'
+          : isDark ? 'border-gray-700/50 bg-gray-800/30' : 'border-gray-200 bg-white'
+      }`}>
+        <div className="flex items-center gap-3 flex-1">
+          <div className="flex-1">
+            <p className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
               {label}
             </p>
             {description && (
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} mt-0.5`}>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
                 {description}
               </p>
             )}
           </div>
         </div>
-        <label className="relative inline-flex items-center cursor-pointer">
+        <label className="relative inline-flex items-center cursor-pointer ml-4 flex-shrink-0">
           <input
             type="checkbox"
             checked={enabled}
-            onChange={(e) => onToggle(e.target.checked)}
+            onChange={(e) => {
+              e.stopPropagation();
+              onToggle(e.target.checked);
+            }}
             className="sr-only peer"
           />
           <div
-            className={`w-11 h-6 rounded-full peer ${
+            className={`w-12 h-6 rounded-full peer transition-colors duration-200 ${
               enabled
                 ? 'bg-blue-600'
                 : isDark
                 ? 'bg-gray-700'
                 : 'bg-gray-300'
-            } peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all`}
+            } peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-sm`}
           />
         </label>
       </div>
@@ -401,6 +433,7 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
 
   return (
     <div className="space-y-4">
+      {/* Main feature toggles - these stay expanded when enabled */}
       {/* Market Regime Detection */}
       <div>
         <ToggleSwitch
@@ -410,14 +443,14 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
           description="Automatically adjust strategy based on market conditions"
         />
         {value.enableMarketRegime && (
-          <div className="mt-3 space-y-3 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+          <div className="mt-3 space-y-3 pl-4 border-l-2 border-purple-200 dark:border-purple-800 transition-all duration-200">
             <SectionHeader
               id="market-regime-config"
               title="Market Regime Configuration"
               icon={Gauge}
             />
-            {expandedSection === 'market-regime-config' && (
-              <div className="mt-3 space-y-3 pl-11">
+            {isSectionExpanded('market-regime-config') && (
+              <div className="mt-3 space-y-4 pl-11 animate-in slide-in-from-top-2 duration-200">
                 <div>
                   <Label className={isDark ? 'text-gray-300' : 'text-gray-700'}>
                     Regime Timeframe
@@ -682,14 +715,14 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
           description="Dynamically adjusts DCA amounts based on market conditions"
         />
         {value.enableDynamicScaling && (
-          <div className="mt-3 space-y-3 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+          <div className="mt-3 space-y-3 pl-4 border-l-2 border-blue-200 dark:border-blue-800 transition-all duration-200">
             <SectionHeader
               id="dynamic-scaling-config"
               title="Dynamic Scaling Configuration"
               icon={LineChart}
             />
-            {expandedSection === 'dynamic-scaling-config' && (
-              <div className="mt-3 space-y-3 pl-11">
+            {isSectionExpanded('dynamic-scaling-config') && (
+              <div className="mt-3 space-y-4 pl-11 animate-in slide-in-from-top-2 duration-200">
                 {/* Volatility-Based Scaling */}
                 <div>
                   <h4 className={`text-sm font-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -1026,14 +1059,14 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
           description="Automatically take profits at optimal points"
         />
         {value.enableProfitTaking && (
-          <div className="mt-3 space-y-3 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+          <div className="mt-3 space-y-3 pl-4 border-l-2 border-green-200 dark:border-green-800 transition-all duration-200">
             <SectionHeader
               id="profit-taking-config"
               title="Profit Taking Configuration"
               icon={TrendingUp}
             />
-            {expandedSection === 'profit-taking-config' && (
-              <div className="mt-3 space-y-3 pl-11">
+            {isSectionExpanded('profit-taking-config') && (
+              <div className="mt-3 space-y-4 pl-11 animate-in slide-in-from-top-2 duration-200">
                 {/* Partial Profit Targets */}
                 <div>
                   <h4 className={`text-sm font-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -1427,14 +1460,14 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
           description="Emergency safety features to protect your capital"
         />
         {value.enableEmergencyBrake && (
-          <div className="mt-3 space-y-3 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+          <div className="mt-3 space-y-3 pl-4 border-l-2 border-red-200 dark:border-red-800 transition-all duration-200">
             <SectionHeader
               id="emergency-brake-config"
               title="Emergency Brake Configuration"
               icon={AlertTriangle}
             />
-            {expandedSection === 'emergency-brake-config' && (
-              <div className="mt-3 space-y-3 pl-11">
+            {isSectionExpanded('emergency-brake-config') && (
+              <div className="mt-3 space-y-4 pl-11 animate-in slide-in-from-top-2 duration-200">
                 {/* Circuit Breaker */}
                 <div>
                   <h4 className={`text-sm font-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
