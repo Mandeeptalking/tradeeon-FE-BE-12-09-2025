@@ -259,7 +259,7 @@ export default function BotCard({
           </div>
 
           {/* Metrics Section */}
-          <CardContent className="px-5 pb-4 space-y-4 flex-1">
+          <CardContent className="px-5 pb-5 space-y-4 flex-1 overflow-visible">
             {/* Key Metrics Grid */}
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 rounded-lg bg-gray-700/30 border border-gray-600/30 backdrop-blur-sm">
@@ -305,7 +305,7 @@ export default function BotCard({
             </div>
 
             {/* Actions Section */}
-            <div className="pt-3 border-t border-gray-700/50">
+            <div className="pt-3 border-t border-gray-700/50 overflow-visible">
               <div className="flex items-center justify-between gap-2">
                 {/* Primary Action Button */}
                 <div className="flex-1">
