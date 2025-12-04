@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   TrendingDown,
   Plus,
@@ -86,10 +86,68 @@ const DCASettings: React.FC<DCASettingsProps> = ({
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [expandedSection, setExpandedSection] = useState<string | null>('amount-config');
+  
+  // Local state for text inputs to prevent focus loss
+  const [localValues, setLocalValues] = useState<{ [key: string]: number | string }>({});
+  const debounceTimersRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
-  const handleUpdate = useCallback((updates: Partial<DCASettingsData>) => {
-    onChange((prev) => ({ ...prev, ...updates }));
+  // Initialize local values from props
+  useEffect(() => {
+    setLocalValues({
+      baseOrderSize: baseOrderSize,
+      downFromLastEntryPercent: value.downFromLastEntryPercent || 5,
+      downFromAveragePricePercent: value.downFromAveragePricePercent || 5,
+      lossByPercent: value.lossByPercent || 0,
+      lossByAmount: value.lossByAmount || 0,
+      fixedAmount: value.fixedAmount || baseOrderSize,
+      percentageAmount: value.percentageAmount || 100,
+      multiplier: value.multiplier || 1,
+      maxDcaPerPosition: value.maxDcaPerPosition || 5,
+      maxDcaAcrossAllPositions: value.maxDcaAcrossAllPositions || 20,
+      cooldownValue: value.cooldownValue || 0,
+      maxTotalInvestmentPerPosition: value.maxTotalInvestmentPerPosition || 0,
+      stopDcaOnLossPercent: value.stopDcaOnLossPercent || 0,
+      stopDcaOnLossAmount: value.stopDcaOnLossAmount || 0,
+    });
+  }, [value, baseOrderSize]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(debounceTimersRef.current).forEach(timer => clearTimeout(timer));
+    };
+  }, []);
+
+  const handleUpdate = useCallback((updates: Partial<DCASettingsData>, immediate = false) => {
+    if (immediate) {
+      onChange((prev) => ({ ...prev, ...updates }));
+      return;
+    }
+
+    // For text inputs, debounce the update
+    const fieldKey = Object.keys(updates)[0];
+    const timerKey = `dca-${fieldKey}`;
+    
+    // Clear existing timer for this field
+    if (debounceTimersRef.current[timerKey]) {
+      clearTimeout(debounceTimersRef.current[timerKey]);
+    }
+
+    // Set new timer
+    debounceTimersRef.current[timerKey] = setTimeout(() => {
+      onChange((prev) => ({ ...prev, ...updates }));
+      delete debounceTimersRef.current[timerKey];
+    }, 300); // 300ms debounce
   }, [onChange]);
+
+  const handleTextInputChange = useCallback((field: string, value: number | string, updateField: string, immediate = false) => {
+    // Update local state immediately for responsive UI
+    setLocalValues((prev) => ({ ...prev, [field]: value }));
+    
+    // Debounce the parent update
+    const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
+    handleUpdate({ [updateField]: numValue } as Partial<DCASettingsData>, immediate);
+  }, [handleUpdate]);
 
   const addDCALevel = useCallback(() => {
     const newLevel: DCALevel = {
@@ -105,13 +163,34 @@ const DCASettings: React.FC<DCASettingsProps> = ({
     }));
   }, [baseOrderSize, onChange]);
 
-  const updateDCALevel = useCallback((id: string, updates: Partial<DCALevel>) => {
-    onChange((prev) => ({
-      ...prev,
-      levels: prev.levels?.map((level) =>
-        level.id === id ? { ...level, ...updates } : level
-      ),
-    }));
+  const updateDCALevel = useCallback((id: string, updates: Partial<DCALevel>, immediate = false) => {
+    if (immediate) {
+      onChange((prev) => ({
+        ...prev,
+        levels: prev.levels?.map((level) =>
+          level.id === id ? { ...level, ...updates } : level
+        ),
+      }));
+      return;
+    }
+
+    // Debounce text input updates for DCA levels
+    const fieldKey = Object.keys(updates)[0];
+    const timerKey = `dca-level-${id}-${fieldKey}`;
+    
+    if (debounceTimersRef.current[timerKey]) {
+      clearTimeout(debounceTimersRef.current[timerKey]);
+    }
+
+    debounceTimersRef.current[timerKey] = setTimeout(() => {
+      onChange((prev) => ({
+        ...prev,
+        levels: prev.levels?.map((level) =>
+          level.id === id ? { ...level, ...updates } : level
+        ),
+      }));
+      delete debounceTimersRef.current[timerKey];
+    }, 300);
   }, [onChange]);
 
   const removeDCALevel = useCallback((id: string) => {
@@ -240,13 +319,23 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                       Base Order Size ({baseOrderCurrency})
                     </Label>
                     <Input
+                      key="base-order-size-input"
                       type="number"
                       step="0.01"
                       min="0"
-                      value={baseOrderSize}
+                      value={localValues.baseOrderSize ?? baseOrderSize}
                       onChange={(e) => {
                         const newSize = parseFloat(e.target.value) || 0;
-                        onBaseOrderSizeChange?.(newSize);
+                        setLocalValues((prev) => ({ ...prev, baseOrderSize: newSize }));
+                        // Debounce base order size change
+                        const timerKey = 'base-order-size';
+                        if (debounceTimersRef.current[timerKey]) {
+                          clearTimeout(debounceTimersRef.current[timerKey]);
+                        }
+                        debounceTimersRef.current[timerKey] = setTimeout(() => {
+                          onBaseOrderSizeChange?.(newSize);
+                          delete debounceTimersRef.current[timerKey];
+                        }, 300);
                       }}
                       className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                     />
@@ -273,7 +362,7 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                     <Select
                       value={value.amountType}
                       onValueChange={(val) =>
-                        handleUpdate({ amountType: val as DCASettingsData['amountType'] })
+                        handleUpdate({ amountType: val as DCASettingsData['amountType'] }, true)
                       }
                     >
                       <SelectTrigger className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}>
@@ -293,12 +382,13 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                         Fixed DCA Amount ({baseOrderCurrency})
                       </Label>
                       <Input
+                        key="fixed-amount-input"
                         type="number"
                         step="0.01"
                         min="0"
-                        value={value.fixedAmount || baseOrderSize}
+                        value={localValues.fixedAmount ?? value.fixedAmount ?? baseOrderSize}
                         onChange={(e) =>
-                          handleUpdate({ fixedAmount: parseFloat(e.target.value) || 0 })
+                          handleTextInputChange('fixedAmount', e.target.value, 'fixedAmount')
                         }
                         className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                       />
@@ -315,13 +405,14 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                       </Label>
                       <div className="flex items-center gap-2 mt-1">
                         <Input
+                          key="percentage-amount-input"
                           type="number"
                           step="0.1"
                           min="0"
                           max="100"
-                          value={value.percentageAmount || 100}
+                          value={localValues.percentageAmount ?? value.percentageAmount ?? 100}
                           onChange={(e) =>
-                            handleUpdate({ percentageAmount: parseFloat(e.target.value) || 0 })
+                            handleTextInputChange('percentageAmount', e.target.value, 'percentageAmount')
                           }
                           className={isDark ? 'bg-gray-800 border-gray-700' : ''}
                         />
@@ -344,12 +435,13 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                         Multiplier
                       </Label>
                       <Input
+                        key="multiplier-input"
                         type="number"
                         step="0.1"
                         min="0"
-                        value={value.multiplier || 1}
+                        value={localValues.multiplier ?? value.multiplier ?? 1}
                         onChange={(e) =>
-                          handleUpdate({ multiplier: parseFloat(e.target.value) || 1 })
+                          handleTextInputChange('multiplier', e.target.value, 'multiplier')
                         }
                         className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                       />
@@ -415,12 +507,13 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                     </Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Input
+                        key="down-from-last-entry-percent-input"
                         type="number"
                         step="0.1"
                         min="0"
-                        value={value.downFromLastEntryPercent || 5}
+                        value={localValues.downFromLastEntryPercent ?? value.downFromLastEntryPercent ?? 5}
                         onChange={(e) =>
-                          handleUpdate({ downFromLastEntryPercent: parseFloat(e.target.value) || 0 })
+                          handleTextInputChange('downFromLastEntryPercent', e.target.value, 'downFromLastEntryPercent')
                         }
                         className={isDark ? 'bg-gray-800 border-gray-700' : ''}
                       />
@@ -439,12 +532,13 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                     </Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Input
+                        key="down-from-average-percent-input"
                         type="number"
                         step="0.1"
                         min="0"
-                        value={value.downFromAveragePricePercent || 5}
+                        value={localValues.downFromAveragePricePercent ?? value.downFromAveragePricePercent ?? 5}
                         onChange={(e) =>
-                          handleUpdate({ downFromAveragePricePercent: parseFloat(e.target.value) || 0 })
+                          handleTextInputChange('downFromAveragePricePercent', e.target.value, 'downFromAveragePricePercent')
                         }
                         className={isDark ? 'bg-gray-800 border-gray-700' : ''}
                       />
@@ -460,12 +554,13 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                     </Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Input
+                        key="loss-by-percent-input"
                         type="number"
                         step="0.1"
                         min="0"
-                        value={value.lossByPercent || 0}
+                        value={localValues.lossByPercent ?? value.lossByPercent ?? 0}
                         onChange={(e) =>
-                          handleUpdate({ lossByPercent: parseFloat(e.target.value) || 0 })
+                          handleTextInputChange('lossByPercent', e.target.value, 'lossByPercent')
                         }
                         className={isDark ? 'bg-gray-800 border-gray-700' : ''}
                       />
@@ -480,12 +575,13 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                       Loss Amount ({baseOrderCurrency})
                     </Label>
                     <Input
+                      key="loss-by-amount-input"
                       type="number"
                       step="0.01"
                       min="0"
-                      value={value.lossByAmount || 0}
+                      value={localValues.lossByAmount ?? value.lossByAmount ?? 0}
                       onChange={(e) =>
-                        handleUpdate({ lossByAmount: parseFloat(e.target.value) || 0 })
+                        handleTextInputChange('lossByAmount', e.target.value, 'lossByAmount')
                       }
                       className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                     />
@@ -569,6 +665,7 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                                 type="number"
                                 step="0.1"
                                 min="0"
+                                key={`level-${level.id}-price-drop-input`}
                                 value={level.priceDropPercent}
                                 onChange={(e) =>
                                   updateDCALevel(level.id, {
@@ -589,7 +686,7 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                               onValueChange={(val) =>
                                 updateDCALevel(level.id, {
                                   orderAmountType: val as 'fixed' | 'percentage',
-                                })
+                                }, true)
                               }
                             >
                               <SelectTrigger className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}>
@@ -608,6 +705,7 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                             {level.orderAmountType === 'percentage' ? ' (%)' : ` (${baseOrderCurrency})`}
                           </Label>
                           <Input
+                            key={`level-${level.id}-order-amount-input`}
                             type="number"
                             step={level.orderAmountType === 'percentage' ? '0.1' : '0.01'}
                             min="0"
@@ -659,9 +757,10 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                       step="1"
                       min="1"
                       max="100"
-                      value={value.maxDcaPerPosition || 5}
+                      key="max-dca-per-position-input"
+                      value={localValues.maxDcaPerPosition ?? value.maxDcaPerPosition ?? 5}
                       onChange={(e) =>
-                        handleUpdate({ maxDcaPerPosition: parseInt(e.target.value) || 1 })
+                        handleTextInputChange('maxDcaPerPosition', e.target.value, 'maxDcaPerPosition')
                       }
                       className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                     />
@@ -678,9 +777,10 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                       step="1"
                       min="1"
                       max="1000"
-                      value={value.maxDcaAcrossAllPositions || 20}
+                      key="max-dca-across-all-input"
+                      value={localValues.maxDcaAcrossAllPositions ?? value.maxDcaAcrossAllPositions ?? 20}
                       onChange={(e) =>
-                        handleUpdate({ maxDcaAcrossAllPositions: parseInt(e.target.value) || 1 })
+                        handleTextInputChange('maxDcaAcrossAllPositions', e.target.value, 'maxDcaAcrossAllPositions')
                       }
                       className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                     />
@@ -712,17 +812,18 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                       type="number"
                       step="1"
                       min="0"
-                      value={value.cooldownValue || 0}
+                      key="cooldown-value-input"
+                      value={localValues.cooldownValue ?? value.cooldownValue ?? 0}
                       onChange={(e) =>
-                        handleUpdate({ cooldownValue: parseInt(e.target.value) || 0 })
+                        handleTextInputChange('cooldownValue', e.target.value, 'cooldownValue')
                       }
                       className={isDark ? 'bg-gray-800 border-gray-700' : ''}
                     />
                     <Select
-                      value={value.cooldownUnit || 'minutes'}
-                      onValueChange={(val) =>
-                        handleUpdate({ cooldownUnit: val as 'minutes' | 'bars' })
-                      }
+                    value={value.cooldownUnit || 'minutes'}
+                    onValueChange={(val) =>
+                      handleUpdate({ cooldownUnit: val as 'minutes' | 'bars' }, true)
+                    }
                     >
                       <SelectTrigger className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
                         <SelectValue />
@@ -741,7 +842,7 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                   <input
                     type="checkbox"
                     checked={value.waitForPreviousDca || false}
-                    onChange={(e) => handleUpdate({ waitForPreviousDca: e.target.checked })}
+                    onChange={(e) => handleUpdate({ waitForPreviousDca: e.target.checked }, true)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
                   />
                   <Label className={isDark ? 'text-gray-300' : 'text-gray-700'}>
@@ -770,9 +871,10 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                     type="number"
                     step="0.01"
                     min="0"
-                    value={value.maxTotalInvestmentPerPosition || 0}
+                    key="max-total-investment-input"
+                    value={localValues.maxTotalInvestmentPerPosition ?? value.maxTotalInvestmentPerPosition ?? 0}
                     onChange={(e) =>
-                      handleUpdate({ maxTotalInvestmentPerPosition: parseFloat(e.target.value) || 0 })
+                      handleTextInputChange('maxTotalInvestmentPerPosition', e.target.value, 'maxTotalInvestmentPerPosition')
                     }
                     className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                     placeholder="1000"
@@ -785,7 +887,7 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                   <input
                     type="checkbox"
                     checked={value.stopDcaOnLoss || false}
-                    onChange={(e) => handleUpdate({ stopDcaOnLoss: e.target.checked })}
+                    onChange={(e) => handleUpdate({ stopDcaOnLoss: e.target.checked }, true)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
                   />
                   <Label className={isDark ? 'text-gray-300' : 'text-gray-700'}>
@@ -801,7 +903,7 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                       <Select
                         value={value.stopDcaOnLossType || 'percent'}
                         onValueChange={(val) =>
-                          handleUpdate({ stopDcaOnLossType: val as 'percent' | 'amount' })
+                          handleUpdate({ stopDcaOnLossType: val as 'percent' | 'amount' }, true)
                         }
                       >
                         <SelectTrigger className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}>
@@ -823,9 +925,10 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                             type="number"
                             step="0.1"
                             min="0"
-                            value={value.stopDcaOnLossPercent || 0}
+                            key="stop-dca-loss-percent-input"
+                            value={localValues.stopDcaOnLossPercent ?? value.stopDcaOnLossPercent ?? 0}
                             onChange={(e) =>
-                              handleUpdate({ stopDcaOnLossPercent: parseFloat(e.target.value) || 0 })
+                              handleTextInputChange('stopDcaOnLossPercent', e.target.value, 'stopDcaOnLossPercent')
                             }
                             className={isDark ? 'bg-gray-800 border-gray-700' : ''}
                           />
@@ -841,9 +944,10 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                           type="number"
                           step="0.01"
                           min="0"
-                          value={value.stopDcaOnLossAmount || 0}
+                          key="stop-dca-loss-amount-input"
+                          value={localValues.stopDcaOnLossAmount ?? value.stopDcaOnLossAmount ?? 0}
                           onChange={(e) =>
-                            handleUpdate({ stopDcaOnLossAmount: parseFloat(e.target.value) || 0 })
+                            handleTextInputChange('stopDcaOnLossAmount', e.target.value, 'stopDcaOnLossAmount')
                           }
                           className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                         />
