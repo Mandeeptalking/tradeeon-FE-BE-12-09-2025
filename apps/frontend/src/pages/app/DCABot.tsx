@@ -85,6 +85,78 @@ const DCABot: React.FC = () => {
       enableDynamicScaling: false,
       enableProfitTaking: false,
       enableEmergencyBrake: false,
+      marketRegimeConfig: {
+        regimeTimeframe: '1d',
+        pauseConditions: {
+          belowMovingAverage: false,
+          maPeriod: 200,
+          rsiThreshold: 30,
+          consecutivePeriods: 7,
+          useTimeframeScaling: true,
+        },
+        resumeConditions: {
+          volumeDecreaseThreshold: 20,
+          consolidationPeriods: 5,
+          priceRangePercent: 5,
+          useTimeframeScaling: true,
+        },
+        allowEntryOverride: false,
+        notifications: false,
+      },
+      dynamicScalingConfig: {
+        volatilityMultiplier: {
+          lowVolatility: 1.2,
+          normalVolatility: 1.0,
+          highVolatility: 0.7,
+        },
+        supportResistanceMultiplier: {
+          nearStrongSupport: 1.5,
+          neutralZone: 1.0,
+          nearResistance: 0.5,
+        },
+        fearGreedIndex: {
+          extremeFear: 1.8,
+          neutral: 1.0,
+          extremeGreed: 0.5,
+        },
+        volumeProfileWeight: false,
+      },
+      profitStrategyConfig: {
+        partialTargets: [],
+        trailingStop: {
+          enabled: false,
+          activationProfit: 10,
+          trailingDistance: 5,
+          onlyUp: true,
+        },
+        takeProfitAndRestart: {
+          enabled: false,
+          profitTarget: 30,
+          useOriginalCapital: true,
+        },
+        timeBasedExit: {
+          enabled: false,
+          maxHoldDays: 30,
+          minProfit: 10,
+        },
+      },
+      emergencyBrakeConfig: {
+        circuitBreaker: {
+          enabled: false,
+          flashCrashPercent: 10,
+          timeWindowMinutes: 5,
+        },
+        marketWideCrashDetection: {
+          enabled: false,
+          correlationThreshold: 0.8,
+          marketDropPercent: 15,
+        },
+        recoveryMode: {
+          enabled: false,
+          stabilizationBars: 10,
+          resumeAfterStabilized: true,
+        },
+      },
     },
     entryConditions: {
       entryType: 'immediate',
