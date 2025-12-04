@@ -865,20 +865,51 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
       </div>
 
       {/* Dynamic Scaling */}
-      <div>
-        <ToggleSwitch
-          enabled={value.enableDynamicScaling}
-          onToggle={(enabled) => handleUpdate({ enableDynamicScaling: enabled })}
-          label="Dynamic DCA Amount Scaling"
-          description="Dynamically adjusts DCA amounts based on market conditions"
-        />
-        {value.enableDynamicScaling && (
-          <div className="mt-3 space-y-4 pl-4 border-l-2 border-blue-200 dark:border-blue-800 transition-all duration-200">
-            <SectionHeader
-              title="Dynamic Scaling Configuration"
-              icon={LineChart}
+      <div className={`rounded-lg border p-4 ${
+        isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+      }`}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              📈 Dynamic DCA Amount Scaling
+            </h2>
+            <span className={`text-xs px-2 py-0.5 rounded ${
+              isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'
+            }`}>
+              Phase 1
+            </span>
+            <Tooltip
+              content={
+                "Dynamically adjusts DCA amounts based on market conditions:\n\n" +
+                "📊 Volatility-Based Scaling:\n" +
+                "• Low volatility: Increase DCA amounts (more aggressive)\n" +
+                "• High volatility: Decrease DCA amounts (more conservative)\n\n" +
+                "🎯 Support/Resistance Scaling:\n" +
+                "• Near strong support: Increase DCA amounts\n" +
+                "• Near resistance: Decrease DCA amounts\n\n" +
+                "😱 Fear & Greed Index:\n" +
+                "• Extreme fear: Scale up (buy the dip)\n" +
+                "• Extreme greed: Scale down (take profits)"
+              }
             />
-            <div className="mt-3 space-y-4 pl-8">
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={value.enableDynamicScaling}
+              onChange={(e) => handleUpdate({ enableDynamicScaling: e.target.checked })}
+              className="sr-only peer"
+            />
+            <div className={`w-11 h-6 rounded-full peer ${
+              isDark 
+                ? 'bg-gray-700 peer-checked:bg-blue-600' 
+                : 'bg-gray-200 peer-checked:bg-blue-600'
+            } peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600`}></div>
+          </label>
+        </div>
+        
+        {value.enableDynamicScaling && (
+          <div className="space-y-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                 {/* Volatility-Based Scaling */}
                 <div>
                   <h4 className={`text-sm font-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
