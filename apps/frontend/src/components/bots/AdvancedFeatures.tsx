@@ -1175,72 +1175,20 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
       </div>
 
       {/* Profit Taking */}
-      <div className={`rounded-lg border p-4 ${
-        !value.enableProfitTaking 
-          ? (isDark ? 'border-red-700 bg-gray-800' : 'border-red-300 bg-white')
-          : (isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white')
-      }`}>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              💰 Intelligent Profit Taking Strategy
-            </h2>
-            <span className={`text-xs px-2 py-0.5 rounded ${
-              isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'
-            }`}>
-              Phase 1
-            </span>
-            {!value.enableProfitTaking && (
-              <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-700'
-              }`}>
-                ⚠️ Required
-              </span>
-            )}
-            <Tooltip
-              content={
-                "Automatically take profits at optimal points:\n\n" +
-                "🎯 Partial Profit Targets:\n" +
-                "Sell X% of position when profit reaches Y%\n" +
-                "Example: Sell 25% at 15% profit, sell 50% at 25% profit\n\n" +
-                "📈 Trailing Stop Loss:\n" +
-                "• Activates after position reaches X% profit\n" +
-                "• Maintains stop X% below peak price\n" +
-                "• 'Only Up' mode: Stop never moves down (locks profits)\n\n" +
-                "🎯 Take Profit & Restart:\n" +
-                "Close entire position at target % and immediately restart with original capital\n\n" +
-                "⏰ Time-Based Exit:\n" +
-                "Close position after X days if profitable and meets minimum profit requirement"
-              }
-            />
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={value.enableProfitTaking}
-              onChange={(e) => handleUpdate({ enableProfitTaking: e.target.checked })}
-              className="sr-only peer"
-            />
-            <div className={`w-11 h-6 rounded-full peer ${
-              isDark 
-                ? 'bg-gray-700 peer-checked:bg-blue-600' 
-                : 'bg-gray-200 peer-checked:bg-blue-600'
-            } peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600`}></div>
-          </label>
-        </div>
-        
-        {!value.enableProfitTaking && (
-          <div className={`rounded-lg p-3 mb-3 border ${
-            isDark ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'
-          }`}>
-            <div className={`text-xs ${isDark ? 'text-red-300' : 'text-red-800'}`}>
-              <strong className="font-semibold">Required:</strong> You must enable and configure the Intelligent Profit Taking Strategy before creating a bot. This ensures your bot has a proper exit strategy to manage risk and take profits.
-            </div>
-          </div>
-        )}
-        
+      <div>
+        <ToggleSwitch
+          enabled={value.enableProfitTaking}
+          onToggle={(enabled) => handleUpdate({ enableProfitTaking: enabled })}
+          label="Intelligent Profit Taking Strategy"
+          description="Automatically take profits at optimal points"
+        />
         {value.enableProfitTaking && (
-          <div className="space-y-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <div className="mt-3 space-y-4 pl-4 border-l-2 border-green-200 dark:border-green-800 transition-all duration-200">
+            <SectionHeader
+              title="Profit Taking Configuration"
+              icon={TrendingUp}
+            />
+            <div className="mt-3 space-y-4 pl-8">
                 {/* Partial Profit Targets */}
                 <div>
                   <h4 className={`text-sm font-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -1657,7 +1605,7 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
                     )}
                   </div>
                 </div>
-              </div>
+            </div>
           </div>
         )}
       </div>
