@@ -776,6 +776,7 @@ async def get_bot_logs(
         
         # Query events from database
         if not db_service.enabled or not db_service.supabase:
+            logger.warning(f"Database service not available for bot logs query (bot_id={bot_id}, user_id={user.user_id})")
             return {
                 "success": True,
                 "logs": [],
@@ -787,6 +788,7 @@ async def get_bot_logs(
             }
         
         try:
+            logger.debug(f"Querying bot events: bot_id={bot_id}, user_id={user.user_id}, event_type={event_type}, event_category={event_category}")
             # Build base query
             base_query = db_service.supabase.table("bot_events").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
             
@@ -808,12 +810,14 @@ async def get_bot_logs(
             
             count_result = count_query.execute()
             total = count_result.count if count_result.count is not None else 0
+            logger.debug(f"Bot events count query result: total={total}")
             
             # Get paginated results (rebuild query for data)
             data_query = base_query.order("created_at", desc=True).range(offset, offset + limit - 1)
             result = data_query.execute()
             
             events = result.data if result.data else []
+            logger.debug(f"Bot events data query result: found {len(events)} events")
             
             # Transform events to match frontend BotLog interface
             logs = []
@@ -842,6 +846,7 @@ async def get_bot_logs(
             }
         except Exception as e:
             logger.error(f"Error fetching bot events: {e}", exc_info=True)
+            logger.error(f"   bot_id={bot_id}, user_id={user.user_id}, event_type={event_type}, event_category={event_category}")
             raise TradeeonError(f"Failed to fetch bot events: {str(e)}", "DATABASE_ERROR", status_code=500)
             
     except NotFoundError:
