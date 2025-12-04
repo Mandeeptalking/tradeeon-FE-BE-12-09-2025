@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Bot,
   Play,
@@ -59,6 +60,7 @@ interface DCABotConfig {
 const DCABot: React.FC = () => {
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+  const navigate = useNavigate();
 
   const [tradingMode, setTradingMode] = useState<'live' | 'paper'>('paper');
   const [isActive, setIsActive] = useState(false);
@@ -359,11 +361,10 @@ const DCABot: React.FC = () => {
       
       if (result.success) {
         setCreateSuccess(true);
-        // Close dialog after 2 seconds and redirect or refresh
+        // Close dialog after 2 seconds and redirect to bots list
         setTimeout(() => {
           setShowSummaryDialog(false);
-          // Optionally redirect to bots list or refresh page
-          window.location.href = '/app/bots';
+          navigate('/app/bots');
         }, 2000);
       } else {
         throw new Error(result.message || 'Failed to create bot');
