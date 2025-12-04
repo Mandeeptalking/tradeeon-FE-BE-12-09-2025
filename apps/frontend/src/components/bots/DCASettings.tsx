@@ -69,6 +69,9 @@ interface DCASettingsProps {
   onChange: (settings: DCASettingsData | ((prev: DCASettingsData) => DCASettingsData)) => void;
   baseOrderCurrency?: string;
   baseOrderSize?: number;
+  pairMode?: 'single' | 'multi';
+  numberOfPairs?: number;
+  onBaseOrderSizeChange?: (size: number) => void;
 }
 
 const DCASettings: React.FC<DCASettingsProps> = ({
@@ -76,10 +79,13 @@ const DCASettings: React.FC<DCASettingsProps> = ({
   onChange,
   baseOrderCurrency = 'USDT',
   baseOrderSize = 100,
+  pairMode = 'single',
+  numberOfPairs = 1,
+  onBaseOrderSizeChange,
 }) => {
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
-  const [expandedSection, setExpandedSection] = useState<string | null>('rule-type');
+  const [expandedSection, setExpandedSection] = useState<string | null>('amount-config');
 
   const handleUpdate = useCallback((updates: Partial<DCASettingsData>) => {
     onChange((prev) => ({ ...prev, ...updates }));
@@ -217,6 +223,151 @@ const DCASettings: React.FC<DCASettingsProps> = ({
 
       {value.enabled && (
         <div className="space-y-4">
+          {/* Base and DCA Configuration */}
+          {value.ruleType !== 'levels' && (
+            <div>
+              <SectionHeader
+                id="amount-config"
+                title="Base and DCA Configuration"
+                icon={DollarSign}
+                description="Configure base order size and DCA order amounts"
+              />
+              {expandedSection === 'amount-config' && (
+                <div className="mt-3 space-y-3 pl-11">
+                  {/* Base Order Size */}
+                  <div>
+                    <Label className={isDark ? 'text-gray-300' : 'text-gray-700'}>
+                      Base Order Size ({baseOrderCurrency})
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={baseOrderSize}
+                      onChange={(e) => {
+                        const newSize = parseFloat(e.target.value) || 0;
+                        onBaseOrderSizeChange?.(newSize);
+                      }}
+                      className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
+                    />
+                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
+                      Initial order amount per pair
+                    </p>
+                    {pairMode === 'multi' && numberOfPairs > 1 && (
+                      <div className={`mt-2 p-2 rounded-lg ${isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-200'}`}>
+                        <p className={`text-xs font-medium ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
+                          Total Capital Required: {(baseOrderSize * numberOfPairs).toFixed(2)} {baseOrderCurrency}
+                        </p>
+                        <p className={`text-xs ${isDark ? 'text-blue-300' : 'text-blue-600'} mt-0.5`}>
+                          {baseOrderSize} {baseOrderCurrency} × {numberOfPairs} pairs = {(baseOrderSize * numberOfPairs).toFixed(2)} {baseOrderCurrency}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* DCA Amount Type */}
+                  <div>
+                    <Label className={isDark ? 'text-gray-300' : 'text-gray-700'}>
+                      DCA Amount Type
+                    </Label>
+                    <Select
+                      value={value.amountType}
+                      onValueChange={(val) =>
+                        handleUpdate({ amountType: val as DCASettingsData['amountType'] })
+                      }
+                    >
+                      <SelectTrigger className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixed">Fixed Amount</SelectItem>
+                        <SelectItem value="percentage">Percentage of Base Order</SelectItem>
+                        <SelectItem value="multiplier">Multiplier</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {value.amountType === 'fixed' && (
+                    <div>
+                      <Label className={isDark ? 'text-gray-300' : 'text-gray-700'}>
+                        Fixed DCA Amount ({baseOrderCurrency})
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={value.fixedAmount || baseOrderSize}
+                        onChange={(e) =>
+                          handleUpdate({ fixedAmount: parseFloat(e.target.value) || 0 })
+                        }
+                        className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
+                      />
+                      <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
+                        Fixed amount per DCA order
+                      </p>
+                    </div>
+                  )}
+
+                  {value.amountType === 'percentage' && (
+                    <div>
+                      <Label className={isDark ? 'text-gray-300' : 'text-gray-700'}>
+                        Percentage of Base Order (%)
+                      </Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          max="100"
+                          value={value.percentageAmount || 100}
+                          onChange={(e) =>
+                            handleUpdate({ percentageAmount: parseFloat(e.target.value) || 0 })
+                          }
+                          className={isDark ? 'bg-gray-800 border-gray-700' : ''}
+                        />
+                        <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>%</span>
+                      </div>
+                      <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
+                        Percentage of base order size ({baseOrderSize} {baseOrderCurrency})
+                        {value.percentageAmount && (
+                          <span className="ml-1 font-medium">
+                            = {((baseOrderSize * (value.percentageAmount || 100)) / 100).toFixed(2)} {baseOrderCurrency}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+
+                  {value.amountType === 'multiplier' && (
+                    <div>
+                      <Label className={isDark ? 'text-gray-300' : 'text-gray-700'}>
+                        Multiplier
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={value.multiplier || 1}
+                        onChange={(e) =>
+                          handleUpdate({ multiplier: parseFloat(e.target.value) || 1 })
+                        }
+                        className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
+                      />
+                      <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
+                        Multiply base order size by this value
+                        {value.multiplier && (
+                          <span className="ml-1 font-medium">
+                            = {(baseOrderSize * (value.multiplier || 1)).toFixed(2)} {baseOrderCurrency}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* DCA Rule Type */}
           <div>
             <SectionHeader
@@ -487,105 +638,6 @@ const DCASettings: React.FC<DCASettingsProps> = ({
             </div>
           )}
 
-          {/* DCA Amount Configuration */}
-          {value.ruleType !== 'levels' && (
-            <div>
-              <SectionHeader
-                id="amount-config"
-                title="DCA Amount Configuration"
-                icon={DollarSign}
-                description="Configure how much to invest per DCA order"
-              />
-              {expandedSection === 'amount-config' && (
-                <div className="mt-3 space-y-3 pl-11">
-                  <div>
-                    <Label className={isDark ? 'text-gray-300' : 'text-gray-700'}>
-                      Amount Type
-                    </Label>
-                    <Select
-                      value={value.amountType}
-                      onValueChange={(val) =>
-                        handleUpdate({ amountType: val as DCASettingsData['amountType'] })
-                      }
-                    >
-                      <SelectTrigger className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="fixed">Fixed Amount</SelectItem>
-                        <SelectItem value="percentage">Percentage of Base Order</SelectItem>
-                        <SelectItem value="multiplier">Multiplier</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {value.amountType === 'fixed' && (
-                    <div>
-                      <Label className={isDark ? 'text-gray-300' : 'text-gray-700'}>
-                        Fixed Amount ({baseOrderCurrency})
-                      </Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={value.fixedAmount || baseOrderSize}
-                        onChange={(e) =>
-                          handleUpdate({ fixedAmount: parseFloat(e.target.value) || 0 })
-                        }
-                        className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
-                      />
-                    </div>
-                  )}
-
-                  {value.amountType === 'percentage' && (
-                    <div>
-                      <Label className={isDark ? 'text-gray-300' : 'text-gray-700'}>
-                        Percentage (%)
-                      </Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="100"
-                          value={value.percentageAmount || 100}
-                          onChange={(e) =>
-                            handleUpdate({ percentageAmount: parseFloat(e.target.value) || 0 })
-                          }
-                          className={isDark ? 'bg-gray-800 border-gray-700' : ''}
-                        />
-                        <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>%</span>
-                      </div>
-                      <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
-                        Percentage of base order size ({baseOrderSize} {baseOrderCurrency})
-                      </p>
-                    </div>
-                  )}
-
-                  {value.amountType === 'multiplier' && (
-                    <div>
-                      <Label className={isDark ? 'text-gray-300' : 'text-gray-700'}>
-                        Multiplier
-                      </Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        value={value.multiplier || 1}
-                        onChange={(e) =>
-                          handleUpdate({ multiplier: parseFloat(e.target.value) || 1 })
-                        }
-                        className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
-                      />
-                      <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
-                        Multiply base order size by this value
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
 
           {/* DCA Limits */}
           <div>

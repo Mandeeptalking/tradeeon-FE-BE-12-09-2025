@@ -348,6 +348,11 @@ const DCABot: React.FC = () => {
                 onChange={handleDCASettingsChange}
                 baseOrderCurrency="USDT"
                 baseOrderSize={config.baseOrderSize}
+                pairMode={config.botConfig.pairMode}
+                numberOfPairs={config.botConfig.pairs.length}
+                onBaseOrderSizeChange={(size) =>
+                  setConfig((prev) => ({ ...prev, baseOrderSize: size }))
+                }
               />
             </ConfigSection>
 
