@@ -103,6 +103,11 @@ const Bots: React.FC = () => {
     navigate(`/app/dcabot?edit=${botId}`);
   };
 
+  const handleView = (botId: string) => {
+    // Navigate to bot details page or open view modal
+    navigate(`/app/dcabot?view=${botId}`);
+  };
+
   if (error) {
     return (
       <div className={`min-h-screen ${isDark ? 'bg-slate-950' : 'bg-gray-50'} p-6`}>
@@ -244,6 +249,7 @@ const Bots: React.FC = () => {
                 onDelete={handleDelete}
                 onDuplicate={handleDuplicate}
                 onEdit={handleEdit}
+                onView={handleView}
               />
             ))}
           </div>
