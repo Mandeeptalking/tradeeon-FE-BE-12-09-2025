@@ -16,14 +16,25 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronUp,
+  Save,
+  CheckCircle,
 } from 'lucide-react';
 import { useThemeStore } from '../../store/theme';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../../components/ui/dialog';
 import BotConfiguration, { type BotConfigurationData } from '../../components/bots/BotConfiguration';
 import EntryConditions, { type EntryConditionsData } from '../../components/bots/EntryConditions';
 import DCASettings, { type DCASettingsData } from '../../components/bots/DCASettings';
 import AdvancedFeatures, { type AdvancedFeaturesData } from '../../components/bots/AdvancedFeatures';
+import BotSummary from '../../components/bots/BotSummary';
 
 interface DCABotConfig {
   // Bot Configuration (from reusable component)
@@ -54,6 +65,10 @@ const DCABot: React.FC = () => {
   // Use Set to allow multiple sections open at once
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['bot-config']));
   const [expandedEntryCondition, setExpandedEntryCondition] = useState<string | null>(null);
+  const [showSummaryDialog, setShowSummaryDialog] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createSuccess, setCreateSuccess] = useState(false);
 
   const [config, setConfig] = useState<DCABotConfig>({
     botConfig: {
@@ -268,6 +283,99 @@ const DCABot: React.FC = () => {
     }));
   }, []);
 
+  const handleCreateBot = useCallback(async () => {
+    // Validation
+    if (!config.botConfig.botName || !config.botConfig.botName.trim()) {
+      setCreateError('Bot name is required');
+      return;
+    }
+    if (!config.botConfig.exchange) {
+      setCreateError('Exchange is required');
+      return;
+    }
+    if (config.botConfig.pairs.length === 0) {
+      setCreateError('At least one trading pair is required');
+      return;
+    }
+    if (!config.advancedFeatures.enableProfitTaking) {
+      setCreateError('Profit Taking Strategy is required. Please enable it in Advanced Features.');
+      return;
+    }
+
+    setIsCreating(true);
+    setCreateError(null);
+    setCreateSuccess(false);
+
+    try {
+      // Get API base URL
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      
+      // Get auth token
+      const { supabase } = await import('../../lib/supabase');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        throw new Error('Authentication required. Please sign in.');
+      }
+
+      // Prepare bot config for API
+      const botConfigPayload = {
+        name: config.botConfig.botName,
+        exchange: config.botConfig.exchange,
+        market: config.botConfig.market || 'spot',
+        direction: config.botConfig.direction || 'long',
+        selectedPairs: config.botConfig.pairs,
+        pairMode: config.botConfig.pairMode,
+        baseOrderSize: config.baseOrderSize,
+        entryConditions: config.entryConditions,
+        dcaSettings: config.dcaSettings,
+        advancedFeatures: config.advancedFeatures,
+        tradingMode: tradingMode,
+        // Legacy fields for backward compatibility
+        symbol: config.botConfig.pairs[0] || '',
+        interval: '1h',
+        timeframe: '1h',
+      };
+
+      const response = await fetch(`${API_BASE_URL}/bots/dca-bots`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(botConfigPayload),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication required. Please sign in.');
+        }
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to create bot' }));
+        throw new Error(errorData.detail || errorData.message || 'Failed to create bot');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setCreateSuccess(true);
+        // Close dialog after 2 seconds and redirect or refresh
+        setTimeout(() => {
+          setShowSummaryDialog(false);
+          // Optionally redirect to bots list or refresh page
+          window.location.href = '/app/bots';
+        }, 2000);
+      } else {
+        throw new Error(result.message || 'Failed to create bot');
+      }
+    } catch (error: any) {
+      console.error('Error creating bot:', error);
+      setCreateError(error.message || 'Failed to create bot. Please try again.');
+    } finally {
+      setIsCreating(false);
+    }
+  }, [config, tradingMode]);
+
   return (
     <div
       className={`min-h-screen pb-20 ${
@@ -463,109 +571,114 @@ const DCABot: React.FC = () => {
 
           {/* Right Column - Summary & Stats */}
           <div className="space-y-4">
-            {/* Bot Summary */}
-            <div
-              className={`rounded-xl border p-6 ${
-                isDark
-                  ? 'border-gray-700/50 bg-gray-800/30'
-                  : 'border-gray-200 bg-white'
-              }`}
-            >
-              <h3 className={`font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                Bot Summary
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Status
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        isActive ? 'bg-emerald-400' : 'bg-gray-400'
-                      }`}
-                    />
-                    <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Mode
-                  </span>
-                  <span
-                    className={`text-sm font-medium ${
-                      tradingMode === 'live'
-                        ? 'text-rose-400'
-                        : isDark
-                        ? 'text-emerald-400'
-                        : 'text-emerald-600'
-                    }`}
-                  >
-                    {tradingMode === 'live' ? 'Live' : 'Paper'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Exchange
-                  </span>
-                  <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    {config.botConfig.exchange || 'Not set'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Pairs
-                  </span>
-                  <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    {config.botConfig.pairs.length}
-                  </span>
-                </div>
-              </div>
-            </div>
+            <BotSummary
+              botConfig={config.botConfig}
+              entryConditions={config.entryConditions}
+              dcaSettings={config.dcaSettings}
+              advancedFeatures={config.advancedFeatures}
+              baseOrderSize={config.baseOrderSize}
+              isDark={isDark}
+            />
+          </div>
+        </div>
 
-            {/* Quick Stats Placeholder */}
-            <div
-              className={`rounded-xl border p-6 ${
-                isDark
-                  ? 'border-gray-700/50 bg-gray-800/30'
-                  : 'border-gray-200 bg-white'
-              }`}
+        {/* Save Bot Button - Fixed at bottom */}
+        <div className={`fixed bottom-0 left-0 right-0 ${isDark ? 'bg-slate-950' : 'bg-gray-50'} border-t ${isDark ? 'border-gray-800' : 'border-gray-200'} p-4 z-10`}>
+          <div className="max-w-7xl mx-auto flex justify-end">
+            <Button
+              onClick={() => setShowSummaryDialog(true)}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2"
             >
-              <h3 className={`font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                Performance
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Total Invested
-                  </span>
-                  <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    $0.00
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Current Value
-                  </span>
-                  <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    $0.00
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Orders Placed
-                  </span>
-                  <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    0
-                  </span>
-                </div>
-              </div>
-            </div>
+              <Save className="w-4 h-4" />
+              Save Bot
+            </Button>
           </div>
         </div>
       </div>
+
+      {/* Summary Dialog */}
+      <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
+        <DialogContent className={`max-w-4xl max-h-[90vh] overflow-y-auto ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <DialogHeader>
+            <DialogTitle className={isDark ? 'text-white' : 'text-gray-900'}>
+              Bot Summary & Create
+            </DialogTitle>
+            <DialogDescription className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+              Review your bot configuration before creating it
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-4">
+            <BotSummary
+              botConfig={config.botConfig}
+              entryConditions={config.entryConditions}
+              dcaSettings={config.dcaSettings}
+              advancedFeatures={config.advancedFeatures}
+              baseOrderSize={config.baseOrderSize}
+              isDark={isDark}
+            />
+          </div>
+
+          {createError && (
+            <div className={`mt-4 p-3 rounded-lg ${isDark ? 'bg-red-900/20 border border-red-800' : 'bg-red-50 border border-red-200'}`}>
+              <div className="flex items-center gap-2">
+                <AlertTriangle className={`w-5 h-5 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
+                <span className={`text-sm ${isDark ? 'text-red-300' : 'text-red-800'}`}>
+                  {createError}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {createSuccess && (
+            <div className={`mt-4 p-3 rounded-lg ${isDark ? 'bg-green-900/20 border border-green-800' : 'bg-green-50 border border-green-200'}`}>
+              <div className="flex items-center gap-2">
+                <CheckCircle className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                <span className={`text-sm ${isDark ? 'text-green-300' : 'text-green-800'}`}>
+                  Bot created successfully! You can now start it from the bots list.
+                </span>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="mt-6">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowSummaryDialog(false);
+                setCreateError(null);
+                setCreateSuccess(false);
+              }}
+              disabled={isCreating}
+              className={isDark ? 'border-gray-700 text-gray-300 hover:bg-gray-700' : ''}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateBot}
+              disabled={isCreating || createSuccess}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 disabled:opacity-50"
+            >
+              {isCreating ? (
+                <>
+                  <Activity className="w-4 h-4 animate-spin" />
+                  Creating...
+                </>
+              ) : createSuccess ? (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  Created
+                </>
+              ) : (
+                <>
+                  <Bot className="w-4 h-4" />
+                  Create Bot
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
