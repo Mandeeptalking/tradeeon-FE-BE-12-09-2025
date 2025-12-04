@@ -463,6 +463,7 @@ const DCABot: React.FC = () => {
                   }))
                 }
                 baseOrderCurrency="USDT"
+                entryConditions={config.entryConditions}
               />
             </ConfigSection>
           </div>
