@@ -755,8 +755,8 @@ async def get_bot_status(
         raise TradeeonError(f"Failed to get bot status: {str(e)}", "INTERNAL_SERVER_ERROR", status_code=500)
 
 
-@router.get("/dca-bots/{bot_id}/events")
-async def get_bot_events(
+@router.get("/dca-bots/{bot_id}/logs")
+async def get_bot_logs(
     bot_id: str = Path(..., description="Bot ID"),
     run_id: Optional[str] = Query(None, description="Filter by run ID"),
     event_type: Optional[str] = Query(None, description="Filter by event type"),
@@ -790,6 +790,8 @@ async def get_bot_events(
                 query = query.eq("run_id", run_id)
             if event_type:
                 query = query.eq("event_type", event_type)
+            if event_category:
+                query = query.eq("event_category", event_category)
             
             # Get total count
             count_result = query.execute()
