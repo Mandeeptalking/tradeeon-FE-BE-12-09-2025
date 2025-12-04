@@ -1165,6 +1165,21 @@ async def resume_dca_bot(
         # Update bot status to running
         db_service.update_bot_status(bot_id, "running")
         
+        # Log bot resume event
+        try:
+            db_service.log_event(
+                bot_id=bot_id,
+                run_id=None,
+                user_id=user.user_id,
+                event_type="bot_resumed",
+                event_category="system",
+                message=f"Bot '{bot_data.get('name', bot_id)}' resumed",
+                symbol=bot_data.get("symbol"),
+                details={}
+            )
+        except Exception as log_error:
+            logger.warning(f"Failed to log bot resume event: {log_error}")
+        
         logger.info(f"✅ DCA bot {bot_id} resumed successfully")
         
         return {
