@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   Bot,
   Play,
@@ -241,11 +241,9 @@ const DCABot: React.FC = () => {
               </p>
             </div>
           </div>
-          {isOpen ? (
-            <ChevronUp className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-          ) : (
+          <div className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
             <ChevronDown className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-          )}
+          </div>
         </button>
         <div 
           className={`px-4 pb-4 border-t transition-all duration-200 ${
