@@ -528,22 +528,52 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Main feature toggles - these stay expanded when enabled */}
       {/* Market Regime Detection */}
-      <div>
-        <ToggleSwitch
-          enabled={value.enableMarketRegime}
-          onToggle={(enabled) => handleUpdate({ enableMarketRegime: enabled })}
-          label="Market Regime Detection"
-          description="Automatically adjust strategy based on market conditions"
-        />
-        {value.enableMarketRegime && (
-          <div className="mt-3 space-y-4 pl-4 border-l-2 border-purple-200 dark:border-purple-800 transition-all duration-200">
-            <SectionHeader
-              title="Market Regime Configuration"
-              icon={Gauge}
+      <div className={`rounded-lg border p-4 ${
+        isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+      }`}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              🧠 Smart Market Regime Detection
+            </h2>
+            <span className={`text-xs px-2 py-0.5 rounded ${
+              isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'
+            }`}>
+              Phase 1
+            </span>
+            <Tooltip
+              content={
+                "Market Regime Detection automatically pauses/resumes your bot based on market conditions:\n\n" +
+                "⏸️ PAUSE Conditions (Bear Market):\n" +
+                "• Price below Moving Average + RSI below threshold\n" +
+                "• Volume decrease + consolidation\n" +
+                "Bot stops buying when bear market detected\n\n" +
+                "▶️ RESUME Conditions (Accumulation Zone):\n" +
+                "• Volume decreases (selling pressure reduces)\n" +
+                "• Price consolidates in range\n" +
+                "Bot resumes when accumulation detected\n\n" +
+                "⚠️ Important: If pause conditions conflict with your entry conditions (e.g., you want to buy below 200 EMA but pause triggers below 200 MA), pause will override entry. The conflict warning will alert you to this."
+              }
             />
-            <div className="mt-3 space-y-4 pl-8">
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={value.enableMarketRegime}
+              onChange={(e) => handleUpdate({ enableMarketRegime: e.target.checked })}
+              className="sr-only peer"
+            />
+            <div className={`w-11 h-6 rounded-full peer ${
+              isDark 
+                ? 'bg-gray-700 peer-checked:bg-blue-600' 
+                : 'bg-gray-200 peer-checked:bg-blue-600'
+            } peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600`}></div>
+          </label>
+        </div>
+        
+        {value.enableMarketRegime && (
+          <div className="space-y-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                 <div>
                   <Label className={isDark ? 'text-gray-300' : 'text-gray-700'}>
                     Regime Timeframe
@@ -603,87 +633,6 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
                             Allow entry conditions to override pause (when entry condition triggers, bot will trade even if pause condition is active)
                           </label>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Conflict Warning */}
-                {showConflictWarning && (
-                  <div className={`rounded-lg p-3 mb-3 border ${
-                    value.marketRegimeConfig?.allowEntryOverride
-                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                      : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
-                  }`}>
-                    <div className="flex items-start gap-2">
-                      {value.marketRegimeConfig?.allowEntryOverride ? (
-                        <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                      ) : (
-                        <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
-                      )}
-                      <div className="flex-1">
-                        {value.marketRegimeConfig?.allowEntryOverride ? (
-                          <>
-                            <div className={`text-xs font-semibold mb-1 ${
-                              isDark ? 'text-green-300' : 'text-green-800'
-                            }`}>
-                              ✓ Conflict Resolved
-                            </div>
-                            <div className={`text-xs mb-2 ${
-                              isDark ? 'text-green-400' : 'text-green-700'
-                            }`}>
-                              Entry conditions will override pause conditions when they trigger.
-                            </div>
-                            <div className={`text-xs space-y-1 opacity-75 ${
-                              isDark ? 'text-green-400' : 'text-green-600'
-                            }`}>
-                              <div className="font-medium mb-1">Detected conflicts (resolved):</div>
-                              {conflictDetails.map((conflict, idx) => (
-                                <div key={idx}>• {conflict}</div>
-                              ))}
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className={`text-xs font-semibold mb-2 ${
-                              isDark ? 'text-orange-300' : 'text-orange-800'
-                            }`}>
-                              ⚠️ Conflict Detected: Entry conditions conflict with pause conditions
-                            </div>
-                            <div className="flex items-center gap-2 mb-2">
-                              <input
-                                type="checkbox"
-                                checked={value.marketRegimeConfig?.allowEntryOverride || false}
-                                onChange={(e) =>
-                                  handleUpdate({
-                                    marketRegimeConfig: {
-                                      ...value.marketRegimeConfig,
-                                      allowEntryOverride: e.target.checked,
-                                    },
-                                  })
-                                }
-                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
-                              />
-                              <label className={`text-xs ${
-                                isDark ? 'text-orange-400' : 'text-orange-700'
-                              }`}>
-                                Allow entry conditions to override pause (when entry condition triggers, bot will trade even if pause condition is active)
-                              </label>
-                            </div>
-                            <div className={`text-xs space-y-1 ${
-                              isDark ? 'text-orange-400' : 'text-orange-700'
-                            }`}>
-                              {conflictDetails.map((conflict, idx) => (
-                                <div key={idx}>• {conflict}</div>
-                              ))}
-                            </div>
-                            <div className={`text-xs mt-2 ${
-                              isDark ? 'text-orange-400' : 'text-orange-600'
-                            }`}>
-                              <strong>Solution:</strong> Enable "Allow entry conditions to override pause" above. This will let your entry conditions trigger trades even when pause condition is active.
-                            </div>
-                          </>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -1257,20 +1206,72 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
       </div>
 
       {/* Profit Taking */}
-      <div>
-        <ToggleSwitch
-          enabled={value.enableProfitTaking}
-          onToggle={(enabled) => handleUpdate({ enableProfitTaking: enabled })}
-          label="Intelligent Profit Taking Strategy"
-          description="Automatically take profits at optimal points"
-        />
-        {value.enableProfitTaking && (
-          <div className="mt-3 space-y-4 pl-4 border-l-2 border-green-200 dark:border-green-800 transition-all duration-200">
-            <SectionHeader
-              title="Profit Taking Configuration"
-              icon={TrendingUp}
+      <div className={`rounded-lg border p-4 ${
+        !value.enableProfitTaking 
+          ? (isDark ? 'border-red-700 bg-gray-800' : 'border-red-300 bg-white')
+          : (isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white')
+      }`}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              💰 Intelligent Profit Taking Strategy
+            </h2>
+            <span className={`text-xs px-2 py-0.5 rounded ${
+              isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'
+            }`}>
+              Phase 1
+            </span>
+            {!value.enableProfitTaking && (
+              <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-700'
+              }`}>
+                ⚠️ Required
+              </span>
+            )}
+            <Tooltip
+              content={
+                "Automatically take profits at optimal points:\n\n" +
+                "🎯 Partial Profit Targets:\n" +
+                "Sell X% of position when profit reaches Y%\n" +
+                "Example: Sell 25% at 15% profit, sell 50% at 25% profit\n\n" +
+                "📈 Trailing Stop Loss:\n" +
+                "• Activates after position reaches X% profit\n" +
+                "• Maintains stop X% below peak price\n" +
+                "• 'Only Up' mode: Stop never moves down (locks profits)\n\n" +
+                "🎯 Take Profit & Restart:\n" +
+                "Close entire position at target % and immediately restart with original capital\n\n" +
+                "⏰ Time-Based Exit:\n" +
+                "Close position after X days if profitable and meets minimum profit requirement"
+              }
             />
-            <div className="mt-3 space-y-4 pl-8">
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={value.enableProfitTaking}
+              onChange={(e) => handleUpdate({ enableProfitTaking: e.target.checked })}
+              className="sr-only peer"
+            />
+            <div className={`w-11 h-6 rounded-full peer ${
+              isDark 
+                ? 'bg-gray-700 peer-checked:bg-blue-600' 
+                : 'bg-gray-200 peer-checked:bg-blue-600'
+            } peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600`}></div>
+          </label>
+        </div>
+        
+        {!value.enableProfitTaking && (
+          <div className={`rounded-lg p-3 mb-3 border ${
+            isDark ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'
+          }`}>
+            <div className={`text-xs ${isDark ? 'text-red-300' : 'text-red-800'}`}>
+              <strong className="font-semibold">Required:</strong> You must enable and configure the Intelligent Profit Taking Strategy before creating a bot. This ensures your bot has a proper exit strategy to manage risk and take profits.
+            </div>
+          </div>
+        )}
+        
+        {value.enableProfitTaking && (
+          <div className="space-y-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                 {/* Partial Profit Targets */}
                 <div>
                   <h4 className={`text-sm font-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
