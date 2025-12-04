@@ -245,15 +245,11 @@ const DCABot: React.FC = () => {
             <ChevronDown className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
           </div>
         </button>
-        <div 
-          className={`px-4 pb-4 border-t transition-all duration-200 ${
-            isDark ? 'border-gray-700/50' : 'border-gray-200'
-          } ${
-            isOpen ? 'block' : 'hidden'
-          }`}
-        >
-          <div className="pt-4">{children}</div>
-        </div>
+        {isOpen && (
+          <div className="px-4 pb-4 border-t border-gray-700/30 dark:border-gray-700/30 animate-in slide-in-from-top-2 duration-200">
+            {children}
+          </div>
+        )}
       </div>
     );
   };
