@@ -120,7 +120,7 @@ interface AdvancedFeaturesProps {
   entryConditions?: EntryConditionsData; // For conflict detection
 }
 
-// Conflict detection function
+// Conflict detection function - matches original implementation logic
 const detectConflicts = (
   entryConditions: EntryConditionsData | undefined,
   marketRegimeConfig: AdvancedFeaturesData['marketRegimeConfig']
@@ -136,14 +136,31 @@ const detectConflicts = (
   entryConditions.conditions?.forEach((condition) => {
     if (!condition.enabled) return;
 
-    const indicator = condition.indicator?.toLowerCase();
-    const operator = condition.operator?.toLowerCase();
+    const indicator = condition.indicator?.toLowerCase() || '';
+    const operator = condition.operator?.toLowerCase() || '';
 
     // Check for RSI conflict
+    // Pause condition: RSI < threshold (e.g., RSI < 30)
+    // Entry condition conflicts if: RSI < threshold (same or lower threshold)
     if (pauseConditions.rsiThreshold !== undefined && indicator === 'rsi') {
-      // If pause condition is RSI < threshold and entry condition is RSI < threshold (or similar), conflict
-      if (operator?.includes('below') || operator?.includes('less') || operator === 'crosses_below_oversold') {
-        const entryValue = condition.value || condition.compareValue;
+      // Check if entry condition is looking for RSI below or equal to pause threshold
+      const entryValue = condition.value || condition.compareValue || condition.oversoldLevel;
+      
+      // Operators that indicate "below" or "less than"
+      const belowOperators = [
+        'crosses_below',
+        'crosses_below_oversold',
+        'below',
+        'less_than',
+        '<',
+        '<=',
+        'less',
+      ];
+      
+      if (belowOperators.some(op => operator.includes(op))) {
+        // If entry condition threshold is <= pause threshold, it's a conflict
+        // Example: Entry "RSI < 30" conflicts with pause "RSI < 30"
+        // Example: Entry "RSI < 25" conflicts with pause "RSI < 30" (both want oversold)
         if (entryValue !== undefined && entryValue <= pauseConditions.rsiThreshold) {
           conflicts.push(
             `Entry condition "RSI ${operator} ${entryValue}" conflicts with pause condition "RSI < ${pauseConditions.rsiThreshold}"`
@@ -153,26 +170,39 @@ const detectConflicts = (
     }
 
     // Check for Moving Average conflict
+    // Pause condition: Price below MA(period)
+    // Entry condition conflicts if: Price below MA(same period)
     if (pauseConditions.belowMovingAverage && pauseConditions.maPeriod !== undefined) {
-      // Check if entry condition uses the same MA
       const entryMaPeriod = condition.maPeriod || condition.period;
       const entryMaType = condition.maType || 'EMA';
       
-      if (entryMaPeriod === pauseConditions.maPeriod) {
-        // Check if entry condition is looking for price below MA (conflicts with pause "below MA")
-        if (
-          indicator === 'price' ||
-          (indicator && ['ema', 'sma', 'wma', 'tema', 'kama', 'mama', 'vwma', 'hull'].includes(indicator.toLowerCase()))
-        ) {
-          if (
-            operator?.includes('below') ||
-            operator?.includes('less') ||
-            operator === 'crosses_below' ||
-            operator === 'crosses_below_level'
-          ) {
-            conflicts.push(
-              `Entry condition "Price ${operator} ${entryMaType}(${entryMaPeriod})" conflicts with pause condition "Price below ${entryMaType}(${pauseConditions.maPeriod})"`
-            );
+      // Check if entry condition uses the same MA period (or close enough, within 10%)
+      if (entryMaPeriod !== undefined) {
+        const periodDiff = Math.abs(entryMaPeriod - pauseConditions.maPeriod);
+        const periodMatch = periodDiff <= Math.max(10, pauseConditions.maPeriod * 0.1);
+        
+        if (periodMatch) {
+          // Check if entry condition is looking for price below MA
+          const isPriceIndicator = indicator === 'price' || indicator === '';
+          const isMaIndicator = ['ema', 'sma', 'wma', 'tema', 'kama', 'mama', 'vwma', 'hull'].includes(indicator);
+          
+          if (isPriceIndicator || isMaIndicator) {
+            // Operators that indicate "below" or "less than"
+            const belowOperators = [
+              'crosses_below',
+              'crosses_below_level',
+              'below',
+              'less_than',
+              '<',
+              '<=',
+              'less',
+            ];
+            
+            if (belowOperators.some(op => operator.includes(op))) {
+              conflicts.push(
+                `Entry condition "Price ${operator} ${entryMaType}(${entryMaPeriod})" conflicts with pause condition "Price below MA(${pauseConditions.maPeriod})"`
+              );
+            }
           }
         }
       }
@@ -542,163 +572,37 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
                   </Select>
                 </div>
 
-                {/* Conflict Warning */}
-                {showConflictWarning && (
-                  <div className={`rounded-lg p-3 mb-3 border ${
-                    value.marketRegimeConfig?.allowEntryOverride
-                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                      : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
-                  }`}>
+                {/* Conflict Warning - Matches original UX */}
+                {showConflictWarning && conflictDetails.length > 0 && (
+                  <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 border border-orange-200 dark:border-orange-800 mb-3">
                     <div className="flex items-start gap-2">
-                      {value.marketRegimeConfig?.allowEntryOverride ? (
-                        <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                      ) : (
-                        <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
-                      )}
+                      <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
                       <div className="flex-1">
-                        {value.marketRegimeConfig?.allowEntryOverride ? (
-                          <>
-                            <div className={`text-xs font-semibold mb-1 ${
-                              isDark ? 'text-green-300' : 'text-green-800'
-                            }`}>
-                              ✓ Conflict Resolved
-                            </div>
-                            <div className={`text-xs mb-2 ${
-                              isDark ? 'text-green-400' : 'text-green-700'
-                            }`}>
-                              Entry conditions will override pause conditions when they trigger.
-                            </div>
-                            <div className={`text-xs space-y-1 opacity-75 ${
-                              isDark ? 'text-green-400' : 'text-green-600'
-                            }`}>
-                              <div className="font-medium mb-1">Detected conflicts (resolved):</div>
-                              {conflictDetails.map((conflict, idx) => (
-                                <div key={idx}>• {conflict}</div>
-                              ))}
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className={`text-xs font-semibold mb-2 ${
-                              isDark ? 'text-orange-300' : 'text-orange-800'
-                            }`}>
-                              ⚠️ Conflict Detected: Entry conditions conflict with pause conditions
-                            </div>
-                            <div className="flex items-center gap-2 mb-2">
-                              <input
-                                type="checkbox"
-                                checked={value.marketRegimeConfig?.allowEntryOverride || false}
-                                onChange={(e) =>
-                                  handleUpdate({
-                                    marketRegimeConfig: {
-                                      ...value.marketRegimeConfig,
-                                      allowEntryOverride: e.target.checked,
-                                    },
-                                  })
-                                }
-                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
-                              />
-                              <label className={`text-xs ${
-                                isDark ? 'text-orange-400' : 'text-orange-700'
-                              }`}>
-                                Allow entry conditions to override pause (when entry condition triggers, bot will trade even if pause condition is active)
-                              </label>
-                            </div>
-                            <div className={`text-xs space-y-1 ${
-                              isDark ? 'text-orange-400' : 'text-orange-700'
-                            }`}>
-                              {conflictDetails.map((conflict, idx) => (
-                                <div key={idx}>• {conflict}</div>
-                              ))}
-                            </div>
-                            <div className={`text-xs mt-2 ${
-                              isDark ? 'text-orange-400' : 'text-orange-600'
-                            }`}>
-                              <strong>Solution:</strong> Enable "Allow entry conditions to override pause" above. This will let your entry conditions trigger trades even when pause condition is active.
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Conflict Warning */}
-                {showConflictWarning && (
-                  <div className={`rounded-lg p-3 mb-3 border ${
-                    value.marketRegimeConfig?.allowEntryOverride
-                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                      : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
-                  }`}>
-                    <div className="flex items-start gap-2">
-                      {value.marketRegimeConfig?.allowEntryOverride ? (
-                        <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                      ) : (
-                        <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
-                      )}
-                      <div className="flex-1">
-                        {value.marketRegimeConfig?.allowEntryOverride ? (
-                          <>
-                            <div className={`text-xs font-semibold mb-1 ${
-                              isDark ? 'text-green-300' : 'text-green-800'
-                            }`}>
-                              ✓ Conflict Resolved
-                            </div>
-                            <div className={`text-xs mb-2 ${
-                              isDark ? 'text-green-400' : 'text-green-700'
-                            }`}>
-                              Entry conditions will override pause conditions when they trigger.
-                            </div>
-                            <div className={`text-xs space-y-1 opacity-75 ${
-                              isDark ? 'text-green-400' : 'text-green-600'
-                            }`}>
-                              <div className="font-medium mb-1">Detected conflicts (resolved):</div>
-                              {conflictDetails.map((conflict, idx) => (
-                                <div key={idx}>• {conflict}</div>
-                              ))}
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className={`text-xs font-semibold mb-2 ${
-                              isDark ? 'text-orange-300' : 'text-orange-800'
-                            }`}>
-                              ⚠️ Conflict Detected: Entry conditions conflict with pause conditions
-                            </div>
-                            <div className="flex items-center gap-2 mb-2">
-                              <input
-                                type="checkbox"
-                                checked={value.marketRegimeConfig?.allowEntryOverride || false}
-                                onChange={(e) =>
-                                  handleUpdate({
-                                    marketRegimeConfig: {
-                                      ...value.marketRegimeConfig,
-                                      allowEntryOverride: e.target.checked,
-                                    },
-                                  })
-                                }
-                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
-                              />
-                              <label className={`text-xs ${
-                                isDark ? 'text-orange-400' : 'text-orange-700'
-                              }`}>
-                                Allow entry conditions to override pause (when entry condition triggers, bot will trade even if pause condition is active)
-                              </label>
-                            </div>
-                            <div className={`text-xs space-y-1 ${
-                              isDark ? 'text-orange-400' : 'text-orange-700'
-                            }`}>
-                              {conflictDetails.map((conflict, idx) => (
-                                <div key={idx}>• {conflict}</div>
-                              ))}
-                            </div>
-                            <div className={`text-xs mt-2 ${
-                              isDark ? 'text-orange-400' : 'text-orange-600'
-                            }`}>
-                              <strong>Solution:</strong> Enable "Allow entry conditions to override pause" above. This will let your entry conditions trigger trades even when pause condition is active.
-                            </div>
-                          </>
-                        )}
+                        <div className={`text-xs font-semibold mb-2 ${
+                          isDark ? 'text-orange-300' : 'text-orange-800'
+                        }`}>
+                          ⚠️ Conflict Detected: Entry conditions conflict with pause conditions
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={value.marketRegimeConfig?.allowEntryOverride || false}
+                            onChange={(e) =>
+                              handleUpdate({
+                                marketRegimeConfig: {
+                                  ...value.marketRegimeConfig,
+                                  allowEntryOverride: e.target.checked,
+                                },
+                              })
+                            }
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                          />
+                          <label className={`text-xs ${
+                            isDark ? 'text-orange-400' : 'text-orange-700'
+                          }`}>
+                            Allow entry conditions to override pause (when entry condition triggers, bot will trade even if pause condition is active)
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
