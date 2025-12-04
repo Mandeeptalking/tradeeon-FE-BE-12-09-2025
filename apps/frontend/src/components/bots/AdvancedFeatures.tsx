@@ -652,7 +652,6 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
                   </Label>
                 </div>
               </div>
-            )}
           </div>
         )}
       </div>
