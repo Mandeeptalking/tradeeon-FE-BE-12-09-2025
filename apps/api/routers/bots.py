@@ -173,6 +173,34 @@ async def create_dca_bot(
         
         logger.info(f"✅ Bot {bot_id} successfully saved to database with status 'inactive'")
         
+        # Convert entry conditions to alert format and create alert
+        try:
+            from apps.bots.entry_condition_to_alert import convert_entry_conditions_to_alert
+            from apps.api.clients.supabase_client import supabase
+            
+            entry_conditions = bot_config.get("entryConditions")
+            if entry_conditions and entry_conditions.get("entryType") == "conditional":
+                alert = convert_entry_conditions_to_alert(
+                    bot_id=bot_id,
+                    user_id=user_id,
+                    symbol=primary_pair,
+                    entry_conditions_data=entry_conditions,
+                    base_timeframe=bot_config.get("timeframe", "1h")
+                )
+                
+                if alert and supabase:
+                    try:
+                        supabase.table("alerts").insert(alert).execute()
+                        logger.info(f"✅ Created entry alert for bot {bot_id}")
+                    except Exception as alert_error:
+                        logger.warning(f"Failed to create alert for bot {bot_id}: {alert_error}")
+                        # Don't fail bot creation if alert creation fails
+                elif alert:
+                    logger.warning(f"Supabase client not available, skipping alert creation for bot {bot_id}")
+        except Exception as e:
+            logger.warning(f"Error creating alert for bot {bot_id}: {e}", exc_info=True)
+            # Don't fail bot creation if alert creation fails
+        
         bot = {
             "bot_id": bot_id,
             "user_id": user_id,
@@ -355,6 +383,199 @@ async def start_dca_bot_paper(
         error_type = type(e).__name__
         error_message = str(e)
         logger.error(f"❌ Error starting DCA bot in paper mode: {error_type}: {error_message}", exc_info=True)
+        logger.error(f"   Bot ID: {bot_id}")
+        logger.error(f"   User ID: {user.user_id}")
+        logger.error(f"   Error details: {repr(e)}")
+        
+        # Include more details in error message for debugging
+        detailed_message = f"Failed to start bot: {error_message}"
+        logger.error(f"   DB service enabled: {db_service.enabled if db_service else 'N/A'}")
+        logger.error(f"   Bot execution service available: {bot_execution_service is not None if bot_execution_service else False}")
+        
+        raise TradeeonError(
+            detailed_message,
+            "INTERNAL_SERVER_ERROR",
+            status_code=500,
+            details={
+                "error_type": error_type,
+                "error_message": error_message,
+                "bot_id": bot_id
+            }
+        )
+
+
+@router.post("/dca-bots/{bot_id}/start")
+async def start_dca_bot_live(
+    bot_id: str = Path(..., description="Bot ID"),
+    start_config: Optional[Dict[str, Any]] = Body(default=None, description="Start configuration"),
+    user: AuthedUser = Depends(get_current_user),
+    services: tuple = Depends(get_bot_services)
+):
+    """Start a DCA bot in live trading mode with real money."""
+    try:
+        bot_execution_service, db_service = services
+        
+        bot_data = db_service.get_bot(bot_id, user_id=user.user_id)
+        if not bot_data:
+            raise NotFoundError("Bot", f"Bot {bot_id} not found or access denied")
+        
+        current_status = bot_data.get("status", "inactive")
+        
+        # Validate that bot can be started (must be inactive or stopped)
+        if current_status not in ["inactive", "stopped"]:
+            if current_status == "running":
+                return {
+                    "success": True,
+                    "message": "Bot is already running",
+                    "bot_id": bot_id,
+                    "status": "running"
+                }
+            elif current_status == "paused":
+                raise TradeeonError(
+                    "Bot is paused. Please resume it instead of starting it.",
+                    "INVALID_STATUS_TRANSITION",
+                    status_code=400
+                )
+            else:
+                raise TradeeonError(
+                    f"Cannot start bot with status: {current_status}. Bot must be inactive or stopped.",
+                    "INVALID_STATUS_TRANSITION",
+                    status_code=400
+                )
+        
+        if bot_execution_service.is_running(bot_id):
+            # Bot is running in memory but status might be out of sync
+            logger.warning(f"Bot {bot_id} is running in memory but status is {current_status}. Updating status to running.")
+            db_service.update_bot_status(bot_id, "running")
+            return {
+                "success": True,
+                "message": "Bot is already running",
+                "bot_id": bot_id,
+                "status": "running"
+            }
+        
+        # Verify user has active Binance connection
+        from apps.api.clients.supabase_client import supabase
+        if not supabase:
+            raise TradeeonError(
+                "Database service not available. Cannot verify Binance connection.",
+                "SERVICE_UNAVAILABLE",
+                status_code=503
+            )
+        
+        connection_result = supabase.table("exchange_keys").select("*").eq(
+            "user_id", user.user_id
+        ).eq("exchange", "binance").eq("is_active", True).execute()
+        
+        if not connection_result.data:
+            raise TradeeonError(
+                "No active Binance connection found. Please connect your Binance account before starting live trading.",
+                "BINANCE_CONNECTION_REQUIRED",
+                status_code=400
+            )
+        
+        bot_config = bot_data.get("config", {})
+        bot_config["user_id"] = user.user_id
+        
+        # Handle optional start_config
+        if start_config is None:
+            start_config = {}
+        
+        # For live mode, initial_balance is not used (uses exchange balance)
+        initial_balance = start_config.get("initial_balance", 0.0)  # Not used in live mode
+        interval_seconds = start_config.get("interval_seconds", 60)
+        
+        # Create bot run record FIRST (before starting bot so we can pass run_id)
+        try:
+            run_id = db_service.create_bot_run(bot_id=bot_id, user_id=user.user_id, status="running")
+            if not run_id:
+                logger.warning(f"Failed to create bot run record, continuing without run_id")
+        except Exception as run_error:
+            logger.error(f"Error creating bot run record: {run_error}", exc_info=True)
+            run_id = None  # Continue without run_id
+        
+        # Start bot with run_id in live mode
+        try:
+            started = await bot_execution_service.start_bot(
+                bot_id=bot_id,
+                bot_config=bot_config,
+                mode="live",
+                initial_balance=initial_balance,
+                interval_seconds=interval_seconds,
+                run_id=run_id  # Pass run_id to executor
+            )
+        except RuntimeError as start_error:
+            # RuntimeError from bot_execution_service.start_bot with detailed message
+            logger.error(f"Error starting bot executor: {start_error}", exc_info=True)
+            # If bot failed to start, update run status
+            if run_id and db_service and db_service.enabled:
+                try:
+                    db_service.update_bot_run(run_id, status="error")
+                except:
+                    pass
+            raise TradeeonError(
+                str(start_error),
+                "INTERNAL_SERVER_ERROR",
+                status_code=500,
+                details={"bot_id": bot_id, "error_type": type(start_error).__name__}
+            )
+        except Exception as start_error:
+            logger.error(f"Unexpected error starting bot executor: {start_error}", exc_info=True)
+            # If bot failed to start, update run status
+            if run_id and db_service and db_service.enabled:
+                try:
+                    db_service.update_bot_run(run_id, status="error")
+                except:
+                    pass
+            raise TradeeonError(
+                f"Failed to start bot executor: {str(start_error)}",
+                "INTERNAL_SERVER_ERROR",
+                status_code=500,
+                details={"bot_id": bot_id, "error_type": type(start_error).__name__}
+            )
+        
+        if not started:
+            # If bot failed to start, update run status
+            if run_id and db_service and db_service.enabled:
+                try:
+                    db_service.update_bot_run(run_id, status="error")
+                except:
+                    pass
+            # Get more details about why it failed
+            error_msg = "Failed to start bot. Check backend logs for details."
+            if bot_execution_service:
+                # Check if DCABotExecutor is available
+                if not hasattr(bot_execution_service, 'DCABotExecutor') or bot_execution_service.DCABotExecutor is None:
+                    error_msg = "DCABotExecutor is not available. Check bot module imports."
+            raise TradeeonError(
+                error_msg,
+                "INTERNAL_SERVER_ERROR",
+                status_code=500,
+                details={"bot_id": bot_id, "user_id": user.user_id}
+            )
+        
+        # Update bot status to running
+        db_service.update_bot_status(bot_id, "running")
+        
+        logger.info(f"✅ DCA bot {bot_id} started in LIVE trading mode with run_id {run_id}")
+        
+        return {
+            "success": True,
+            "message": "Bot started successfully in live trading mode",
+            "bot_id": bot_id,
+            "run_id": run_id,
+            "status": "running",
+            "mode": "live"
+        }
+        
+    except NotFoundError:
+        raise
+    except TradeeonError:
+        raise
+    except Exception as e:
+        error_type = type(e).__name__
+        error_message = str(e)
+        logger.error(f"❌ Error starting DCA bot in live mode: {error_type}: {error_message}", exc_info=True)
         logger.error(f"   Bot ID: {bot_id}")
         logger.error(f"   User ID: {user.user_id}")
         logger.error(f"   Error details: {repr(e)}")
