@@ -224,6 +224,7 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
   useEffect(() => {
     return () => {
       Object.values(debounceTimersRef.current).forEach(timer => clearTimeout(timer));
+      Object.values(profitTargetTimersRef.current).forEach(timer => clearTimeout(timer));
     };
   }, []);
 
@@ -368,15 +369,56 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
     });
   }, [value.profitStrategyConfig, handleUpdate]);
 
-  const updateProfitTarget = useCallback((index: number, field: 'profitPercent' | 'sellPercent', val: number) => {
-    const newTargets = [...(value.profitStrategyConfig?.partialTargets || [])];
-    newTargets[index] = { ...newTargets[index], [field]: val };
-    handleUpdate({
-      profitStrategyConfig: {
-        ...value.profitStrategyConfig,
-        partialTargets: newTargets,
-      },
+  // Local state for profit target inputs
+  const [localProfitTargets, setLocalProfitTargets] = useState<{ [key: string]: string }>({});
+  const profitTargetTimersRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
+
+  // Initialize local profit targets from props
+  useEffect(() => {
+    const updates: { [key: string]: string } = {};
+    (value.profitStrategyConfig?.partialTargets || []).forEach((target, index) => {
+      const profitKey = `profit-${index}`;
+      const sellKey = `sell-${index}`;
+      if (focusedInputRef.current !== profitKey) {
+        updates[profitKey] = String(target.profitPercent || 0);
+      }
+      if (focusedInputRef.current !== sellKey) {
+        updates[sellKey] = String(target.sellPercent || 0);
+      }
     });
+    setLocalProfitTargets((prev) => ({ ...prev, ...updates }));
+  }, [value.profitStrategyConfig?.partialTargets]);
+
+  const updateProfitTarget = useCallback((index: number, field: 'profitPercent' | 'sellPercent', val: number, immediate = false) => {
+    if (immediate) {
+      const newTargets = [...(value.profitStrategyConfig?.partialTargets || [])];
+      newTargets[index] = { ...newTargets[index], [field]: val };
+      handleUpdate({
+        profitStrategyConfig: {
+          ...value.profitStrategyConfig,
+          partialTargets: newTargets,
+        },
+      });
+      return;
+    }
+
+    // Debounce the update
+    const timerKey = `profit-target-${index}-${field}`;
+    if (profitTargetTimersRef.current[timerKey]) {
+      clearTimeout(profitTargetTimersRef.current[timerKey]);
+    }
+
+    profitTargetTimersRef.current[timerKey] = setTimeout(() => {
+      const newTargets = [...(value.profitStrategyConfig?.partialTargets || [])];
+      newTargets[index] = { ...newTargets[index], [field]: val };
+      handleUpdate({
+        profitStrategyConfig: {
+          ...value.profitStrategyConfig,
+          partialTargets: newTargets,
+        },
+      });
+      delete profitTargetTimersRef.current[timerKey];
+    }, 300);
   }, [value.profitStrategyConfig, handleUpdate]);
 
   const totalSellPercent = (value.profitStrategyConfig?.partialTargets || []).reduce(
@@ -1034,10 +1076,29 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
                             key={`profit-target-${index}-profit-input`}
                             type="number"
                             step="0.1"
-                            value={target.profitPercent}
-                            onChange={(e) =>
-                              updateProfitTarget(index, 'profitPercent', parseFloat(e.target.value) || 0)
-                            }
+                            value={localProfitTargets[`profit-${index}`] ?? target.profitPercent ?? 0}
+                            onChange={(e) => {
+                              const inputValue = e.target.value;
+                              setLocalProfitTargets((prev) => ({ ...prev, [`profit-${index}`]: inputValue }));
+                              const timerKey = `profit-target-${index}-profitPercent`;
+                              if (profitTargetTimersRef.current[timerKey]) {
+                                clearTimeout(profitTargetTimersRef.current[timerKey]);
+                              }
+                              profitTargetTimersRef.current[timerKey] = setTimeout(() => {
+                                updateProfitTarget(index, 'profitPercent', parseFloat(inputValue) || 0, true);
+                                delete profitTargetTimersRef.current[timerKey];
+                              }, 300);
+                            }}
+                            onFocus={() => handleInputFocus(`profit-${index}`)}
+                            onBlur={(e) => {
+                              const timerKey = `profit-target-${index}-profitPercent`;
+                              if (profitTargetTimersRef.current[timerKey]) {
+                                clearTimeout(profitTargetTimersRef.current[timerKey]);
+                                updateProfitTarget(index, 'profitPercent', parseFloat(e.target.value) || 0, true);
+                                delete profitTargetTimersRef.current[timerKey];
+                              }
+                              handleInputBlur(`profit-${index}`);
+                            }}
                             className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                           />
                         </div>
@@ -1050,10 +1111,29 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
                               key={`profit-target-${index}-sell-input`}
                               type="number"
                               step="0.1"
-                              value={target.sellPercent}
-                              onChange={(e) =>
-                                updateProfitTarget(index, 'sellPercent', parseFloat(e.target.value) || 0)
-                              }
+                              value={localProfitTargets[`sell-${index}`] ?? target.sellPercent ?? 0}
+                              onChange={(e) => {
+                                const inputValue = e.target.value;
+                                setLocalProfitTargets((prev) => ({ ...prev, [`sell-${index}`]: inputValue }));
+                                const timerKey = `profit-target-${index}-sellPercent`;
+                                if (profitTargetTimersRef.current[timerKey]) {
+                                  clearTimeout(profitTargetTimersRef.current[timerKey]);
+                                }
+                                profitTargetTimersRef.current[timerKey] = setTimeout(() => {
+                                  updateProfitTarget(index, 'sellPercent', parseFloat(inputValue) || 0, true);
+                                  delete profitTargetTimersRef.current[timerKey];
+                                }, 300);
+                              }}
+                              onFocus={() => handleInputFocus(`sell-${index}`)}
+                              onBlur={(e) => {
+                                const timerKey = `profit-target-${index}-sellPercent`;
+                                if (profitTargetTimersRef.current[timerKey]) {
+                                  clearTimeout(profitTargetTimersRef.current[timerKey]);
+                                  updateProfitTarget(index, 'sellPercent', parseFloat(e.target.value) || 0, true);
+                                  delete profitTargetTimersRef.current[timerKey];
+                                }
+                                handleInputBlur(`sell-${index}`);
+                              }}
                               className={`mt-1 flex-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                             />
                             <Button
