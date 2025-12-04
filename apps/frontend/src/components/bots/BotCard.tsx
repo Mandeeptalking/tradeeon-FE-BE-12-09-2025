@@ -21,6 +21,7 @@ import {
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { useThemeStore } from '../../store/theme';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -400,12 +401,13 @@ export default function BotCard({
                       <Button 
                         size="sm" 
                         variant="ghost"
-                        className="h-9 w-9 p-0 text-gray-400 hover:text-white hover:bg-gray-700/50 border border-transparent hover:border-gray-600/50 rounded-lg transition-all"
+                        className="h-9 w-9 p-0 text-gray-400 hover:text-white hover:bg-gray-700/50 border border-gray-600/30 hover:border-gray-500/50 rounded-lg transition-all flex items-center justify-center"
+                        title="More options"
                       >
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 w-48">
+                    <DropdownMenuContent align="end" className={`bg-gray-800 border-gray-700 w-48 z-50 ${isDark ? '' : 'dark'}`}>
                       <DropdownMenuItem 
                         onClick={() => onDuplicate(bot.bot_id)}
                         className="text-white hover:bg-gray-700 focus:bg-gray-700 cursor-pointer"
