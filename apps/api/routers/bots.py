@@ -787,22 +787,31 @@ async def get_bot_logs(
             }
         
         try:
-            query = db_service.supabase.table("bot_events").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
+            # Build base query
+            base_query = db_service.supabase.table("bot_events").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
             
             if run_id:
-                query = query.eq("run_id", run_id)
+                base_query = base_query.eq("run_id", run_id)
             if event_type:
-                query = query.eq("event_type", event_type)
+                base_query = base_query.eq("event_type", event_type)
             if event_category:
-                query = query.eq("event_category", event_category)
+                base_query = base_query.eq("event_category", event_category)
             
-            # Get total count
-            count_result = query.execute()
-            total = len(count_result.data) if count_result.data else 0
+            # Get total count (execute a separate count query)
+            count_query = db_service.supabase.table("bot_events").select("event_id", count="exact").eq("bot_id", bot_id).eq("user_id", user.user_id)
+            if run_id:
+                count_query = count_query.eq("run_id", run_id)
+            if event_type:
+                count_query = count_query.eq("event_type", event_type)
+            if event_category:
+                count_query = count_query.eq("event_category", event_category)
             
-            # Get paginated results
-            query = query.order("created_at", desc=True).range(offset, offset + limit - 1)
-            result = query.execute()
+            count_result = count_query.execute()
+            total = count_result.count if count_result.count is not None else 0
+            
+            # Get paginated results (rebuild query for data)
+            data_query = base_query.order("created_at", desc=True).range(offset, offset + limit - 1)
+            result = data_query.execute()
             
             events = result.data if result.data else []
             
