@@ -213,7 +213,7 @@ export default function BotCard({
         className="group h-full"
       >
         <Card className={`
-          relative overflow-hidden h-full flex flex-col
+          relative overflow-visible h-full flex flex-col min-h-[420px]
           bg-gradient-to-br from-gray-800/95 via-gray-800/90 to-gray-900/95
           border border-gray-700/50
           shadow-xl shadow-black/20
