@@ -22,6 +22,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import BotConfiguration, { type BotConfigurationData } from '../../components/bots/BotConfiguration';
 import EntryConditions, { type EntryConditionsData } from '../../components/bots/EntryConditions';
+import DCASettings, { type DCASettingsData } from '../../components/bots/DCASettings';
 
 interface DCABotConfig {
   // Bot Configuration (from reusable component)
@@ -29,9 +30,12 @@ interface DCABotConfig {
   
   // DCA Specific Configuration
   baseOrderSize: number;
-  dcaInterval: number; // minutes
-  priceDropPercent: number; // % drop to trigger DCA
-  maxOrders: number;
+  dcaInterval: number; // minutes (legacy - kept for backward compatibility)
+  priceDropPercent: number; // % drop to trigger DCA (legacy - kept for backward compatibility)
+  maxOrders: number; // legacy - kept for backward compatibility
+  
+  // DCA Settings (new component)
+  dcaSettings: DCASettingsData;
   
   // Advanced Features
   enableMarketRegime: boolean;
@@ -65,6 +69,19 @@ const DCABot: React.FC = () => {
     dcaInterval: 60,
     priceDropPercent: 5,
     maxOrders: 10,
+    dcaSettings: {
+      enabled: true,
+      ruleType: 'down_from_last_entry',
+      downFromLastEntryPercent: 5,
+      amountType: 'fixed',
+      fixedAmount: 100,
+      maxDcaPerPosition: 5,
+      maxDcaAcrossAllPositions: 20,
+      cooldownValue: 0,
+      cooldownUnit: 'minutes',
+      waitForPreviousDca: false,
+      stopDcaOnLoss: false,
+    },
     enableMarketRegime: false,
     enableDynamicScaling: false,
     enableProfitTaking: false,
@@ -150,6 +167,13 @@ const DCABot: React.FC = () => {
     setConfig((prev) => ({
       ...prev,
       entryConditions: typeof newConditions === 'function' ? newConditions(prev.entryConditions) : newConditions,
+    }));
+  }, []);
+
+  const handleDCASettingsChange = useCallback((newSettings: DCASettingsData | ((prev: DCASettingsData) => DCASettingsData)) => {
+    setConfig((prev) => ({
+      ...prev,
+      dcaSettings: typeof newSettings === 'function' ? newSettings(prev.dcaSettings) : newSettings,
     }));
   }, []);
 
@@ -318,96 +342,13 @@ const DCABot: React.FC = () => {
               icon={Layers}
               description="Configure dollar cost averaging intervals and rules"
             >
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
-                      Base Order Size
-                    </label>
-                    <Input
-                      type="number"
-                      value={config.baseOrderSize}
-                      onChange={(e) =>
-                        setConfig((prev) => ({
-                          ...prev,
-                          baseOrderSize: parseFloat(e.target.value) || 0,
-                        }))
-                      }
-                      className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
-                      placeholder="100"
-                    />
-                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Initial order amount in quote currency
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
-                      DCA Interval (minutes)
-                    </label>
-                    <Input
-                      type="number"
-                      value={config.dcaInterval}
-                      onChange={(e) =>
-                        setConfig((prev) => ({
-                          ...prev,
-                          dcaInterval: parseInt(e.target.value) || 60,
-                        }))
-                      }
-                      className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
-                      placeholder="60"
-                    />
-                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Time between DCA orders
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
-                      Price Drop Trigger (%)
-                    </label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={config.priceDropPercent}
-                      onChange={(e) =>
-                        setConfig((prev) => ({
-                          ...prev,
-                          priceDropPercent: parseFloat(e.target.value) || 0,
-                        }))
-                      }
-                      className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
-                      placeholder="5"
-                    />
-                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Price drop percentage to trigger DCA
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
-                      Max Orders
-                    </label>
-                    <Input
-                      type="number"
-                      value={config.maxOrders}
-                      onChange={(e) =>
-                        setConfig((prev) => ({
-                          ...prev,
-                          maxOrders: parseInt(e.target.value) || 10,
-                        }))
-                      }
-                      className={isDark ? 'bg-gray-800 border-gray-700 text-white' : ''}
-                      placeholder="10"
-                    />
-                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Maximum number of DCA orders
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <DCASettings
+                key="dca-settings-component"
+                value={config.dcaSettings}
+                onChange={handleDCASettingsChange}
+                baseOrderCurrency="USDT"
+                baseOrderSize={config.baseOrderSize}
+              />
             </ConfigSection>
 
             {/* Advanced Features */}
