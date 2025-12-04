@@ -598,6 +598,25 @@ async def start_dca_bot_live(
         # Update bot status to running
         db_service.update_bot_status(bot_id, "running")
         
+        # Log bot start event
+        try:
+            db_service.log_event(
+                bot_id=bot_id,
+                run_id=run_id,
+                user_id=user.user_id,
+                event_type="bot_started",
+                event_category="system",
+                message=f"Bot '{bot_data.get('name', bot_id)}' started in live trading mode",
+                symbol=bot_data.get("symbol"),
+                details={
+                    "trading_mode": "live",
+                    "run_id": str(run_id) if run_id else None,
+                    "start_config": start_config or {},
+                }
+            )
+        except Exception as log_error:
+            logger.warning(f"Failed to log bot start event: {log_error}")
+        
         logger.info(f"✅ DCA bot {bot_id} started in LIVE trading mode with run_id {run_id}")
         
         return {
