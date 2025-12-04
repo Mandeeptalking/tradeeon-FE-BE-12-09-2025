@@ -87,28 +87,59 @@ const DCASettings: React.FC<DCASettingsProps> = ({
   const isDark = theme === 'dark';
   const [expandedSection, setExpandedSection] = useState<string | null>('amount-config');
   
-  // Local state for text inputs to prevent focus loss
+  // Local state for text inputs - only sync from props when not focused
   const [localValues, setLocalValues] = useState<{ [key: string]: number | string }>({});
+  const focusedInputRef = useRef<string | null>(null);
   const debounceTimersRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
-  // Initialize local values from props
+  // Initialize local values from props only if input is not focused
   useEffect(() => {
-    setLocalValues({
-      baseOrderSize: baseOrderSize,
-      downFromLastEntryPercent: value.downFromLastEntryPercent || 5,
-      downFromAveragePricePercent: value.downFromAveragePricePercent || 5,
-      lossByPercent: value.lossByPercent || 0,
-      lossByAmount: value.lossByAmount || 0,
-      fixedAmount: value.fixedAmount || baseOrderSize,
-      percentageAmount: value.percentageAmount || 100,
-      multiplier: value.multiplier || 1,
-      maxDcaPerPosition: value.maxDcaPerPosition || 5,
-      maxDcaAcrossAllPositions: value.maxDcaAcrossAllPositions || 20,
-      cooldownValue: value.cooldownValue || 0,
-      maxTotalInvestmentPerPosition: value.maxTotalInvestmentPerPosition || 0,
-      stopDcaOnLossPercent: value.stopDcaOnLossPercent || 0,
-      stopDcaOnLossAmount: value.stopDcaOnLossAmount || 0,
-    });
+    const updates: { [key: string]: number | string } = {};
+    
+    if (focusedInputRef.current !== 'baseOrderSize') {
+      updates.baseOrderSize = baseOrderSize;
+    }
+    if (focusedInputRef.current !== 'downFromLastEntryPercent') {
+      updates.downFromLastEntryPercent = value.downFromLastEntryPercent ?? 5;
+    }
+    if (focusedInputRef.current !== 'downFromAveragePricePercent') {
+      updates.downFromAveragePricePercent = value.downFromAveragePricePercent ?? 5;
+    }
+    if (focusedInputRef.current !== 'lossByPercent') {
+      updates.lossByPercent = value.lossByPercent ?? 0;
+    }
+    if (focusedInputRef.current !== 'lossByAmount') {
+      updates.lossByAmount = value.lossByAmount ?? 0;
+    }
+    if (focusedInputRef.current !== 'fixedAmount') {
+      updates.fixedAmount = value.fixedAmount ?? baseOrderSize;
+    }
+    if (focusedInputRef.current !== 'percentageAmount') {
+      updates.percentageAmount = value.percentageAmount ?? 100;
+    }
+    if (focusedInputRef.current !== 'multiplier') {
+      updates.multiplier = value.multiplier ?? 1;
+    }
+    if (focusedInputRef.current !== 'maxDcaPerPosition') {
+      updates.maxDcaPerPosition = value.maxDcaPerPosition ?? 5;
+    }
+    if (focusedInputRef.current !== 'maxDcaAcrossAllPositions') {
+      updates.maxDcaAcrossAllPositions = value.maxDcaAcrossAllPositions ?? 20;
+    }
+    if (focusedInputRef.current !== 'cooldownValue') {
+      updates.cooldownValue = value.cooldownValue ?? 0;
+    }
+    if (focusedInputRef.current !== 'maxTotalInvestmentPerPosition') {
+      updates.maxTotalInvestmentPerPosition = value.maxTotalInvestmentPerPosition ?? 0;
+    }
+    if (focusedInputRef.current !== 'stopDcaOnLossPercent') {
+      updates.stopDcaOnLossPercent = value.stopDcaOnLossPercent ?? 0;
+    }
+    if (focusedInputRef.current !== 'stopDcaOnLossAmount') {
+      updates.stopDcaOnLossAmount = value.stopDcaOnLossAmount ?? 0;
+    }
+    
+    setLocalValues((prev) => ({ ...prev, ...updates }));
   }, [value, baseOrderSize]);
 
   // Cleanup timers on unmount
@@ -140,14 +171,41 @@ const DCASettings: React.FC<DCASettingsProps> = ({
     }, 300); // 300ms debounce
   }, [onChange]);
 
-  const handleTextInputChange = useCallback((field: string, value: number | string, updateField: string, immediate = false) => {
-    // Update local state immediately for responsive UI
-    setLocalValues((prev) => ({ ...prev, [field]: value }));
+  const handleTextInputChange = useCallback((field: string, inputValue: string, updateField: string) => {
+    // Update local state immediately - this is what the user sees
+    setLocalValues((prev) => ({ ...prev, [field]: inputValue }));
     
     // Debounce the parent update
-    const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
-    handleUpdate({ [updateField]: numValue } as Partial<DCASettingsData>, immediate);
+    const timerKey = `dca-${field}`;
+    if (debounceTimersRef.current[timerKey]) {
+      clearTimeout(debounceTimersRef.current[timerKey]);
+    }
+
+    debounceTimersRef.current[timerKey] = setTimeout(() => {
+      const numValue = parseFloat(inputValue) || 0;
+      handleUpdate({ [updateField]: numValue } as Partial<DCASettingsData>, false);
+      delete debounceTimersRef.current[timerKey];
+    }, 300);
   }, [handleUpdate]);
+
+  const handleInputFocus = useCallback((field: string) => {
+    focusedInputRef.current = field;
+  }, []);
+
+  const handleInputBlur = useCallback((field: string) => {
+    // Clear any pending debounce and update immediately
+    const timerKey = `dca-${field}`;
+    if (debounceTimersRef.current[timerKey]) {
+      clearTimeout(debounceTimersRef.current[timerKey]);
+      const currentValue = localValues[field];
+      if (currentValue !== undefined) {
+        const numValue = typeof currentValue === 'string' ? parseFloat(currentValue) || 0 : currentValue;
+        handleUpdate({ [field]: numValue } as Partial<DCASettingsData>, false);
+      }
+      delete debounceTimersRef.current[timerKey];
+    }
+    focusedInputRef.current = null;
+  }, [localValues, handleUpdate]);
 
   const addDCALevel = useCallback(() => {
     const newLevel: DCALevel = {
@@ -325,17 +383,30 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                       min="0"
                       value={localValues.baseOrderSize ?? baseOrderSize}
                       onChange={(e) => {
-                        const newSize = parseFloat(e.target.value) || 0;
-                        setLocalValues((prev) => ({ ...prev, baseOrderSize: newSize }));
-                        // Debounce base order size change
+                        const inputValue = e.target.value;
+                        setLocalValues((prev) => ({ ...prev, baseOrderSize: inputValue }));
                         const timerKey = 'base-order-size';
                         if (debounceTimersRef.current[timerKey]) {
                           clearTimeout(debounceTimersRef.current[timerKey]);
                         }
                         debounceTimersRef.current[timerKey] = setTimeout(() => {
+                          const newSize = parseFloat(inputValue) || 0;
                           onBaseOrderSizeChange?.(newSize);
                           delete debounceTimersRef.current[timerKey];
                         }, 300);
+                      }}
+                      onFocus={() => handleInputFocus('baseOrderSize')}
+                      onBlur={() => {
+                        handleInputBlur('baseOrderSize');
+                        const timerKey = 'base-order-size';
+                        if (debounceTimersRef.current[timerKey]) {
+                          clearTimeout(debounceTimersRef.current[timerKey]);
+                          const currentValue = localValues.baseOrderSize ?? baseOrderSize;
+                          const newSize = typeof currentValue === 'string' ? parseFloat(currentValue) || 0 : currentValue;
+                          onBaseOrderSizeChange?.(newSize);
+                          delete debounceTimersRef.current[timerKey];
+                        }
+                        focusedInputRef.current = null;
                       }}
                       className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                     />
@@ -390,6 +461,8 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                         onChange={(e) =>
                           handleTextInputChange('fixedAmount', e.target.value, 'fixedAmount')
                         }
+                        onFocus={() => handleInputFocus('fixedAmount')}
+                        onBlur={() => handleInputBlur('fixedAmount')}
                         className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                       />
                       <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
@@ -414,6 +487,8 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                           onChange={(e) =>
                             handleTextInputChange('percentageAmount', e.target.value, 'percentageAmount')
                           }
+                          onFocus={() => handleInputFocus('percentageAmount')}
+                          onBlur={() => handleInputBlur('percentageAmount')}
                           className={isDark ? 'bg-gray-800 border-gray-700' : ''}
                         />
                         <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>%</span>
@@ -443,6 +518,8 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                         onChange={(e) =>
                           handleTextInputChange('multiplier', e.target.value, 'multiplier')
                         }
+                        onFocus={() => handleInputFocus('multiplier')}
+                        onBlur={() => handleInputBlur('multiplier')}
                         className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                       />
                       <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
@@ -515,6 +592,8 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                         onChange={(e) =>
                           handleTextInputChange('downFromLastEntryPercent', e.target.value, 'downFromLastEntryPercent')
                         }
+                        onFocus={() => handleInputFocus('downFromLastEntryPercent')}
+                        onBlur={() => handleInputBlur('downFromLastEntryPercent')}
                         className={isDark ? 'bg-gray-800 border-gray-700' : ''}
                       />
                       <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>%</span>
@@ -540,6 +619,8 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                         onChange={(e) =>
                           handleTextInputChange('downFromAveragePricePercent', e.target.value, 'downFromAveragePricePercent')
                         }
+                        onFocus={() => handleInputFocus('downFromAveragePricePercent')}
+                        onBlur={() => handleInputBlur('downFromAveragePricePercent')}
                         className={isDark ? 'bg-gray-800 border-gray-700' : ''}
                       />
                       <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>%</span>
@@ -562,6 +643,8 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                         onChange={(e) =>
                           handleTextInputChange('lossByPercent', e.target.value, 'lossByPercent')
                         }
+                        onFocus={() => handleInputFocus('lossByPercent')}
+                        onBlur={() => handleInputBlur('lossByPercent')}
                         className={isDark ? 'bg-gray-800 border-gray-700' : ''}
                       />
                       <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>%</span>
@@ -583,6 +666,8 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                       onChange={(e) =>
                         handleTextInputChange('lossByAmount', e.target.value, 'lossByAmount')
                       }
+                      onFocus={() => handleInputFocus('lossByAmount')}
+                      onBlur={() => handleInputBlur('lossByAmount')}
                       className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                     />
                   </div>
@@ -662,16 +747,27 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                             </Label>
                             <div className="flex items-center gap-2 mt-1">
                               <Input
+                                key={`level-${level.id}-price-drop-input`}
                                 type="number"
                                 step="0.1"
                                 min="0"
-                                key={`level-${level.id}-price-drop-input`}
                                 value={level.priceDropPercent}
-                                onChange={(e) =>
+                                onChange={(e) => {
+                                  const inputValue = e.target.value;
+                                  // Update immediately in local state for the level
+                                  onChange((prev) => ({
+                                    ...prev,
+                                    levels: prev.levels?.map((l) =>
+                                      l.id === level.id ? { ...l, priceDropPercent: parseFloat(inputValue) || 0 } : l
+                                    ),
+                                  }));
+                                }}
+                                onBlur={(e) => {
+                                  const finalValue = parseFloat(e.target.value) || 0;
                                   updateDCALevel(level.id, {
-                                    priceDropPercent: parseFloat(e.target.value) || 0,
-                                  })
-                                }
+                                    priceDropPercent: finalValue,
+                                  }, true);
+                                }}
                                 className={isDark ? 'bg-gray-800 border-gray-700' : ''}
                               />
                               <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>%</span>
@@ -710,11 +806,22 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                             step={level.orderAmountType === 'percentage' ? '0.1' : '0.01'}
                             min="0"
                             value={level.orderAmount}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              const inputValue = e.target.value;
+                              // Update immediately in local state for the level
+                              onChange((prev) => ({
+                                ...prev,
+                                levels: prev.levels?.map((l) =>
+                                  l.id === level.id ? { ...l, orderAmount: parseFloat(inputValue) || 0 } : l
+                                ),
+                              }));
+                            }}
+                            onBlur={(e) => {
+                              const finalValue = parseFloat(e.target.value) || 0;
                               updateDCALevel(level.id, {
-                                orderAmount: parseFloat(e.target.value) || 0,
-                              })
-                            }
+                                orderAmount: finalValue,
+                              }, true);
+                            }}
                             className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                           />
                         </div>
@@ -762,6 +869,8 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                       onChange={(e) =>
                         handleTextInputChange('maxDcaPerPosition', e.target.value, 'maxDcaPerPosition')
                       }
+                      onFocus={() => handleInputFocus('maxDcaPerPosition')}
+                      onBlur={() => handleInputBlur('maxDcaPerPosition')}
                       className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                     />
                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
@@ -782,6 +891,8 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                       onChange={(e) =>
                         handleTextInputChange('maxDcaAcrossAllPositions', e.target.value, 'maxDcaAcrossAllPositions')
                       }
+                      onFocus={() => handleInputFocus('maxDcaAcrossAllPositions')}
+                      onBlur={() => handleInputBlur('maxDcaAcrossAllPositions')}
                       className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                     />
                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
@@ -817,6 +928,8 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                       onChange={(e) =>
                         handleTextInputChange('cooldownValue', e.target.value, 'cooldownValue')
                       }
+                      onFocus={() => handleInputFocus('cooldownValue')}
+                      onBlur={() => handleInputBlur('cooldownValue')}
                       className={isDark ? 'bg-gray-800 border-gray-700' : ''}
                     />
                     <Select
@@ -876,6 +989,8 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                     onChange={(e) =>
                       handleTextInputChange('maxTotalInvestmentPerPosition', e.target.value, 'maxTotalInvestmentPerPosition')
                     }
+                    onFocus={() => handleInputFocus('maxTotalInvestmentPerPosition')}
+                    onBlur={() => handleInputBlur('maxTotalInvestmentPerPosition')}
                     className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                     placeholder="1000"
                   />
@@ -930,6 +1045,8 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                             onChange={(e) =>
                               handleTextInputChange('stopDcaOnLossPercent', e.target.value, 'stopDcaOnLossPercent')
                             }
+                            onFocus={() => handleInputFocus('stopDcaOnLossPercent')}
+                            onBlur={() => handleInputBlur('stopDcaOnLossPercent')}
                             className={isDark ? 'bg-gray-800 border-gray-700' : ''}
                           />
                           <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>%</span>
@@ -949,6 +1066,8 @@ const DCASettings: React.FC<DCASettingsProps> = ({
                           onChange={(e) =>
                             handleTextInputChange('stopDcaOnLossAmount', e.target.value, 'stopDcaOnLossAmount')
                           }
+                          onFocus={() => handleInputFocus('stopDcaOnLossAmount')}
+                          onBlur={() => handleInputBlur('stopDcaOnLossAmount')}
                           className={`mt-1 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}
                         />
                       </div>
