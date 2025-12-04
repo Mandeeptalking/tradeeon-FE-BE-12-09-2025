@@ -801,12 +801,30 @@ async def get_bot_events(
             
             events = result.data if result.data else []
             
+            # Transform events to match frontend BotLog interface
+            logs = []
+            for event in events:
+                log = {
+                    "event_id": event.get("event_id"),
+                    "bot_id": event.get("bot_id"),
+                    "run_id": event.get("run_id"),
+                    "user_id": event.get("user_id"),
+                    "event_type": event.get("event_type"),
+                    "event_category": event.get("event_category"),
+                    "symbol": event.get("symbol"),
+                    "message": event.get("message"),
+                    "details": event.get("details", {}),
+                    "created_at": event.get("created_at")
+                }
+                logs.append(log)
+            
             return {
                 "success": True,
-                "events": events,
+                "logs": logs,
                 "total": total,
                 "limit": limit,
-                "offset": offset
+                "offset": offset,
+                "has_more": (offset + limit) < total
             }
         except Exception as e:
             logger.error(f"Error fetching bot events: {e}", exc_info=True)
