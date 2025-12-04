@@ -51,7 +51,8 @@ const DCABot: React.FC = () => {
 
   const [tradingMode, setTradingMode] = useState<'live' | 'paper'>('paper');
   const [isActive, setIsActive] = useState(false);
-  const [selectedSection, setSelectedSection] = useState<string | null>('bot-config');
+  // Use Set to allow multiple sections open at once
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['bot-config']));
   const [expandedEntryCondition, setExpandedEntryCondition] = useState<string | null>(null);
 
   const [config, setConfig] = useState<DCABotConfig>({
@@ -170,6 +171,18 @@ const DCABot: React.FC = () => {
     },
   });
 
+  const toggleSection = useCallback((id: string) => {
+    setExpandedSections((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  }, []);
+
   const ConfigSection = ({
     id,
     title,
@@ -185,19 +198,31 @@ const DCABot: React.FC = () => {
     children: React.ReactNode;
     defaultOpen?: boolean;
   }) => {
-    const isOpen = selectedSection === id;
+    // Initialize section as open if defaultOpen is true
+    useEffect(() => {
+      if (defaultOpen && !expandedSections.has(id)) {
+        setExpandedSections((prev) => new Set(prev).add(id));
+      }
+    }, [defaultOpen, id]);
+
+    const isOpen = expandedSections.has(id);
 
     return (
       <div
-        className={`rounded-xl border transition-all ${
+        className={`rounded-xl border transition-all duration-200 ${
           isDark
             ? 'border-gray-700/50 bg-gray-800/30'
             : 'border-gray-200 bg-white'
-        } ${isOpen ? 'ring-2 ring-blue-500/50' : ''}`}
+        } ${isOpen ? 'ring-2 ring-blue-500/50 shadow-lg' : ''}`}
       >
         <button
-          onClick={() => setSelectedSection(isOpen ? null : id)}
-          className="w-full p-4 flex items-center justify-between hover:bg-opacity-50 transition-colors"
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleSection(id);
+          }}
+          className="w-full p-4 flex items-center justify-between hover:bg-opacity-50 transition-all duration-200"
         >
           <div className="flex items-center gap-3">
             <div
