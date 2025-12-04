@@ -17,6 +17,10 @@ export interface Bot {
   created_at: string;
   updated_at: string;
   sparkline?: number[];         // last 24h pnl series for the card
+  config?: {                    // Bot configuration
+    tradingMode?: 'test' | 'live';  // Trading mode: 'test' for paper trading, 'live' for real trading
+    [key: string]: any;          // Other config fields
+  };
 }
 
 export interface BotFilters {
@@ -154,10 +158,21 @@ export async function listBots(filters: BotFilters): Promise<Bot[]> {
 }
 
 // Start a bot (for inactive/stopped bots)
-export async function startBot(botId: string): Promise<Bot> {
+export async function startBot(botId: string, tradingMode?: 'test' | 'live'): Promise<Bot> {
   try {
     const API_BASE_URL = getApiBaseUrl();
-    const endpoint = `${API_BASE_URL}/bots/dca-bots/${botId}/start-paper`;
+    
+    // If tradingMode not provided, try to get it from the bot config
+    if (!tradingMode) {
+      const bots = await listBots({ search: '', exchange: 'All', status: 'All' });
+      const bot = bots.find(b => b.bot_id === botId);
+      tradingMode = bot?.config?.tradingMode || 'test'; // Default to 'test' if not found
+    }
+    
+    // Use appropriate endpoint based on trading mode
+    const endpoint = tradingMode === 'live' 
+      ? `${API_BASE_URL}/bots/dca-bots/${botId}/start`
+      : `${API_BASE_URL}/bots/dca-bots/${botId}/start-paper`;
     
     const response = await authenticatedFetch(endpoint, {
       method: 'POST',
@@ -291,6 +306,64 @@ export async function stopBot(botId: string): Promise<Bot> {
 }
 
 // Delete a bot
+export interface BotLog {
+  event_id: string;
+  bot_id: string;
+  run_id?: string;
+  user_id: string;
+  event_type: string;
+  event_category: string;
+  symbol?: string;
+  message: string;
+  details?: Record<string, any>;
+  created_at: string;
+}
+
+export interface BotLogsResponse {
+  success: boolean;
+  logs: BotLog[];
+  total: number;
+  limit: number;
+  offset: number;
+  has_more: boolean;
+}
+
+export async function getBotLogs(
+  botId: string,
+  limit: number = 100,
+  offset: number = 0,
+  eventType?: string,
+  eventCategory?: string
+): Promise<BotLogsResponse> {
+  try {
+    const API_BASE_URL = getApiBaseUrl();
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString(),
+    });
+    if (eventType) params.append('event_type', eventType);
+    if (eventCategory) params.append('event_category', eventCategory);
+    
+    const response = await authenticatedFetch(`${API_BASE_URL}/bots/dca-bots/${botId}/logs?${params.toString()}`);
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please sign in.');
+      }
+      if (response.status === 404) {
+        throw new Error('Bot not found');
+      }
+      const error = await response.json().catch(() => ({ detail: 'Failed to fetch bot logs' }));
+      throw new Error(error.detail || 'Failed to fetch bot logs');
+    }
+    
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching bot logs:', error);
+    throw error;
+  }
+}
+
 export async function deleteBot(botId: string): Promise<void> {
   try {
     const API_BASE_URL = getApiBaseUrl();

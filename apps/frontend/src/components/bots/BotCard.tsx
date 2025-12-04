@@ -380,7 +380,7 @@ export default function BotCard({
                     variant="ghost"
                     onClick={() => onView(bot.bot_id)}
                     className="h-9 w-9 p-0 text-gray-400 hover:text-white hover:bg-gray-700/50 border border-transparent hover:border-gray-600/50 rounded-lg transition-all"
-                    title="View Details"
+                    title="View Logs"
                   >
                     <Eye className="h-4 w-4" />
                   </Button>

@@ -173,6 +173,28 @@ async def create_dca_bot(
         
         logger.info(f"✅ Bot {bot_id} successfully saved to database with status 'inactive'")
         
+        # Log bot creation event
+        try:
+            db_service.log_event(
+                bot_id=bot_id,
+                run_id=None,
+                user_id=user_id,
+                event_type="bot_created",
+                event_category="system",
+                message=f"Bot '{bot_name}' created successfully",
+                symbol=primary_pair,
+                details={
+                    "bot_type": "dca",
+                    "exchange": exchange,
+                    "required_capital": required_capital,
+                    "pairs": bot_config.get("selectedPairs", []),
+                    "pair_mode": bot_config.get("pairMode", "single"),
+                }
+            )
+        except Exception as log_error:
+            logger.warning(f"Failed to log bot creation event: {log_error}")
+            # Don't fail bot creation if logging fails
+        
         # Convert entry conditions to alert format and create alert
         try:
             from apps.bots.entry_condition_to_alert import convert_entry_conditions_to_alert
@@ -363,6 +385,25 @@ async def start_dca_bot_paper(
         
         # Update bot status to running
         db_service.update_bot_status(bot_id, "running")
+        
+        # Log bot start event
+        try:
+            db_service.log_event(
+                bot_id=bot_id,
+                run_id=run_id,
+                user_id=user.user_id,
+                event_type="bot_started",
+                event_category="system",
+                message=f"Bot '{bot_data.get('name', bot_id)}' started in paper trading mode",
+                symbol=bot_data.get("symbol"),
+                details={
+                    "trading_mode": "paper",
+                    "run_id": str(run_id) if run_id else None,
+                    "start_config": start_config or {},
+                }
+            )
+        except Exception as log_error:
+            logger.warning(f"Failed to log bot start event: {log_error}")
         
         logger.info(f"✅ DCA bot {bot_id} started in paper trading mode with run_id {run_id}")
         
@@ -953,6 +994,21 @@ async def stop_dca_bot(
         except Exception as run_error:
             logger.warning(f"Failed to update bot run status: {run_error}")
         
+        # Log bot stop event
+        try:
+            db_service.log_event(
+                bot_id=bot_id,
+                run_id=None,
+                user_id=user.user_id,
+                event_type="bot_stopped",
+                event_category="system",
+                message=f"Bot '{bot_data.get('name', bot_id)}' stopped",
+                symbol=bot_data.get("symbol"),
+                details={}
+            )
+        except Exception as log_error:
+            logger.warning(f"Failed to log bot stop event: {log_error}")
+        
         logger.info(f"✅ DCA bot {bot_id} stopped successfully")
         
         return {
@@ -1012,6 +1068,21 @@ async def pause_dca_bot(
         
         # Update bot status to paused
         db_service.update_bot_status(bot_id, "paused")
+        
+        # Log bot pause event
+        try:
+            db_service.log_event(
+                bot_id=bot_id,
+                run_id=None,
+                user_id=user.user_id,
+                event_type="bot_paused",
+                event_category="system",
+                message=f"Bot '{bot_data.get('name', bot_id)}' paused",
+                symbol=bot_data.get("symbol"),
+                details={}
+            )
+        except Exception as log_error:
+            logger.warning(f"Failed to log bot pause event: {log_error}")
         
         logger.info(f"✅ DCA bot {bot_id} paused successfully")
         
@@ -1122,6 +1193,23 @@ async def delete_dca_bot(
                 db_service.update_bot_status(bot_id, "stopped")
             except Exception as status_error:
                 logger.warning(f"Error updating bot status before deletion: {status_error}")
+        
+        # Log bot deletion event BEFORE deletion (so we can reference bot name)
+        bot_name = bot_data.get("name", bot_id)
+        bot_symbol = bot_data.get("symbol")
+        try:
+            db_service.log_event(
+                bot_id=bot_id,
+                run_id=None,
+                user_id=user.user_id,
+                event_type="bot_deleted",
+                event_category="system",
+                message=f"Bot '{bot_name}' deleted",
+                symbol=bot_symbol,
+                details={}
+            )
+        except Exception as log_error:
+            logger.warning(f"Failed to log bot deletion event: {log_error}")
         
         # Delete the bot
         logger.info(f"Attempting to delete bot {bot_id} for user {user.user_id}")

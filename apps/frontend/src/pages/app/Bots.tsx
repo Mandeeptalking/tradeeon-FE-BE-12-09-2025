@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/button';
 import { listBots, type Bot as BotType, type BotFilters, getKPIs, filterBots } from '../../lib/api/bots';
 import BotCard from '../../components/bots/BotCard';
 import BotFilters from '../../components/bots/BotFilters';
+import BotLogs from '../../components/bots/BotLogs';
 import { useQuery } from '@tanstack/react-query';
 
 const Bots: React.FC = () => {
@@ -17,6 +18,7 @@ const Bots: React.FC = () => {
     const saved = localStorage.getItem('bots.filters');
     return saved ? JSON.parse(saved) : { search: '', exchange: 'All', status: 'All' };
   });
+  const [selectedBotForLogs, setSelectedBotForLogs] = useState<{ id: string; name: string } | null>(null);
 
   // Fetch bots using React Query
   const { data: bots = [], isLoading, error, refetch } = useQuery({
@@ -104,8 +106,11 @@ const Bots: React.FC = () => {
   };
 
   const handleView = (botId: string) => {
-    // Navigate to bot details page or open view modal
-    navigate(`/app/dcabot?view=${botId}`);
+    // Find bot and show logs
+    const bot = bots.find(b => b.bot_id === botId);
+    if (bot) {
+      setSelectedBotForLogs({ id: botId, name: bot.name });
+    }
   };
 
   if (error) {
@@ -255,6 +260,15 @@ const Bots: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Bot Logs Modal */}
+      {selectedBotForLogs && (
+        <BotLogs
+          botId={selectedBotForLogs.id}
+          botName={selectedBotForLogs.name}
+          onClose={() => setSelectedBotForLogs(null)}
+        />
+      )}
     </div>
   );
 };
