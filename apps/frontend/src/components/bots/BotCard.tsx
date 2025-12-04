@@ -21,7 +21,6 @@ import {
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { useThemeStore } from '../../store/theme';
 import {
   DropdownMenu,
   DropdownMenuContent,
