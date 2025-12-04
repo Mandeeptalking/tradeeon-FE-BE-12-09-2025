@@ -407,7 +407,7 @@ export default function BotCard({
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className={`bg-gray-800 border-gray-700 w-48 z-50 ${isDark ? '' : 'dark'}`}>
+                    <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 w-48 z-50">
                       <DropdownMenuItem 
                         onClick={() => onDuplicate(bot.bot_id)}
                         className="text-white hover:bg-gray-700 focus:bg-gray-700 cursor-pointer"
