@@ -23,6 +23,7 @@ import { Input } from '../../components/ui/input';
 import BotConfiguration, { type BotConfigurationData } from '../../components/bots/BotConfiguration';
 import EntryConditions, { type EntryConditionsData } from '../../components/bots/EntryConditions';
 import DCASettings, { type DCASettingsData } from '../../components/bots/DCASettings';
+import AdvancedFeatures, { type AdvancedFeaturesData } from '../../components/bots/AdvancedFeatures';
 
 interface DCABotConfig {
   // Bot Configuration (from reusable component)
@@ -38,10 +39,7 @@ interface DCABotConfig {
   dcaSettings: DCASettingsData;
   
   // Advanced Features
-  enableMarketRegime: boolean;
-  enableDynamicScaling: boolean;
-  enableProfitTaking: boolean;
-  enableEmergencyBrake: boolean;
+  advancedFeatures: AdvancedFeaturesData;
   
   // Entry Conditions
   entryConditions: EntryConditionsData;
@@ -82,10 +80,12 @@ const DCABot: React.FC = () => {
       waitForPreviousDca: false,
       stopDcaOnLoss: false,
     },
-    enableMarketRegime: false,
-    enableDynamicScaling: false,
-    enableProfitTaking: false,
-    enableEmergencyBrake: false,
+    advancedFeatures: {
+      enableMarketRegime: false,
+      enableDynamicScaling: false,
+      enableProfitTaking: false,
+      enableEmergencyBrake: false,
+    },
     entryConditions: {
       entryType: 'immediate',
       orderType: 'market',
@@ -363,147 +363,17 @@ const DCABot: React.FC = () => {
               icon={Sparkles}
               description="Market regime detection, dynamic scaling, profit taking"
             >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-lg border border-gray-700/50">
-                  <div className="flex items-center gap-3">
-                    <Gauge className="w-5 h-5 text-purple-400" />
-                    <div>
-                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        Market Regime Detection
-                      </p>
-                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Automatically adjust strategy based on market conditions
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() =>
-                      setConfig((prev) => ({
-                        ...prev,
-                        enableMarketRegime: !prev.enableMarketRegime,
-                      }))
-                    }
-                    className={`relative w-12 h-6 rounded-full transition-colors ${
-                      config.enableMarketRegime
-                        ? 'bg-blue-500'
-                        : isDark
-                        ? 'bg-gray-700'
-                        : 'bg-gray-300'
-                    }`}
-                  >
-                    <div
-                      className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                        config.enableMarketRegime ? 'translate-x-6' : ''
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-lg border border-gray-700/50">
-                  <div className="flex items-center gap-3">
-                    <LineChart className="w-5 h-5 text-blue-400" />
-                    <div>
-                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        Dynamic Scaling
-                      </p>
-                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Adjust order sizes based on volatility
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() =>
-                      setConfig((prev) => ({
-                        ...prev,
-                        enableDynamicScaling: !prev.enableDynamicScaling,
-                      }))
-                    }
-                    className={`relative w-12 h-6 rounded-full transition-colors ${
-                      config.enableDynamicScaling
-                        ? 'bg-blue-500'
-                        : isDark
-                        ? 'bg-gray-700'
-                        : 'bg-gray-300'
-                    }`}
-                  >
-                    <div
-                      className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                        config.enableDynamicScaling ? 'translate-x-6' : ''
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-lg border border-gray-700/50">
-                  <div className="flex items-center gap-3">
-                    <TrendingUp className="w-5 h-5 text-emerald-400" />
-                    <div>
-                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        Profit Taking
-                      </p>
-                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Automatically take profits at target levels
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() =>
-                      setConfig((prev) => ({
-                        ...prev,
-                        enableProfitTaking: !prev.enableProfitTaking,
-                      }))
-                    }
-                    className={`relative w-12 h-6 rounded-full transition-colors ${
-                      config.enableProfitTaking
-                        ? 'bg-blue-500'
-                        : isDark
-                        ? 'bg-gray-700'
-                        : 'bg-gray-300'
-                    }`}
-                  >
-                    <div
-                      className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                        config.enableProfitTaking ? 'translate-x-6' : ''
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-lg border border-gray-700/50">
-                  <div className="flex items-center gap-3">
-                    <AlertTriangle className="w-5 h-5 text-amber-400" />
-                    <div>
-                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        Emergency Brake
-                      </p>
-                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Stop trading if losses exceed threshold
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() =>
-                      setConfig((prev) => ({
-                        ...prev,
-                        enableEmergencyBrake: !prev.enableEmergencyBrake,
-                      }))
-                    }
-                    className={`relative w-12 h-6 rounded-full transition-colors ${
-                      config.enableEmergencyBrake
-                        ? 'bg-blue-500'
-                        : isDark
-                        ? 'bg-gray-700'
-                        : 'bg-gray-300'
-                    }`}
-                  >
-                    <div
-                      className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                        config.enableEmergencyBrake ? 'translate-x-6' : ''
-                      }`}
-                    />
-                  </button>
-                </div>
-              </div>
+              <AdvancedFeatures
+                key="advanced-features-component"
+                value={config.advancedFeatures}
+                onChange={(features) =>
+                  setConfig((prev) => ({
+                    ...prev,
+                    advancedFeatures: typeof features === 'function' ? features(prev.advancedFeatures) : features,
+                  }))
+                }
+                baseOrderCurrency="USDT"
+              />
             </ConfigSection>
           </div>
 
