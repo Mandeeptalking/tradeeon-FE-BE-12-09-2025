@@ -431,7 +431,8 @@ export default function BotCard({
                         Delete Bot
                       </DropdownMenuItem>
                     </DropdownMenuContent>
-                  </DropdownMenu>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </div>
             </div>
