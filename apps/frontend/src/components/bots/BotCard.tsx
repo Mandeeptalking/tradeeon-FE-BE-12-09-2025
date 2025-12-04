@@ -400,7 +400,8 @@ export default function BotCard({
                       <Button 
                         size="sm" 
                         variant="ghost"
-                        className="h-9 w-9 p-0 text-gray-300 hover:text-white hover:bg-gray-700/70 border border-gray-600/50 hover:border-gray-500/70 rounded-lg transition-all flex items-center justify-center bg-gray-700/20"
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-9 w-9 p-0 text-gray-400 hover:text-white hover:bg-gray-700/50 border border-transparent hover:border-gray-600/50 rounded-lg transition-all flex items-center justify-center"
                         title="More options"
                       >
                         <MoreHorizontal className="h-4 w-4" />
