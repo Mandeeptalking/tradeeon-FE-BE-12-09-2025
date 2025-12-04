@@ -859,7 +859,6 @@ const AdvancedFeatures: React.FC<AdvancedFeaturesProps> = ({
                     Enable notifications for regime changes
                   </Label>
                 </div>
-              </div>
           </div>
         )}
       </div>
