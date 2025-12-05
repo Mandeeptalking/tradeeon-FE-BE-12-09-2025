@@ -792,8 +792,10 @@ async def get_bot_logs(
             logger.info(f"Querying bot events: bot_id={bot_id}, user_id={user.user_id}, event_type={event_type}, event_category={event_category}, limit={limit}, offset={offset}")
             
             # Build base query - using bot_events_live table (source of truth)
+            # Fallback to bot_events if bot_events_live doesn't exist yet
+            table_name = "bot_events_live"
             try:
-                base_query = db_service.supabase.table("bot_events_live").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
+                base_query = db_service.supabase.table(table_name).select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
                 
                 if run_id:
                     base_query = base_query.eq("run_id", run_id)
@@ -804,13 +806,25 @@ async def get_bot_logs(
                 
                 logger.debug("Base query built successfully")
             except Exception as query_build_error:
-                logger.error(f"Error building base query: {query_build_error}", exc_info=True)
-                raise TradeeonError(f"Failed to build query: {str(query_build_error)}", "DATABASE_ERROR", status_code=500)
+                error_msg = str(query_build_error).lower()
+                if "does not exist" in error_msg or "relation" in error_msg:
+                    logger.warning(f"bot_events_live table does not exist yet. Falling back to bot_events. Please run migration 004_bot_events_live.sql")
+                    table_name = "bot_events"
+                    base_query = db_service.supabase.table(table_name).select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
+                    if run_id:
+                        base_query = base_query.eq("run_id", run_id)
+                    if event_type:
+                        base_query = base_query.eq("event_type", event_type)
+                    if event_category:
+                        base_query = base_query.eq("event_category", event_category)
+                else:
+                    logger.error(f"Error building base query: {query_build_error}", exc_info=True)
+                    raise TradeeonError(f"Failed to build query: {str(query_build_error)}", "DATABASE_ERROR", status_code=500)
             
             # Get total count - use same pattern as get_bot_orders endpoint
             try:
                 # Use * for count since event_id column might not exist - let Supabase handle the count
-                count_query = db_service.supabase.table("bot_events_live").select("*", count="exact").eq("bot_id", bot_id).eq("user_id", user.user_id)
+                count_query = db_service.supabase.table(table_name).select("*", count="exact").eq("bot_id", bot_id).eq("user_id", user.user_id)
                 if run_id:
                     count_query = count_query.eq("run_id", run_id)
                 if event_type:
