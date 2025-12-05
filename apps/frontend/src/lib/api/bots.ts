@@ -148,6 +148,7 @@ export async function listBots(filters: BotFilters): Promise<Bot[]> {
       created_at: bot.created_at || new Date().toISOString(),
       updated_at: bot.updated_at || new Date().toISOString(),
       sparkline: bot.sparkline || Array(12).fill(0),
+      config: bot.config || {}, // Include full config to access tradingMode
     }));
     
     return filterBots(bots, filters);
@@ -166,7 +167,16 @@ export async function startBot(botId: string, tradingMode?: 'test' | 'live'): Pr
     if (!tradingMode) {
       const bots = await listBots({ search: '', exchange: 'All', status: 'All' });
       const bot = bots.find(b => b.bot_id === botId);
-      tradingMode = bot?.config?.tradingMode || 'test'; // Default to 'test' if not found
+      // Check both 'live'/'paper' and 'test'/'live' formats for compatibility
+      const mode = bot?.config?.tradingMode;
+      if (mode === 'live') {
+        tradingMode = 'live';
+      } else if (mode === 'paper' || mode === 'test') {
+        tradingMode = 'test';
+      } else {
+        // Default to 'live' for production bots (user said they're working with live bots)
+        tradingMode = 'live';
+      }
     }
     
     // Use appropriate endpoint based on trading mode
