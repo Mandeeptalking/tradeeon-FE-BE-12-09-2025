@@ -47,13 +47,28 @@ const EVENT_TYPE_ICONS: Record<string, React.ReactNode> = {
   bot_paused: <Pause className="w-4 h-4" />,
   bot_resumed: <RotateCw className="w-4 h-4" />,
   bot_deleted: <Trash2 className="w-4 h-4" />,
-  entry_condition: <Target className="w-4 h-4" />,
-  dca_triggered: <DollarSign className="w-4 h-4" />,
-  order_executed: <Activity className="w-4 h-4" />,
+  order_executed: <DollarSign className="w-4 h-4" />,
+  dca_executed: <DollarSign className="w-4 h-4" />,
   profit_target: <TrendingUp className="w-4 h-4" />,
   market_regime: <Shield className="w-4 h-4" />,
   emergency_brake: <AlertCircle className="w-4 h-4" />,
   dynamic_scaling: <Sparkles className="w-4 h-4" />,
+};
+
+// User-friendly event type labels
+const EVENT_TYPE_LABELS: Record<string, string> = {
+  bot_created: 'Bot Created',
+  bot_started: 'Bot Started',
+  bot_stopped: 'Bot Stopped',
+  bot_paused: 'Bot Paused',
+  bot_resumed: 'Bot Resumed',
+  bot_deleted: 'Bot Deleted',
+  order_executed: 'Order Placed',
+  dca_executed: 'Order Placed',
+  profit_target: 'Profit Target Hit',
+  market_regime: 'Market Regime Change',
+  emergency_brake: 'Emergency Stop',
+  dynamic_scaling: 'Dynamic Scaling',
 };
 
 const EVENT_TYPE_COLORS: Record<string, string> = {
