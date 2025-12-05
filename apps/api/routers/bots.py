@@ -800,8 +800,8 @@ async def get_bot_logs(
             if event_category:
                 base_query = base_query.eq("event_category", event_category)
             
-            # Get total count (execute a separate count query)
-            count_query = db_service.supabase.table("bot_events").select("event_id", count="exact").eq("bot_id", bot_id).eq("user_id", user.user_id)
+            # Get total count - use same pattern as get_bot_orders endpoint
+            count_query = db_service.supabase.table("bot_events").select("event_id").eq("bot_id", bot_id).eq("user_id", user.user_id)
             if run_id:
                 count_query = count_query.eq("run_id", run_id)
             if event_type:
@@ -810,22 +810,7 @@ async def get_bot_logs(
                 count_query = count_query.eq("event_category", event_category)
             
             count_result = count_query.execute()
-            # Handle different Supabase client versions - count might be in different places
-            if hasattr(count_result, 'count') and count_result.count is not None:
-                total = count_result.count
-            elif hasattr(count_result, 'data') and count_result.data:
-                total = len(count_result.data)
-            else:
-                # Fallback: execute query to get all and count
-                count_all_query = db_service.supabase.table("bot_events").select("event_id").eq("bot_id", bot_id).eq("user_id", user.user_id)
-                if run_id:
-                    count_all_query = count_all_query.eq("run_id", run_id)
-                if event_type:
-                    count_all_query = count_all_query.eq("event_type", event_type)
-                if event_category:
-                    count_all_query = count_all_query.eq("event_category", event_category)
-                count_all_result = count_all_query.execute()
-                total = len(count_all_result.data) if count_all_result.data else 0
+            total = len(count_result.data) if count_result.data else 0
             logger.debug(f"Bot events count query result: total={total}")
             
             # Get paginated results (rebuild query for data)
