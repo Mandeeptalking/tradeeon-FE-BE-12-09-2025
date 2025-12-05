@@ -598,9 +598,9 @@ async def start_dca_bot_live(
         # Update bot status to running
         db_service.update_bot_status(bot_id, "running")
         
-        # Log bot start event
+        # Log bot start event to bot_events_live
         try:
-            db_service.log_event(
+            db_service.log_live_event(
                 bot_id=bot_id,
                 run_id=run_id,
                 user_id=user.user_id,

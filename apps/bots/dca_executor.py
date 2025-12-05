@@ -72,26 +72,7 @@ class DCABotExecutor:
             bot_name = self.config.get('botName', self.config.get('name', 'Unknown'))
             logger.info(f"Initializing DCA bot: {bot_name} (Paper Trading: {self.paper_trading})")
             
-            # Log initialization event (don't fail if logging fails)
-            try:
-                if self.bot_id and self.user_id and db_service:
-                    db_service.log_event(
-                        bot_id=self.bot_id,
-                        run_id=getattr(self, 'run_id', None),
-                        user_id=self.user_id,
-                        event_type="bot_initialized",
-                        event_category="system",
-                        message=f"DCA bot '{bot_name}' initialized in {'paper trading' if self.paper_trading else 'live trading'} mode",
-                        details={
-                            "bot_name": bot_name,
-                            "paper_trading": self.paper_trading,
-                            "pairs": self.config.get("selectedPairs", []),
-                            "interval": self.config.get("interval", "1h")
-                        }
-                    )
-            except Exception as log_error:
-                logger.warning(f"Failed to log initialization event: {log_error}")
-            
+            # Don't log initialization events - not important for bot_events_live
             # Initialize market data service
             await self.market_data.initialize()
             
@@ -99,38 +80,8 @@ class DCABotExecutor:
             if self.paper_trading:
                 balance = self.trading_engine.get_balance()
                 logger.info(f"Paper trading initialized with balance: {balance}")
-                
-                # Log balance initialization (don't fail if logging fails)
-                try:
-                    if self.bot_id and self.user_id and db_service:
-                        db_service.log_event(
-                            bot_id=self.bot_id,
-                            run_id=getattr(self, 'run_id', None),
-                            user_id=self.user_id,
-                            event_type="balance_initialized",
-                            event_category="system",
-                            message=f"Paper trading balance initialized: ${balance:.2f}",
-                            details={"initial_balance": balance}
-                        )
-                except Exception as log_error:
-                    logger.warning(f"Failed to log balance initialization: {log_error}")
             else:
                 logger.info("Live trading initialized - will use Binance API for orders")
-                
-                # Log live trading initialization (don't fail if logging fails)
-                try:
-                    if self.bot_id and self.user_id and db_service:
-                        db_service.log_event(
-                            bot_id=self.bot_id,
-                            run_id=getattr(self, 'run_id', None),
-                            user_id=self.user_id,
-                            event_type="balance_initialized",
-                            event_category="system",
-                            message="Live trading initialized - using Binance exchange",
-                            details={"mode": "live"}
-                        )
-                except Exception as log_error:
-                    logger.warning(f"Failed to log live trading initialization: {log_error}")
             
             self.status = "running"
         except Exception as e:
@@ -970,14 +921,14 @@ class DCABotExecutor:
             action_type = action["action"]
             reason = action.get("reason", "")
             
-            # Log profit target hit
+            # Log profit target hit to bot_events_live
             if self.bot_id and self.user_id and db_service:
-                db_service.log_event(
+                db_service.log_live_event(
                     bot_id=self.bot_id,
                     run_id=getattr(self, 'run_id', None),
                     user_id=self.user_id,
                     event_type="profit_target_hit",
-                    event_category="execution",
+                    event_category="profit",
                     message=f"Profit target hit for {pair}: {action_type} - {reason}",
                     symbol=pair,
                     details={
