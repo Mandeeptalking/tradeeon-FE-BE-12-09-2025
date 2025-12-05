@@ -791,9 +791,9 @@ async def get_bot_logs(
         try:
             logger.info(f"Querying bot events: bot_id={bot_id}, user_id={user.user_id}, event_type={event_type}, event_category={event_category}, limit={limit}, offset={offset}")
             
-            # Build base query - using bot_events table
+            # Build base query - using bot_events_live table (source of truth)
             try:
-                base_query = db_service.supabase.table("bot_events").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
+                base_query = db_service.supabase.table("bot_events_live").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
                 
                 if run_id:
                     base_query = base_query.eq("run_id", run_id)
@@ -807,10 +807,10 @@ async def get_bot_logs(
                 logger.error(f"Error building base query: {query_build_error}", exc_info=True)
                 raise TradeeonError(f"Failed to build query: {str(query_build_error)}", "DATABASE_ERROR", status_code=500)
             
-               # Get total count - use same pattern as get_bot_orders endpoint
-               try:
-                   # Use * for count since event_id column might not exist - let Supabase handle the count
-                   count_query = db_service.supabase.table("bot_events_live").select("*", count="exact").eq("bot_id", bot_id).eq("user_id", user.user_id)
+            # Get total count - use same pattern as get_bot_orders endpoint
+            try:
+                # Use * for count since event_id column might not exist - let Supabase handle the count
+                count_query = db_service.supabase.table("bot_events_live").select("*", count="exact").eq("bot_id", bot_id).eq("user_id", user.user_id)
                 if run_id:
                     count_query = count_query.eq("run_id", run_id)
                 if event_type:
