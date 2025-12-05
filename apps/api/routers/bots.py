@@ -814,8 +814,8 @@ async def get_bot_logs(
             logger.debug(f"Bot events count query result: total={total}")
             
             # Get paginated results (rebuild query for data)
-            data_query = base_query.order("created_at", desc=True).range(offset, offset + limit - 1)
-            result = data_query.execute()
+            data_query = base_query.order("created_at", desc=True)
+            result = data_query.range(offset, offset + limit - 1).execute()
             
             events = result.data if result.data else []
             logger.debug(f"Bot events data query result: found {len(events)} events")
