@@ -12,9 +12,9 @@ bots_path = os.path.dirname(__file__)
 if bots_path not in sys.path:
     sys.path.insert(0, bots_path)
 
-from .dca_executor import DCABotExecutor
+from dca_executor import DCABotExecutor
 try:
-    from .db_service import db_service
+    from db_service import db_service
 except ImportError:
     db_service = None
 

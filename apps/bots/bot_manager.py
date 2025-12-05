@@ -9,7 +9,7 @@ from bot_runner import BotRunner
 # Add db_service to path
 sys.path.insert(0, os.path.dirname(__file__))
 try:
-    from .db_service import db_service
+    from db_service import db_service
 except ImportError:
     db_service = None
 

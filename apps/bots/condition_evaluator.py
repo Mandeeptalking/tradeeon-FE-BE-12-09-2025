@@ -13,7 +13,7 @@ bots_path = os.path.dirname(__file__)
 if bots_path not in sys.path:
     sys.path.insert(0, bots_path)
 
-from .market_data import MarketDataService
+from market_data import MarketDataService
 from backend.evaluator import evaluate_condition
 
 logger = logging.getLogger(__name__)

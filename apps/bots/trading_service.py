@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'api'))
 
 try:
-    from .db_service import db_service
+    from db_service import db_service
 except ImportError:
     db_service = None
 
