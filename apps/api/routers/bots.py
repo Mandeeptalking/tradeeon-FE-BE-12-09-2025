@@ -809,7 +809,8 @@ async def get_bot_logs(
             
             # Get total count - use same pattern as get_bot_orders endpoint
             try:
-                count_query = db_service.supabase.table("bot_events").select("event_id").eq("bot_id", bot_id).eq("user_id", user.user_id)
+                # Use * for count since event_id column might not exist - let Supabase handle the count
+                count_query = db_service.supabase.table("bot_events").select("*", count="exact").eq("bot_id", bot_id).eq("user_id", user.user_id)
                 if run_id:
                     count_query = count_query.eq("run_id", run_id)
                 if event_type:
