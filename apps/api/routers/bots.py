@@ -789,36 +789,51 @@ async def get_bot_logs(
             }
         
         try:
-            logger.debug(f"Querying bot events: bot_id={bot_id}, user_id={user.user_id}, event_type={event_type}, event_category={event_category}")
-            # Build base query - using bot_events table
-            base_query = db_service.supabase.table("bot_events").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
+            logger.info(f"Querying bot events: bot_id={bot_id}, user_id={user.user_id}, event_type={event_type}, event_category={event_category}, limit={limit}, offset={offset}")
             
-            if run_id:
-                base_query = base_query.eq("run_id", run_id)
-            if event_type:
-                base_query = base_query.eq("event_type", event_type)
-            if event_category:
-                base_query = base_query.eq("event_category", event_category)
+            # Build base query - using bot_events table
+            try:
+                base_query = db_service.supabase.table("bot_events").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
+                
+                if run_id:
+                    base_query = base_query.eq("run_id", run_id)
+                if event_type:
+                    base_query = base_query.eq("event_type", event_type)
+                if event_category:
+                    base_query = base_query.eq("event_category", event_category)
+                
+                logger.debug("Base query built successfully")
+            except Exception as query_build_error:
+                logger.error(f"Error building base query: {query_build_error}", exc_info=True)
+                raise TradeeonError(f"Failed to build query: {str(query_build_error)}", "DATABASE_ERROR", status_code=500)
             
             # Get total count - use same pattern as get_bot_orders endpoint
-            count_query = db_service.supabase.table("bot_events").select("event_id").eq("bot_id", bot_id).eq("user_id", user.user_id)
-            if run_id:
-                count_query = count_query.eq("run_id", run_id)
-            if event_type:
-                count_query = count_query.eq("event_type", event_type)
-            if event_category:
-                count_query = count_query.eq("event_category", event_category)
-            
-            count_result = count_query.execute()
-            total = len(count_result.data) if count_result.data else 0
-            logger.debug(f"Bot events count query result: total={total}")
+            try:
+                count_query = db_service.supabase.table("bot_events").select("event_id").eq("bot_id", bot_id).eq("user_id", user.user_id)
+                if run_id:
+                    count_query = count_query.eq("run_id", run_id)
+                if event_type:
+                    count_query = count_query.eq("event_type", event_type)
+                if event_category:
+                    count_query = count_query.eq("event_category", event_category)
+                
+                count_result = count_query.execute()
+                total = len(count_result.data) if count_result.data else 0
+                logger.info(f"Bot events count query result: total={total}")
+            except Exception as count_error:
+                logger.error(f"Error executing count query: {count_error}", exc_info=True)
+                total = 0  # Set to 0 if count fails, but continue with data query
             
             # Get paginated results (rebuild query for data)
-            data_query = base_query.order("created_at", desc=True).range(offset, offset + limit - 1)
-            result = data_query.execute()
-            
-            events = result.data if result.data else []
-            logger.debug(f"Bot events data query result: found {len(events)} events")
+            try:
+                data_query = base_query.order("created_at", desc=True).range(offset, offset + limit - 1)
+                result = data_query.execute()
+                events = result.data if result.data else []
+                logger.info(f"Bot events data query result: found {len(events)} events")
+            except Exception as data_error:
+                logger.error(f"Error executing data query: {data_error}", exc_info=True)
+                logger.error(f"   Query details: bot_id={bot_id}, offset={offset}, limit={limit}")
+                raise TradeeonError(f"Failed to fetch events: {str(data_error)}", "DATABASE_ERROR", status_code=500)
             
             # Transform events to match frontend BotLog interface
             logs = []
