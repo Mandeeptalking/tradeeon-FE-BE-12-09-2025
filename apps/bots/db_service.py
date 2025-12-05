@@ -704,8 +704,21 @@ class BotDatabaseService:
             logger.info(f"Logged live event: {event_type} - {message}")
             return True
         except Exception as e:
-            logger.error(f"Failed to log live event: {e}")
-            return False
+            # If table doesn't exist yet, log warning but don't crash
+            error_msg = str(e).lower()
+            if "does not exist" in error_msg or "relation" in error_msg:
+                logger.warning(f"bot_events_live table does not exist yet. Please run migration 004_bot_events_live.sql. Event: {event_type} - {message}")
+                # Fallback to old table temporarily
+                try:
+                    self.supabase.table("bot_events").insert(event_data).execute()
+                    logger.info(f"Logged event to bot_events (fallback): {event_type} - {message}")
+                    return True
+                except Exception as fallback_error:
+                    logger.error(f"Failed to log event even to fallback table: {fallback_error}")
+                    return False
+            else:
+                logger.error(f"Failed to log live event: {e}")
+                return False
 
 
 # Global instance
