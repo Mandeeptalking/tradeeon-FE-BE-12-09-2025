@@ -22,10 +22,10 @@ if backend_path not in sys.path:
 if alerts_path not in sys.path:
     sys.path.insert(0, alerts_path)
 
-from market_data import MarketDataService
-from trading_service import TradingService
-from db_service import db_service
-from entry_condition_converter import convert_for_dca_executor
+from .market_data import MarketDataService
+from .trading_service import TradingService
+from .db_service import db_service
+from .entry_condition_converter import convert_for_dca_executor
 
 logger = logging.getLogger(__name__)
 
