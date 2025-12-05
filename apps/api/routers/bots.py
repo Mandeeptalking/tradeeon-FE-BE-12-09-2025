@@ -839,8 +839,10 @@ async def get_bot_logs(
             logs = []
             for event in events:
                 try:
+                    # Handle both event_id and id column names
+                    event_id = event.get("event_id") or event.get("id") or ""
                     log = {
-                        "event_id": event.get("event_id") or "",
+                        "event_id": event_id,
                         "bot_id": event.get("bot_id") or "",
                         "run_id": event.get("run_id"),
                         "user_id": event.get("user_id") or "",
