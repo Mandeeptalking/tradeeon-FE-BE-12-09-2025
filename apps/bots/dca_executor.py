@@ -290,27 +290,52 @@ class DCABotExecutor:
                 logger.info(f"✅ {mode_label} DCA executed for {pair}: {result['quantity']:.6f} @ ${current_price:.2f} = ${scaled_amount:.2f}")
                 self.last_dca_time[pair] = datetime.now()
                 
-                # Only log AFTER successful order execution - user-friendly message
+                # Only log AFTER successful order execution
+                # For paper trading, log as "simulated" to make it clear no real order was placed
                 if self.bot_id and self.user_id and db_service:
                     mode_label_lower = mode_label.lower()
-                    db_service.log_event(
-                        bot_id=self.bot_id,
-                        run_id=getattr(self, 'run_id', None),
-                        user_id=self.user_id,
-                        event_type="order_executed",
-                        event_category="execution",
-                        message=f"Order placed: Bought {result['quantity']:.6f} {pair.replace('USDT', '')} at ${current_price:.2f}",
-                        symbol=pair,
-                        details={
-                            "order_id": result.get("order_id"),
-                            "quantity": result['quantity'],
-                            "price": current_price,
-                            "cost": scaled_amount,
-                            "timestamp": result.get("timestamp").isoformat() if result.get("timestamp") else None,
-                            "mode": mode_label_lower,
-                            "order_type": "dca"
-                        }
-                    )
+                    if self.paper_trading:
+                        # Paper trading: Log as simulated order (not a real order)
+                        db_service.log_event(
+                            bot_id=self.bot_id,
+                            run_id=getattr(self, 'run_id', None),
+                            user_id=self.user_id,
+                            event_type="order_simulated",
+                            event_category="execution",
+                            message=f"Simulated order: Would buy {result['quantity']:.6f} {pair.replace('USDT', '')} at ${current_price:.2f}",
+                            symbol=pair,
+                            details={
+                                "order_id": result.get("order_id"),
+                                "quantity": result['quantity'],
+                                "price": current_price,
+                                "cost": scaled_amount,
+                                "timestamp": result.get("timestamp").isoformat() if result.get("timestamp") else None,
+                                "mode": mode_label_lower,
+                                "order_type": "dca",
+                                "simulated": True
+                            }
+                        )
+                    else:
+                        # Live trading: Log as real order execution
+                        db_service.log_event(
+                            bot_id=self.bot_id,
+                            run_id=getattr(self, 'run_id', None),
+                            user_id=self.user_id,
+                            event_type="order_executed",
+                            event_category="execution",
+                            message=f"Order placed: Bought {result['quantity']:.6f} {pair.replace('USDT', '')} at ${current_price:.2f}",
+                            symbol=pair,
+                            details={
+                                "order_id": result.get("order_id"),
+                                "quantity": result['quantity'],
+                                "price": current_price,
+                                "cost": scaled_amount,
+                                "timestamp": result.get("timestamp").isoformat() if result.get("timestamp") else None,
+                                "mode": mode_label_lower,
+                                "order_type": "dca",
+                                "simulated": False
+                            }
+                        )
                 
                 # Update position state
                 position = self.trading_engine.get_position(pair)
