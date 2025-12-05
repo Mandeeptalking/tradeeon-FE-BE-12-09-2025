@@ -814,8 +814,8 @@ async def get_bot_logs(
             logger.debug(f"Bot events count query result: total={total}")
             
             # Get paginated results (rebuild query for data)
-            data_query = base_query.order("created_at", desc=True)
-            result = data_query.range(offset, offset + limit - 1).execute()
+            data_query = base_query.order("created_at", desc=True).range(offset, offset + limit - 1)
+            result = data_query.execute()
             
             events = result.data if result.data else []
             logger.debug(f"Bot events data query result: found {len(events)} events")
@@ -823,19 +823,23 @@ async def get_bot_logs(
             # Transform events to match frontend BotLog interface
             logs = []
             for event in events:
-                log = {
-                    "event_id": event.get("event_id"),
-                    "bot_id": event.get("bot_id"),
-                    "run_id": event.get("run_id"),
-                    "user_id": event.get("user_id"),
-                    "event_type": event.get("event_type"),
-                    "event_category": event.get("event_category"),
-                    "symbol": event.get("symbol"),
-                    "message": event.get("message"),
-                    "details": event.get("details", {}),
-                    "created_at": event.get("created_at")
-                }
-                logs.append(log)
+                try:
+                    log = {
+                        "event_id": event.get("event_id") or "",
+                        "bot_id": event.get("bot_id") or "",
+                        "run_id": event.get("run_id"),
+                        "user_id": event.get("user_id") or "",
+                        "event_type": event.get("event_type") or "",
+                        "event_category": event.get("event_category") or "",
+                        "symbol": event.get("symbol"),
+                        "message": event.get("message") or "",
+                        "details": event.get("details") or {},
+                        "created_at": event.get("created_at") or ""
+                    }
+                    logs.append(log)
+                except Exception as transform_error:
+                    logger.warning(f"Error transforming event: {transform_error}, event: {event}")
+                    continue
             
             return {
                 "success": True,
