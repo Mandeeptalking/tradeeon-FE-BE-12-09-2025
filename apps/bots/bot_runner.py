@@ -14,7 +14,7 @@ if bots_path not in sys.path:
 
 from dca_executor import DCABotExecutor
 try:
-    from db_service import db_service
+    from .db_service import db_service
 except ImportError:
     db_service = None
 
