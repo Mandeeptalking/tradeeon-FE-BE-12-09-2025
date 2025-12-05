@@ -760,6 +760,7 @@ async def get_bot_logs(
     bot_id: str = Path(..., description="Bot ID"),
     run_id: Optional[str] = Query(None, description="Filter by run ID"),
     event_type: Optional[str] = Query(None, description="Filter by event type"),
+    event_category: Optional[str] = Query(None, description="Filter by event category"),
     limit: int = Query(100, ge=1, le=1000, description="Number of events to retrieve"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     user: AuthedUser = Depends(get_current_user),
