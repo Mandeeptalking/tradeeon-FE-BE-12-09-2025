@@ -819,7 +819,11 @@ async def get_bot_logs(
                     count_query = count_query.eq("event_category", event_category)
                 
                 count_result = count_query.execute()
-                total = len(count_result.data) if count_result.data else 0
+                # Handle count response - count="exact" returns count in count attribute
+                if hasattr(count_result, 'count') and count_result.count is not None:
+                    total = count_result.count
+                else:
+                    total = len(count_result.data) if count_result.data else 0
                 logger.info(f"Bot events count query result: total={total}")
             except Exception as count_error:
                 logger.error(f"Error executing count query: {count_error}", exc_info=True)
