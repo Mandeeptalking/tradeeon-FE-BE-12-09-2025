@@ -755,7 +755,7 @@ async def get_bot_status(
         raise TradeeonError(f"Failed to get bot status: {str(e)}", "INTERNAL_SERVER_ERROR", status_code=500)
 
 
-@router.get("/dca-bots/{bot_id}/logs")
+@router.get("/dca-bots/{bot_id}/logs", name="get_bot_logs")
 async def get_bot_logs(
     bot_id: str = Path(..., description="Bot ID"),
     run_id: Optional[str] = Query(None, description="Filter by run ID"),
