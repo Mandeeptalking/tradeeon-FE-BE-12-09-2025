@@ -790,8 +790,8 @@ async def get_bot_logs(
         
         try:
             logger.debug(f"Querying bot events: bot_id={bot_id}, user_id={user.user_id}, event_type={event_type}, event_category={event_category}")
-            # Build base query - using bot_event (singular) table
-            base_query = db_service.supabase.table("bot_event").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
+            # Build base query - using bot_events table
+            base_query = db_service.supabase.table("bot_events").select("*").eq("bot_id", bot_id).eq("user_id", user.user_id)
             
             if run_id:
                 base_query = base_query.eq("run_id", run_id)
@@ -801,7 +801,7 @@ async def get_bot_logs(
                 base_query = base_query.eq("event_category", event_category)
             
             # Get total count (execute a separate count query)
-            count_query = db_service.supabase.table("bot_event").select("event_id", count="exact").eq("bot_id", bot_id).eq("user_id", user.user_id)
+            count_query = db_service.supabase.table("bot_events").select("event_id", count="exact").eq("bot_id", bot_id).eq("user_id", user.user_id)
             if run_id:
                 count_query = count_query.eq("run_id", run_id)
             if event_type:

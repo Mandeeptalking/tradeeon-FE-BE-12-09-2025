@@ -628,7 +628,7 @@ class BotDatabaseService:
             if symbol:
                 event_data["symbol"] = symbol
             
-            self.supabase.table("bot_event").insert(event_data).execute()
+            self.supabase.table("bot_events").insert(event_data).execute()
             logger.debug(f"Logged event: {event_type} - {message}")
             return True
         except Exception as e:
