@@ -15,8 +15,8 @@ if bots_path not in sys.path:
     sys.path.insert(0, bots_path)
 
 try:
-    from .dca_executor import DCABotExecutor
-    from .db_service import db_service
+    from dca_executor import DCABotExecutor
+    from db_service import db_service
 except ImportError as e:
     logging.error(f"Failed to import required modules: {e}")
     DCABotExecutor = None
