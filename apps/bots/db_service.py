@@ -594,14 +594,15 @@ class BotDatabaseService:
         details: Optional[Dict[str, Any]] = None
     ) -> bool:
         """
-        Log a bot event to the database.
+        Log a bot event to the database (legacy - kept for backward compatibility).
+        For important events, use log_live_event instead.
         
         Args:
             bot_id: Bot identifier
             run_id: Optional run identifier
             user_id: User identifier
-            event_type: Type of event (e.g., 'entry_condition', 'dca_triggered', 'order_executed')
-            event_category: Category ('condition', 'execution', 'risk', 'system', 'position')
+            event_type: Type of event
+            event_category: Category
             message: Human-readable message
             symbol: Optional trading symbol
             details: Optional JSON details about the event
@@ -609,6 +610,8 @@ class BotDatabaseService:
         Returns:
             True if logged successfully, False otherwise
         """
+        # Legacy method - now logs to bot_events (old table)
+        # Use log_live_event for important events
         if not self.enabled:
             logger.debug(f"Database disabled, skipping event log: {event_type} - {message}")
             return False
@@ -629,10 +632,79 @@ class BotDatabaseService:
                 event_data["symbol"] = symbol
             
             self.supabase.table("bot_events").insert(event_data).execute()
-            logger.debug(f"Logged event: {event_type} - {message}")
+            logger.debug(f"Logged event (legacy): {event_type} - {message}")
             return True
         except Exception as e:
             logger.error(f"Failed to log event: {e}")
+            return False
+    
+    def log_live_event(
+        self,
+        bot_id: str,
+        run_id: Optional[str],
+        user_id: str,
+        event_type: str,
+        event_category: str,
+        message: str,
+        symbol: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None
+    ) -> bool:
+        """
+        Log an important bot event to bot_events_live table (source of truth).
+        
+        Only logs important user-actionable events:
+        - bot_created, bot_started, bot_stopped, bot_paused, bot_resumed, bot_deleted
+        - order_executed, order_simulated, dca_started, dca_order_placed
+        - entry_condition_met, profit_target_hit
+        
+        Args:
+            bot_id: Bot identifier
+            run_id: Optional run identifier
+            user_id: User identifier
+            event_type: Type of event (must be from allowed list)
+            event_category: Category ('system', 'execution', 'condition', 'profit')
+            message: Human-readable message
+            symbol: Optional trading symbol
+            details: Optional JSON details about the event
+            
+        Returns:
+            True if logged successfully, False otherwise
+        """
+        if not self.enabled:
+            logger.debug(f"Database disabled, skipping live event log: {event_type} - {message}")
+            return False
+        
+        # Validate event_type is from allowed list
+        allowed_types = {
+            'bot_created', 'bot_started', 'bot_stopped', 'bot_paused', 'bot_resumed', 
+            'bot_deleted', 'order_executed', 'order_simulated', 'dca_started', 
+            'dca_order_placed', 'entry_condition_met', 'profit_target_hit'
+        }
+        
+        if event_type not in allowed_types:
+            logger.warning(f"Event type '{event_type}' not in allowed list for bot_events_live, skipping")
+            return False
+        
+        try:
+            event_data = {
+                "bot_id": bot_id,
+                "user_id": user_id,
+                "event_type": event_type,
+                "event_category": event_category,
+                "message": message,
+                "details": details or {}
+            }
+            
+            if run_id:
+                event_data["run_id"] = run_id
+            if symbol:
+                event_data["symbol"] = symbol
+            
+            self.supabase.table("bot_events_live").insert(event_data).execute()
+            logger.info(f"Logged live event: {event_type} - {message}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to log live event: {e}")
             return False
 
 

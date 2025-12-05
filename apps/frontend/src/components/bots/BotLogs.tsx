@@ -49,11 +49,10 @@ const EVENT_TYPE_ICONS: Record<string, React.ReactNode> = {
   bot_deleted: <Trash2 className="w-4 h-4" />,
   order_executed: <DollarSign className="w-4 h-4" />,
   order_simulated: <DollarSign className="w-4 h-4" />,
-  dca_executed: <DollarSign className="w-4 h-4" />,
-  profit_target: <TrendingUp className="w-4 h-4" />,
-  market_regime: <Shield className="w-4 h-4" />,
-  emergency_brake: <AlertCircle className="w-4 h-4" />,
-  dynamic_scaling: <Sparkles className="w-4 h-4" />,
+  dca_started: <Activity className="w-4 h-4" />,
+  dca_order_placed: <DollarSign className="w-4 h-4" />,
+  entry_condition_met: <Target className="w-4 h-4" />,
+  profit_target_hit: <TrendingUp className="w-4 h-4" />,
 };
 
 // User-friendly event type labels
@@ -66,11 +65,10 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   bot_deleted: 'Bot Deleted',
   order_executed: 'Order Placed',
   order_simulated: 'Simulated Order',
-  dca_executed: 'Order Placed',
-  profit_target: 'Profit Target Hit',
-  market_regime: 'Market Regime Change',
-  emergency_brake: 'Emergency Stop',
-  dynamic_scaling: 'Dynamic Scaling',
+  dca_started: 'DCA Started',
+  dca_order_placed: 'DCA Order Placed',
+  entry_condition_met: 'Entry Condition Met',
+  profit_target_hit: 'Profit Target Hit',
 };
 
 const EVENT_TYPE_COLORS: Record<string, string> = {
@@ -82,11 +80,10 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   bot_deleted: 'text-red-400 bg-red-500/10 border-red-500/20',
   order_executed: 'text-green-400 bg-green-500/10 border-green-500/20',
   order_simulated: 'text-blue-400 bg-blue-500/10 border-blue-500/20', // Different color for simulated
-  dca_executed: 'text-green-400 bg-green-500/10 border-green-500/20',
-  profit_target: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-  market_regime: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
-  emergency_brake: 'text-red-400 bg-red-500/10 border-red-500/20',
-  dynamic_scaling: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
+  dca_started: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+  dca_order_placed: 'text-green-400 bg-green-500/10 border-green-500/20',
+  entry_condition_met: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
+  profit_target_hit: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
 };
 
 const EVENT_CATEGORIES = [

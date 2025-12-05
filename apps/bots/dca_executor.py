@@ -142,17 +142,7 @@ class DCABotExecutor:
         """Execute one iteration of the bot."""
         if self.paused:
             logger.info("Bot is paused by market regime detection")
-            # Log pause event
-            if self.bot_id and self.user_id and db_service:
-                db_service.log_event(
-                    bot_id=self.bot_id,
-                    run_id=getattr(self, 'run_id', None),
-                    user_id=self.user_id,
-                    event_type="bot_paused",
-                    event_category="system",
-                    message="Bot execution paused by market regime detection",
-                    details={"reason": "market_regime"}
-                )
+            # Don't log pause from execute_once - only log when user explicitly pauses via API
             return
             
         # Process each pair
@@ -290,19 +280,19 @@ class DCABotExecutor:
                 logger.info(f"✅ {mode_label} DCA executed for {pair}: {result['quantity']:.6f} @ ${current_price:.2f} = ${scaled_amount:.2f}")
                 self.last_dca_time[pair] = datetime.now()
                 
-                # Only log AFTER successful order execution
+                # Log DCA order placed to bot_events_live
                 # For paper trading, log as "simulated" to make it clear no real order was placed
                 if self.bot_id and self.user_id and db_service:
                     mode_label_lower = mode_label.lower()
                     if self.paper_trading:
                         # Paper trading: Log as simulated order (not a real order)
-                        db_service.log_event(
+                        db_service.log_live_event(
                             bot_id=self.bot_id,
                             run_id=getattr(self, 'run_id', None),
                             user_id=self.user_id,
-                            event_type="order_simulated",
+                            event_type="dca_order_placed",
                             event_category="execution",
-                            message=f"Simulated order: Would buy {result['quantity']:.6f} {pair.replace('USDT', '')} at ${current_price:.2f}",
+                            message=f"Simulated DCA order: Would buy {result['quantity']:.6f} {pair.replace('USDT', '')} at ${current_price:.2f}",
                             symbol=pair,
                             details={
                                 "order_id": result.get("order_id"),
@@ -316,14 +306,14 @@ class DCABotExecutor:
                             }
                         )
                     else:
-                        # Live trading: Log as real order execution
-                        db_service.log_event(
+                        # Live trading: Log as real DCA order execution
+                        db_service.log_live_event(
                             bot_id=self.bot_id,
                             run_id=getattr(self, 'run_id', None),
                             user_id=self.user_id,
-                            event_type="order_executed",
+                            event_type="dca_order_placed",
                             event_category="execution",
-                            message=f"Order placed: Bought {result['quantity']:.6f} {pair.replace('USDT', '')} at ${current_price:.2f}",
+                            message=f"DCA order placed: Bought {result['quantity']:.6f} {pair.replace('USDT', '')} at ${current_price:.2f}",
                             symbol=pair,
                             details={
                                 "order_id": result.get("order_id"),
@@ -349,14 +339,7 @@ class DCABotExecutor:
             else:
                 error_msg = result.get('error', 'Unknown error')
                 logger.error(f"❌ DCA failed for {pair}: {error_msg}")
-                
-                # Log DCA failure
-                if self.bot_id and self.user_id and db_service:
-                    db_service.log_event(
-                        bot_id=self.bot_id,
-                        run_id=getattr(self, 'run_id', None),
-                        user_id=self.user_id,
-                        event_type="dca_failed",
+                # Don't log DCA failures - not important for bot_events_live
                         event_category="execution",
                         message=f"DCA execution failed for {pair}: {error_msg}",
                         symbol=pair,

@@ -173,9 +173,9 @@ async def create_dca_bot(
         
         logger.info(f"✅ Bot {bot_id} successfully saved to database with status 'inactive'")
         
-        # Log bot creation event
+        # Log bot creation event to bot_events_live
         try:
-            db_service.log_event(
+            db_service.log_live_event(
                 bot_id=bot_id,
                 run_id=None,
                 user_id=user_id,
@@ -386,9 +386,9 @@ async def start_dca_bot_paper(
         # Update bot status to running
         db_service.update_bot_status(bot_id, "running")
         
-        # Log bot start event
+        # Log bot start event to bot_events_live
         try:
-            db_service.log_event(
+            db_service.log_live_event(
                 bot_id=bot_id,
                 run_id=run_id,
                 user_id=user.user_id,
@@ -807,10 +807,10 @@ async def get_bot_logs(
                 logger.error(f"Error building base query: {query_build_error}", exc_info=True)
                 raise TradeeonError(f"Failed to build query: {str(query_build_error)}", "DATABASE_ERROR", status_code=500)
             
-            # Get total count - use same pattern as get_bot_orders endpoint
-            try:
-                # Use * for count since event_id column might not exist - let Supabase handle the count
-                count_query = db_service.supabase.table("bot_events").select("*", count="exact").eq("bot_id", bot_id).eq("user_id", user.user_id)
+               # Get total count - use same pattern as get_bot_orders endpoint
+               try:
+                   # Use * for count since event_id column might not exist - let Supabase handle the count
+                   count_query = db_service.supabase.table("bot_events_live").select("*", count="exact").eq("bot_id", bot_id).eq("user_id", user.user_id)
                 if run_id:
                     count_query = count_query.eq("run_id", run_id)
                 if event_type:
@@ -1077,9 +1077,9 @@ async def stop_dca_bot(
         except Exception as run_error:
             logger.warning(f"Failed to update bot run status: {run_error}")
         
-        # Log bot stop event
+        # Log bot stop event to bot_events_live
         try:
-            db_service.log_event(
+            db_service.log_live_event(
                 bot_id=bot_id,
                 run_id=None,
                 user_id=user.user_id,
@@ -1152,9 +1152,9 @@ async def pause_dca_bot(
         # Update bot status to paused
         db_service.update_bot_status(bot_id, "paused")
         
-        # Log bot pause event
+        # Log bot pause event to bot_events_live
         try:
-            db_service.log_event(
+            db_service.log_live_event(
                 bot_id=bot_id,
                 run_id=None,
                 user_id=user.user_id,
@@ -1229,9 +1229,9 @@ async def resume_dca_bot(
         # Update bot status to running
         db_service.update_bot_status(bot_id, "running")
         
-        # Log bot resume event
+        # Log bot resume event to bot_events_live
         try:
-            db_service.log_event(
+            db_service.log_live_event(
                 bot_id=bot_id,
                 run_id=None,
                 user_id=user.user_id,
@@ -1296,7 +1296,7 @@ async def delete_dca_bot(
         bot_name = bot_data.get("name", bot_id)
         bot_symbol = bot_data.get("symbol")
         try:
-            db_service.log_event(
+            db_service.log_live_event(
                 bot_id=bot_id,
                 run_id=None,
                 user_id=user.user_id,
