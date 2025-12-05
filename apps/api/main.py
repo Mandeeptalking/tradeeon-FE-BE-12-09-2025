@@ -288,6 +288,19 @@ async def get_current_user():
     """Get current user information"""
     return {"user": None}
 
+@app.get("/debug/routes")
+async def debug_routes():
+    """Debug endpoint to list all registered routes"""
+    routes = []
+    for route in app.routes:
+        if hasattr(route, "path") and hasattr(route, "methods"):
+            routes.append({
+                "path": route.path,
+                "methods": list(route.methods),
+                "name": getattr(route, "name", None)
+            })
+    return {"routes": routes, "total": len(routes)}
+
 # ==================== BINANCE API ENDPOINTS ====================
 
 @app.get("/api/symbols", response_model=SymbolListResponse)
