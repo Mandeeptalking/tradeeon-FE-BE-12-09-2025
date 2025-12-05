@@ -9,23 +9,23 @@ import numpy as np
 import sys
 import os
 
-# Add necessary paths
-bots_path = os.path.dirname(__file__)
-if bots_path not in sys.path:
-    sys.path.insert(0, bots_path)
-
-# Add backend and alerts paths for evaluator
-backend_path = os.path.join(os.path.dirname(__file__), '..', '..', 'backend')
-alerts_path = os.path.join(os.path.dirname(__file__), '..', 'alerts')
-if backend_path not in sys.path:
-    sys.path.insert(0, backend_path)
-if alerts_path not in sys.path:
-    sys.path.insert(0, alerts_path)
-
-from market_data import MarketDataService
-from trading_service import TradingService
-from db_service import db_service
-from entry_condition_converter import convert_for_dca_executor
+# Use absolute imports since PYTHONPATH=/app is set in Dockerfile
+# This ensures consistent imports regardless of how this module is imported
+try:
+    from apps.bots.market_data import MarketDataService
+    from apps.bots.trading_service import TradingService
+    from apps.bots.db_service import db_service
+    from apps.bots.entry_condition_converter import convert_for_dca_executor
+except ImportError:
+    # Fallback for local development or when PYTHONPATH isn't set
+    bots_path = os.path.dirname(__file__)
+    if bots_path not in sys.path:
+        sys.path.insert(0, bots_path)
+    
+    from market_data import MarketDataService
+    from trading_service import TradingService
+    from db_service import db_service
+    from entry_condition_converter import convert_for_dca_executor
 
 logger = logging.getLogger(__name__)
 

@@ -15,12 +15,18 @@ if bots_path not in sys.path:
     sys.path.insert(0, bots_path)
 
 try:
-    from dca_executor import DCABotExecutor
-    from db_service import db_service
-except ImportError as e:
-    logging.error(f"Failed to import required modules: {e}")
-    DCABotExecutor = None
-    db_service = None
+    # Try absolute imports first (PYTHONPATH=/app in Docker)
+    from apps.bots.dca_executor import DCABotExecutor
+    from apps.bots.db_service import db_service
+except ImportError:
+    # Fallback for local development
+    try:
+        from dca_executor import DCABotExecutor
+        from db_service import db_service
+    except ImportError as e:
+        logging.error(f"Failed to import required modules: {e}")
+        DCABotExecutor = None
+        db_service = None
 
 logger = logging.getLogger(__name__)
 
