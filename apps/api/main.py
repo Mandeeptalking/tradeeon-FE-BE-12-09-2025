@@ -167,22 +167,25 @@ async def startup_event():
     # Initialize bot execution service
     try:
         # Add bots directory to path for imports
-        # Import bot services using absolute package imports
+        # Import bot services - try multiple import strategies
+        import sys
+        bots_path = os.path.join(os.path.dirname(__file__), '..', 'bots')
+        bots_path = os.path.abspath(bots_path)
+        
+        # Add bots path to sys.path first
+        if bots_path not in sys.path:
+            sys.path.insert(0, bots_path)
+        
+        # Try importing - use direct imports since we added to path
         try:
-            from apps.bots.bot_execution_service import bot_execution_service
-            from apps.bots.db_service import db_service
+            from bot_execution_service import bot_execution_service
+            from db_service import db_service
         except ImportError as e:
             logger.error(f"Failed to import bot services: {e}", exc_info=True)
-            # Fallback: try adding to path and importing (for backward compatibility)
-            import sys
-            bots_path = os.path.join(os.path.dirname(__file__), '..', 'bots')
-            bots_path = os.path.abspath(bots_path)
-            if bots_path not in sys.path:
-                sys.path.insert(0, bots_path)
-            
+            # Try absolute import as fallback
             try:
-                from bot_execution_service import bot_execution_service
-                from db_service import db_service
+                from apps.bots.bot_execution_service import bot_execution_service
+                from apps.bots.db_service import db_service
             except ImportError as fallback_error:
                 logger.error(f"Fallback import also failed: {fallback_error}", exc_info=True)
                 bot_execution_service = None
