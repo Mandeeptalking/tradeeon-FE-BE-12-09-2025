@@ -68,61 +68,75 @@ class DCABotExecutor:
         
     async def initialize(self):
         """Initialize bot executor."""
-        bot_name = self.config.get('botName', 'Unknown')
-        logger.info(f"Initializing DCA bot: {bot_name} (Paper Trading: {self.paper_trading})")
-        
-        # Log initialization event
-        if self.bot_id and self.user_id and db_service:
-            db_service.log_event(
-                bot_id=self.bot_id,
-                run_id=getattr(self, 'run_id', None),
-                user_id=self.user_id,
-                event_type="bot_initialized",
-                event_category="system",
-                message=f"DCA bot '{bot_name}' initialized in {'paper trading' if self.paper_trading else 'live trading'} mode",
-                details={
-                    "bot_name": bot_name,
-                    "paper_trading": self.paper_trading,
-                    "pairs": self.config.get("selectedPairs", []),
-                    "interval": self.config.get("interval", "1h")
-                }
-            )
-        
-        # Initialize market data service
-        await self.market_data.initialize()
-        
-        # Initialize trading service
-        if self.paper_trading:
-            balance = self.trading_engine.get_balance()
-            logger.info(f"Paper trading initialized with balance: {balance}")
+        try:
+            bot_name = self.config.get('botName', self.config.get('name', 'Unknown'))
+            logger.info(f"Initializing DCA bot: {bot_name} (Paper Trading: {self.paper_trading})")
             
-            # Log balance initialization
-            if self.bot_id and self.user_id and db_service:
-                db_service.log_event(
-                    bot_id=self.bot_id,
-                    run_id=getattr(self, 'run_id', None),
-                    user_id=self.user_id,
-                    event_type="balance_initialized",
-                    event_category="system",
-                    message=f"Paper trading balance initialized: ${balance:.2f}",
-                    details={"initial_balance": balance}
-                )
-        else:
-            logger.info("Live trading initialized - will use Binance API for orders")
+            # Log initialization event (don't fail if logging fails)
+            try:
+                if self.bot_id and self.user_id and db_service:
+                    db_service.log_event(
+                        bot_id=self.bot_id,
+                        run_id=getattr(self, 'run_id', None),
+                        user_id=self.user_id,
+                        event_type="bot_initialized",
+                        event_category="system",
+                        message=f"DCA bot '{bot_name}' initialized in {'paper trading' if self.paper_trading else 'live trading'} mode",
+                        details={
+                            "bot_name": bot_name,
+                            "paper_trading": self.paper_trading,
+                            "pairs": self.config.get("selectedPairs", []),
+                            "interval": self.config.get("interval", "1h")
+                        }
+                    )
+            except Exception as log_error:
+                logger.warning(f"Failed to log initialization event: {log_error}")
             
-            # Log live trading initialization
-            if self.bot_id and self.user_id and db_service:
-                db_service.log_event(
-                    bot_id=self.bot_id,
-                    run_id=getattr(self, 'run_id', None),
-                    user_id=self.user_id,
-                    event_type="balance_initialized",
-                    event_category="system",
-                    message="Live trading initialized - using Binance exchange",
-                    details={"mode": "live"}
-                )
-        
-        self.status = "running"
+            # Initialize market data service
+            await self.market_data.initialize()
+            
+            # Initialize trading service
+            if self.paper_trading:
+                balance = self.trading_engine.get_balance()
+                logger.info(f"Paper trading initialized with balance: {balance}")
+                
+                # Log balance initialization (don't fail if logging fails)
+                try:
+                    if self.bot_id and self.user_id and db_service:
+                        db_service.log_event(
+                            bot_id=self.bot_id,
+                            run_id=getattr(self, 'run_id', None),
+                            user_id=self.user_id,
+                            event_type="balance_initialized",
+                            event_category="system",
+                            message=f"Paper trading balance initialized: ${balance:.2f}",
+                            details={"initial_balance": balance}
+                        )
+                except Exception as log_error:
+                    logger.warning(f"Failed to log balance initialization: {log_error}")
+            else:
+                logger.info("Live trading initialized - will use Binance API for orders")
+                
+                # Log live trading initialization (don't fail if logging fails)
+                try:
+                    if self.bot_id and self.user_id and db_service:
+                        db_service.log_event(
+                            bot_id=self.bot_id,
+                            run_id=getattr(self, 'run_id', None),
+                            user_id=self.user_id,
+                            event_type="balance_initialized",
+                            event_category="system",
+                            message="Live trading initialized - using Binance exchange",
+                            details={"mode": "live"}
+                        )
+                except Exception as log_error:
+                    logger.warning(f"Failed to log live trading initialization: {log_error}")
+            
+            self.status = "running"
+        except Exception as e:
+            logger.error(f"Error initializing bot executor: {e}", exc_info=True)
+            self.status = "error"
+            raise
         
     async def execute_once(self):
         """Execute one iteration of the bot."""
