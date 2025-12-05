@@ -63,9 +63,8 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   bot_paused: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
   bot_resumed: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
   bot_deleted: 'text-red-400 bg-red-500/10 border-red-500/20',
-  entry_condition: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
-  dca_triggered: 'text-green-400 bg-green-500/10 border-green-500/20',
-  order_executed: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+  order_executed: 'text-green-400 bg-green-500/10 border-green-500/20',
+  dca_executed: 'text-green-400 bg-green-500/10 border-green-500/20',
   profit_target: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
   market_regime: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
   emergency_brake: 'text-red-400 bg-red-500/10 border-red-500/20',
@@ -85,8 +84,9 @@ export default function BotLogs({ botId, botName, onClose }: BotLogsProps) {
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   
+  // Filter out system logs by default - only show user-actionable events
   const [eventTypeFilter, setEventTypeFilter] = useState<string>('all');
-  const [eventCategoryFilter, setEventCategoryFilter] = useState<string>('all');
+  const [eventCategoryFilter, setEventCategoryFilter] = useState<string>('execution'); // Default to execution only
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
   
   const { data, isLoading, error, refetch } = useQuery({
@@ -280,7 +280,7 @@ export default function BotLogs({ botId, botName, onClose }: BotLogsProps) {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                              {log.event_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              {EVENT_TYPE_LABELS[log.event_type] || log.event_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                             </span>
                             {log.symbol && (
                               <span className={`text-xs px-2 py-0.5 rounded ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>

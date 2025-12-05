@@ -78,15 +78,64 @@ class BotExecutionService:
                 logger.error(f"Invalid mode: {mode}. Must be 'paper' or 'live'")
                 return False
             
+            # For live mode, verify user has Binance connection
+            # Note: Actual API key validation happens in TradingService._initialize_binance_client()
+            # This is just a preliminary check
             if mode == "live":
-                logger.error("Live trading not implemented yet")
-                return False
+                try:
+                    import sys
+                    import os
+                    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'api'))
+                    from clients.supabase_client import supabase
+                    
+                    if supabase:
+                        user_id = bot_config.get("user_id")
+                        connection_id = bot_config.get("config", {}).get("connection_id")
+                        connection_nickname = bot_config.get("config", {}).get("connection_nickname")
+                        
+                        # Build query
+                        query = supabase.table("exchange_keys").select("id, nickname, status").eq(
+                            "user_id", user_id
+                        ).eq("exchange", "binance").eq("is_active", True)
+                        
+                        if connection_id:
+                            query = query.eq("id", connection_id)
+                        elif connection_nickname:
+                            query = query.eq("nickname", connection_nickname)
+                        
+                        connection_result = query.execute()
+                        
+                        if not connection_result.data:
+                            error_msg = "No active Binance connection found."
+                            if connection_id:
+                                error_msg += f" Connection ID '{connection_id}' not found or inactive."
+                            elif connection_nickname:
+                                error_msg += f" Connection with nickname '{connection_nickname}' not found or inactive."
+                            error_msg += " Please connect your Binance account in the Connections page."
+                            logger.error(f"User {user_id} does not have active Binance connection")
+                            raise RuntimeError(error_msg)
+                        
+                        # Log which connection will be used
+                        conn = connection_result.data[0]
+                        logger.info(
+                            f"Found Binance connection for live trading: "
+                            f"ID={conn.get('id')}, Nickname={conn.get('nickname', 'N/A')}, "
+                            f"Status={conn.get('status', 'unknown')}"
+                        )
+                    else:
+                        logger.warning("Supabase not available, cannot verify Binance connection")
+                except RuntimeError:
+                    # Re-raise RuntimeError as-is (these are user-friendly messages)
+                    raise
+                except Exception as e:
+                    logger.error(f"Error verifying Binance connection: {e}", exc_info=True)
+                    raise RuntimeError(f"Failed to verify Binance connection: {str(e)}")
             
             # Create bot executor
             logger.info(f"Creating DCA bot executor for {bot_id} in {mode} mode")
             executor = DCABotExecutor(
                 bot_config=bot_config,
-                paper_trading=True,  # Always paper for now
+                paper_trading=(mode == "paper"),
                 initial_balance=initial_balance
             )
             
@@ -95,7 +144,7 @@ class BotExecutionService:
             executor.user_id = bot_config.get("user_id")
             executor.run_id = run_id  # Set run_id on executor
             
-            # Update paper trading engine with run_id
+            # Update trading service with run_id (unified for both paper and live)
             if executor.trading_engine:
                 executor.trading_engine.run_id = run_id
             
@@ -154,32 +203,9 @@ class BotExecutionService:
                     iteration_count += 1
                     last_execution_time = datetime.now()
                     
-                    # Log iteration start
-                    if db_service and executor.bot_id and executor.user_id:
-                        db_service.log_event(
-                            bot_id=executor.bot_id,
-                            run_id=getattr(executor, 'run_id', None),
-                            user_id=executor.user_id,
-                            event_type="iteration_start",
-                            event_category="system",
-                            message=f"Bot execution iteration #{iteration_count}",
-                            details={"iteration": iteration_count, "interval_seconds": interval_seconds}
-                        )
-                    
+                    # Don't log every iteration - too noisy. Only log significant events (orders, errors, etc.)
                     # Execute one iteration
                     await executor.execute_once()
-                    
-                    # Log iteration complete
-                    if db_service and executor.bot_id and executor.user_id:
-                        db_service.log_event(
-                            bot_id=executor.bot_id,
-                            run_id=getattr(executor, 'run_id', None),
-                            user_id=executor.user_id,
-                            event_type="iteration_complete",
-                            event_category="system",
-                            message=f"Bot execution iteration #{iteration_count} completed",
-                            details={"iteration": iteration_count}
-                        )
                     
                     # Calculate next execution time
                     next_execution_time = last_execution_time + timedelta(seconds=interval_seconds)
@@ -397,13 +423,13 @@ class BotExecutionService:
             interval_seconds = state.get("interval_seconds", 60)
             paused = state.get("paused", False)
             
-            # Get initial balance from state or use default
+            # Get initial balance from state or use default (only for paper mode)
             initial_balance = 10000.0
-            if state.get("trading_engine", {}).get("balance"):
+            if mode == "paper" and state.get("trading_engine", {}).get("balance"):
                 initial_balance = state["trading_engine"]["balance"]
             
             # Create executor
-            logger.info(f"Restoring DCA bot executor for {bot_id} from saved state")
+            logger.info(f"Restoring DCA bot executor for {bot_id} from saved state (mode: {mode})")
             executor = DCABotExecutor(
                 bot_config=bot_config,
                 paper_trading=(mode == "paper"),
@@ -473,7 +499,10 @@ class BotExecutionService:
                     continue
                 
                 # Restore bot (will load state internally if needed)
-                mode = "paper"  # Default to paper for now
+                # Determine mode from bot config or default to paper
+                mode = bot_config.get("tradingMode", "paper")
+                if mode not in ["paper", "live"]:
+                    mode = "paper"  # Default to paper if invalid
                 restored = await self.restore_bot_from_state(
                     bot_id=bot_id,
                     bot_config=bot_config,
