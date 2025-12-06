@@ -290,12 +290,6 @@ class DCABotExecutor:
             else:
                 error_msg = result.get('error', 'Unknown error')
                 logger.error(f"❌ DCA failed for {pair}: {error_msg}")
-                # Don't log DCA failures - not important for bot_events_live
-                        event_category="execution",
-                        message=f"DCA execution failed for {pair}: {error_msg}",
-                        symbol=pair,
-                        details={"error": error_msg, "amount": scaled_amount, "price": current_price}
-                    )
         
     async def _should_execute_dca(self, pair: str, current_price: float, 
                                   market_df: Optional[pd.DataFrame] = None) -> bool:
